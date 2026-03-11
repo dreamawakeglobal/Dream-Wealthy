@@ -6,7 +6,7 @@
     overflow: hidden;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px), (max-height: 600px) {
     .waitlist-hero-box {
         margin-top: calc(15vh + 8px) !important;
     }
