@@ -2,11 +2,6 @@
     margin-top: calc(30vh + 8px); /* slightly raised for regular screens too */
 }
 
-/* Force the video background to stay locked when scrolling on the Waitlist page */
-.waitlist-video-bg {
-    position: fixed !important;
-}
-
 /* Remove default Layout padding that generates extra hidden scroll space below the video on mobile */
 .waitlist-main {
     padding-bottom: 0 !important;
@@ -25,6 +20,10 @@
     .waitlist-body-lock {
         overflow: auto !important;
     }
+    
+    .waitlist-video-bg {
+        position: fixed !important;
+    }
 }
 
 /* Mobile Landscape (Phones) */
@@ -37,5 +36,9 @@
     
     .waitlist-body-lock {
         overflow: auto !important;
+    }
+    
+    .waitlist-video-bg {
+        position: fixed !important;
     }
 }
