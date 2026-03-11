@@ -32,7 +32,7 @@ const Navigation = () => {
                 {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
 
-            <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`}>
+            <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`} style={location.pathname === '/' ? { pointerEvents: 'none' } : {}}>
                 {navItems.map(({ path, label, icon: Icon, customIcon, customSize, customStyle }) => (
                     <NavLink
                         key={path}
