@@ -7,6 +7,11 @@
     position: fixed !important;
 }
 
+/* Remove default Layout padding that generates extra hidden scroll space below the video on mobile */
+.waitlist-main {
+    padding: 0 !important;
+}
+
 .waitlist-body-lock {
     overflow: hidden;
 }

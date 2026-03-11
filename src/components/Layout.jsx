@@ -72,7 +72,7 @@ const Layout = () => {
                 )}
             </div>
             <Navigation />
-            <main className="main-content">
+            <main className={`main-content ${location.pathname === '/' ? 'waitlist-main' : ''}`}>
                 <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-primary)' }}>Loading application...</div>}>
                     <Outlet />
                 </Suspense>
