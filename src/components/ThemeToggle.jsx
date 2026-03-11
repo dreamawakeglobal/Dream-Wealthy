@@ -1,10 +1,14 @@
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useLocation } from 'react-router-dom';
 import './ThemeToggle.css';
 
 const ThemeToggle = () => {
     const { theme, toggleTheme } = useTheme();
+    const location = useLocation();
+
+    if (location.pathname === '/') return null;
 
     return (
         <button
