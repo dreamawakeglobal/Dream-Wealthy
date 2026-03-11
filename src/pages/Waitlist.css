@@ -6,7 +6,19 @@
     overflow: hidden;
 }
 
-@media (max-width: 1024px), (max-height: 600px) {
+/* Mobile Portrait */
+@media (max-width: 768px) and (orientation: portrait) {
+    .waitlist-hero-box {
+        margin-top: calc(15vh + 8px) !important;
+    }
+    
+    .waitlist-body-lock {
+        overflow: auto !important;
+    }
+}
+
+/* Mobile Landscape (Phones) */
+@media (max-width: 932px) and (max-height: 450px) and (orientation: landscape) {
     .waitlist-hero-box {
         margin-top: calc(5vh) !important;
         transform: scale(0.6) !important;
