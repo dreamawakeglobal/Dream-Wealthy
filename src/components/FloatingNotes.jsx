@@ -96,6 +96,8 @@ const FloatingNotes = () => {
 
     const charCount = currentNote.length;
 
+    if (location.pathname === '/') return null;
+
     return (
         <>
             {/* Draggable Button */}

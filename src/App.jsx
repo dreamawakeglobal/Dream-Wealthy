@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 
 // Lazy loaded pages to optimize build chunks
+const Waitlist = React.lazy(() => import('./pages/Waitlist'));
 const Home = React.lazy(() => import('./pages/Home'));
 const Income = React.lazy(() => import('./pages/Income'));
 const Expenses = React.lazy(() => import('./pages/Expenses'));
@@ -32,7 +33,8 @@ function App() {
             <ThemeToggle />
             <Routes>
               <Route path="/" element={<Layout />}>
-                <Route index element={<Home />} />
+                <Route index element={<Waitlist />} />
+                <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                 <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
                 <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
                 <Route path="projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
