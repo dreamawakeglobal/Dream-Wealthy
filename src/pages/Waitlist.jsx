@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { supabase } from '../supabaseClient';
 import './Home.css'; // Re-use the existing Home styles for the hero section
+import './Waitlist.css';
 
 const Waitlist = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -35,11 +36,11 @@ const Waitlist = () => {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    // Prevent scrolling on Waitlist page
+    // Prevent scrolling on Waitlist page on desktop only via CSS
     useEffect(() => {
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('waitlist-body-lock');
         return () => {
-            document.body.style.overflow = 'auto';
+            document.body.classList.remove('waitlist-body-lock');
         };
     }, []);
 
@@ -103,7 +104,7 @@ const Waitlist = () => {
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <Card glass className="hero-box fade-in-up" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '480px', width: '100%', margin: '0 auto', marginTop: 'calc(40vh + 8px)' }}>
+                    <Card glass className="hero-box fade-in-up waitlist-hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '480px', width: '100%', margin: '0 auto' }}>
                         <h2 style={{ fontSize: '2rem', textAlign: 'center', margin: 0 }}>Gain Early Access</h2>
                         <p className="text-muted" style={{ textAlign: 'center', fontSize: '1rem', marginTop: '-12px' }}>
                             Join the exclusive waitlist to secure your spot for the Dream Wealthy platform.

@@ -1,0 +1,17 @@
+.waitlist-hero-box {
+    margin-top: calc(30vh + 8px); /* slightly raised for regular screens too */
+}
+
+.waitlist-body-lock {
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .waitlist-hero-box {
+        margin-top: calc(15vh + 8px) !important;
+    }
+    
+    .waitlist-body-lock {
+        overflow: auto !important;
+    }
+}
