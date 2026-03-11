@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, Suspense } from 'react';
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
 import Footer from './Footer';
 import { Button } from './ui/Button';
@@ -12,6 +12,7 @@ const Layout = () => {
     const { user, signOut } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef(null);
+    const location = useLocation();
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -63,7 +64,11 @@ const Layout = () => {
                         )}
                     </div>
                 ) : (
-                    <Button onClick={() => navigate('/signup')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '1rem' }}>Build Wealth</Button>
+                    location.pathname !== '/' && (
+                        <Button onClick={() => navigate('/signup')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '1rem' }}>
+                            Build Wealth
+                        </Button>
+                    )
                 )}
             </div>
             <Navigation />
