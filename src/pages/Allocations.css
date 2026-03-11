@@ -1,0 +1,228 @@
+.allocation-dashboard {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 32px;
+}
+
+@media (max-width: 1024px) {
+    .allocation-dashboard {
+        grid-template-columns: 1fr;
+        flex-direction: column-reverse;
+        display: flex;
+    }
+}
+
+.allocation-controls {
+    flex: 1;
+}
+
+.sliders-card {
+    padding: 32px;
+}
+
+.sliders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--surface-border);
+}
+
+.header-info h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.income-badge {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.status-badge.success {
+    background: var(--success-glow);
+    color: var(--success);
+}
+
+.status-badge.warning {
+    background: rgba(255, 159, 10, 0.1);
+    color: #ff9f0a;
+}
+
+.status-badge.danger {
+    background: var(--danger-glow);
+    color: var(--danger);
+    animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+    0% {
+        box-shadow: 0 0 0 0 var(--danger-glow);
+    }
+
+    70% {
+        box-shadow: 0 0 10px 5px var(--danger-glow);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+}
+
+.sliders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.allocation-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.allocation-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.category-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.category-amount {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.allocation-row .slider-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.allocation-row .dream-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.allocation-row .dream-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    border: 2px solid currentColor;
+    transition: transform 0.1s;
+}
+
+.allocation-row .dream-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+.allocation-row .slider-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    min-width: 50px;
+    text-align: right;
+}
+
+/* Visuals Column */
+.allocation-visuals {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-card {
+    padding: 32px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-card h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    align-self: flex-start;
+}
+
+.pie-wrapper {
+    flex: 1;
+    width: 100%;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.empty-pie {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: var(--text-muted);
+}
+
+.total-allocated-metric {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--surface-border);
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.metric-label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.metric-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.success-text {
+    color: var(--success);
+}
+
+.danger-text {
+    color: var(--danger);
+    text-shadow: 0 0 20px var(--danger-glow);
+}
+
+@media (max-width: 600px) {
+    .sliders-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+}

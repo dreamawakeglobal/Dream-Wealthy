@@ -1,0 +1,185 @@
+.navigation-bar {
+    position: fixed;
+    top: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: 95%;
+    height: auto;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 32px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 60px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.nav-links {
+    display: flex;
+    gap: 0px;
+    /* Reduced gap between icons */
+    height: 100%;
+    align-items: center;
+}
+
+.nav-custom-icon {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    filter: brightness(0.8);
+    transition: filter var(--transition-fast);
+    animation: float 6s ease-in-out infinite;
+    /* added float animation */
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(2deg);
+    }
+
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+}
+
+.nav-link:hover .nav-custom-icon,
+.nav-link.active .nav-custom-icon {
+    filter: brightness(1) drop-shadow(0 0 12px rgba(0, 150, 255, 0.8));
+    transform: scale(1.05);
+    /* Slight scale up on hover/active for extra feedback */
+}
+
+.nav-link {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 20px;
+    height: auto;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.nav-tooltip {
+    position: absolute;
+    bottom: 5px;
+    /* Brought up closer to the icon */
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1002;
+    color: #ffffff;
+    /* White text */
+    font-size: 0.9rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-shadow: 0 0 8px rgba(0, 150, 255, 1), 0 0 15px rgba(0, 150, 255, 0.8), 0 0 25px rgba(0, 150, 255, 0.5);
+    /* Strong blue glow */
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    pointer-events: none;
+}
+
+.nav-link:hover .nav-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+.nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--surface-hover);
+}
+
+.nav-link.active {
+    color: var(--accent-primary);
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.nav-link.is-custom {
+    padding: 0 10.5px;
+}
+
+.nav-link.is-custom:hover,
+.nav-link.is-custom.active {
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1003;
+}
+
+@media (max-width: 1300px) {
+    .navigation-bar {
+        top: 24px;
+        bottom: auto;
+        width: max-content;
+        max-width: calc(100% - 240px);
+        /* Leave room for logo in top left and account in top right */
+        padding: 4px 16px;
+        border-radius: 40px;
+    }
+
+    .nav-links {
+        width: 100%;
+        justify-content: space-around;
+        gap: 8px;
+    }
+
+    .nav-label {
+        display: none;
+    }
+
+    .nav-link {
+        padding: 4px;
+        justify-content: center;
+    }
+
+    .nav-custom-icon {
+        max-width: 65px !important;
+        max-height: 65px !important;
+        width: auto !important;
+        height: auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .navigation-bar {
+        top: auto;
+        bottom: 24px;
+        width: max-content;
+        max-width: 90%;
+        padding: 4px 8px;
+    }
+
+    .nav-custom-icon {
+        max-width: 40px !important;
+        max-height: 40px !important;
+    }
+
+    .nav-link.is-custom {
+        padding: 0 4px;
+    }
+}

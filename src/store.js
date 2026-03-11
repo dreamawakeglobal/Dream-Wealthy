@@ -1,0 +1,227 @@
+import { create } from 'zustand';
+import { supabase } from './supabaseClient';
+
+// Helper to format DB snake_case to frontend camelCase
+const mapToCamel = (item) => {
+    const mapped = { ...item };
+    if (mapped.target_amount !== undefined) { mapped.targetAmount = mapped.target_amount; delete mapped.target_amount; }
+    if (mapped.current_amount !== undefined) { mapped.currentAmount = mapped.current_amount; delete mapped.current_amount; }
+    if (mapped.monthly_contribution !== undefined) { mapped.monthlyContribution = mapped.monthly_contribution; delete mapped.monthly_contribution; }
+    if (mapped.annual_return_rate !== undefined) { mapped.annualReturnRate = mapped.annual_return_rate; delete mapped.annual_return_rate; }
+    if (mapped.interest_rate !== undefined) { mapped.interestRate = mapped.interest_rate; delete mapped.interest_rate; }
+    if (mapped.minimum_payment !== undefined) { mapped.minimumPayment = mapped.minimum_payment; delete mapped.minimum_payment; }
+    if (mapped.avg_price !== undefined) { mapped.avgPrice = mapped.avg_price; delete mapped.avg_price; }
+    if (mapped.api_id !== undefined) { mapped.apiId = mapped.api_id; delete mapped.api_id; }
+    if (mapped.asset_class !== undefined) { mapped.assetClass = mapped.asset_class; delete mapped.asset_class; }
+
+    // Auto-Tracker Fields
+    if (mapped.manual_received !== undefined) { mapped.manualReceived = mapped.manual_received; delete mapped.manual_received; }
+    if (mapped.manual_spent !== undefined) { mapped.manualSpent = mapped.manual_spent; delete mapped.manual_spent; }
+
+    return mapped;
+};
+
+// Helper to format frontend camelCase to DB snake_case
+const mapToSnake = (item) => {
+    const snakeItem = { ...item };
+    if (snakeItem.targetAmount !== undefined) { snakeItem.target_amount = snakeItem.targetAmount; delete snakeItem.targetAmount; }
+    if (snakeItem.currentAmount !== undefined) { snakeItem.current_amount = snakeItem.currentAmount; delete snakeItem.currentAmount; }
+    if (snakeItem.monthlyContribution !== undefined) { snakeItem.monthly_contribution = snakeItem.monthlyContribution; delete snakeItem.monthlyContribution; }
+    if (snakeItem.annualReturnRate !== undefined) { snakeItem.annual_return_rate = snakeItem.annualReturnRate; delete snakeItem.annualReturnRate; }
+    if (snakeItem.interestRate !== undefined) { snakeItem.interest_rate = snakeItem.interestRate; delete snakeItem.interestRate; }
+    if (snakeItem.minimumPayment !== undefined) { snakeItem.minimum_payment = snakeItem.minimumPayment; delete snakeItem.minimumPayment; }
+    if (snakeItem.avgPrice !== undefined) { snakeItem.avg_price = snakeItem.avgPrice; delete snakeItem.avgPrice; }
+    if (snakeItem.apiId !== undefined) { snakeItem.api_id = snakeItem.apiId; delete snakeItem.apiId; }
+    if (snakeItem.assetClass !== undefined) { snakeItem.asset_class = snakeItem.assetClass; delete snakeItem.assetClass; }
+
+    // Auto-Tracker Fields
+    if (snakeItem.manualReceived !== undefined) { snakeItem.manual_received = snakeItem.manualReceived; delete snakeItem.manualReceived; }
+    if (snakeItem.manualSpent !== undefined) { snakeItem.manual_spent = snakeItem.manualSpent; delete snakeItem.manualSpent; }
+
+    return snakeItem;
+}
+
+export const useStore = create((set, get) => ({
+    // Auth State
+    user: null,
+    setUser: (user) => set({ user }),
+
+    // Financial Collections
+    currentIncome: [],
+    futureIncome: [],
+    fixedExpenses: [],
+    variableExpenses: [],
+    allocations: [],
+    debts: [],
+    goals: [],
+    customProjections: [],
+    transactions: [], // Plaid Database Cache
+    portfolio: [],     // User Investment Holdings
+
+    // Profile Settings
+    profileData: {
+        startingSavings: 0,
+        incomeGrowthRate: 0,
+        expenseInflationRate: 0,
+        cellOverrides: {},
+        extraColumns: [],
+        subscriptionTier: 'none'
+    },
+
+    // 1. Initial Load Action
+    fetchAllData: async () => {
+        const { user } = get();
+        if (!user) return;
+
+        try {
+            // Run all heavy initial Supabase queries in parallel
+            const [
+                profileRes,
+                incomeRes,
+                expensesRes,
+                allocationsRes,
+                debtsRes,
+                goalsRes,
+                projectionsRes,
+                transactionsRes,
+                portfolioRes
+            ] = await Promise.all([
+                supabase.from('profiles').select('*').eq('user_id', user.id).single(),
+                supabase.from('income_streams').select('*').eq('user_id', user.id),
+                supabase.from('expenses').select('*').eq('user_id', user.id),
+                supabase.from('allocations').select('*').eq('user_id', user.id),
+                supabase.from('debts').select('*').eq('user_id', user.id),
+                supabase.from('goals').select('*').eq('user_id', user.id),
+                supabase.from('custom_projections').select('*').eq('user_id', user.id),
+                supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+                supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true })
+            ]);
+
+            const newProfileData = profileRes.data ? {
+                startingSavings: profileRes.data.starting_savings ?? 0,
+                incomeGrowthRate: profileRes.data.income_growth_rate ?? 0,
+                expenseInflationRate: profileRes.data.expense_inflation_rate ?? 0,
+                cellOverrides: profileRes.data.cell_overrides?.overrides || {},
+                extraColumns: profileRes.data.cell_overrides?.extraColumns || [],
+                subscriptionTier: profileRes.data.subscription_tier || 'none'
+            } : get().profileData;
+
+            set({
+                profileData: newProfileData,
+                currentIncome: (incomeRes.data || []).filter(i => !i.is_future).map(mapToCamel),
+                futureIncome: (incomeRes.data || []).filter(i => i.is_future).map(mapToCamel),
+                fixedExpenses: (expensesRes.data || []).filter(e => !e.is_variable).map(mapToCamel),
+                variableExpenses: (expensesRes.data || []).filter(e => e.is_variable).map(mapToCamel),
+                allocations: (allocationsRes.data || []).map(mapToCamel),
+                debts: (debtsRes.data || []).map(mapToCamel),
+                goals: (goalsRes.data || []).map(mapToCamel),
+                customProjections: (projectionsRes.data || []).map(mapToCamel),
+                transactions: (transactionsRes.data || []),
+                portfolio: (portfolioRes.data || []).map(mapToCamel)
+            });
+        } catch (err) {
+            console.error("Zustand fetchAllData failed:", err);
+        }
+    },
+
+    // 2. Generic Collection Setter with Async Supabase Syncing built-in
+    setCollection: async (collectionKey, tableName, matchConditions, newDataOrFn) => {
+        const { user } = get();
+        const prevData = get()[collectionKey] || [];
+        const newData = typeof newDataOrFn === 'function' ? newDataOrFn(prevData) : newDataOrFn;
+
+        // Instant UI update
+        set({ [collectionKey]: newData });
+
+        if (!user) return; // Fallback
+
+        // Async Sync to Supabase in the background
+        const oldIds = new Set(prevData.map(i => String(i.id)));
+        const newIds = new Set(newData.map(i => String(i.id)));
+
+        const deletedIds = prevData.map(i => String(i.id)).filter(id => !newIds.has(id));
+        const addedItems = newData.filter(i => !oldIds.has(String(i.id)));
+        const updatedItems = newData.filter(newItem => {
+            const oldItem = prevData.find(i => String(i.id) === String(newItem.id));
+            return oldItem && JSON.stringify(oldItem) !== JSON.stringify(newItem);
+        });
+
+        if (deletedIds.length > 0) {
+            const validIds = deletedIds.filter(id => id.length > 20);
+            if (validIds.length > 0) supabase.from(tableName).delete().in('id', validIds).then();
+        }
+
+        if (addedItems.length > 0) {
+            let needsRefetch = false;
+            const inserts = addedItems.map(item => {
+                const { id, ...rest } = mapToSnake(item);
+                const payload = { ...rest, ...matchConditions, user_id: user.id };
+                if (String(id).length < 20) { needsRefetch = true; return payload; }
+                return { ...payload, id };
+            });
+
+            const { data: fresh } = await supabase.from(tableName).insert(inserts).select();
+            if (needsRefetch && fresh) {
+                // Background refetch to tie UUIDs back to UI state cleanly
+                let refetchQ = supabase.from(tableName).select('*').eq('user_id', user.id);
+                for (const [k, v] of Object.entries(matchConditions)) refetchQ = refetchQ.eq(k, v);
+                const { data: fullFresh } = await refetchQ.order('created_at', { ascending: true });
+                if (fullFresh) set({ [collectionKey]: fullFresh.map(mapToCamel) });
+            }
+        }
+
+        if (updatedItems.length > 0) {
+            updatedItems.forEach(item => {
+                if (String(item.id).length > 20) {
+                    const { id, created_at, user_id, ...rest } = mapToSnake(item);
+                    supabase.from(tableName).update(rest).eq('id', id).then();
+                }
+            });
+        }
+    },
+
+    // 3. Specific Bound Setters for the entire App to consume effortlessly
+    setCurrentIncome: (data) => get().setCollection('currentIncome', 'income_streams', { is_future: false }, data),
+    setFutureIncome: (data) => get().setCollection('futureIncome', 'income_streams', { is_future: true }, data),
+    setFixedExpenses: (data) => get().setCollection('fixedExpenses', 'expenses', { is_variable: false }, data),
+    setVariableExpenses: (data) => get().setCollection('variableExpenses', 'expenses', { is_variable: true }, data),
+    setAllocations: (data) => get().setCollection('allocations', 'allocations', {}, data),
+    setDebts: (data) => get().setCollection('debts', 'debts', {}, data),
+    setGoals: (data) => get().setCollection('goals', 'goals', {}, data),
+    setCustomProjections: (data) => get().setCollection('customProjections', 'custom_projections', {}, data),
+    setPortfolio: (data) => get().setCollection('portfolio', 'portfolios', {}, data),
+
+    // Profile Modifiers
+    updateProfileField: async (key, newValueOrFn) => {
+        const { user, profileData } = get();
+        const newValue = typeof newValueOrFn === 'function' ? newValueOrFn(profileData[key]) : newValueOrFn;
+
+        // Instant UI Update
+        const newProfile = { ...profileData, [key]: newValue };
+        set({ profileData: newProfile });
+
+        if (user) {
+            let column = '';
+            let valToSave = newValue;
+            if (key === 'startingSavings') column = 'starting_savings';
+            if (key === 'incomeGrowthRate') column = 'income_growth_rate';
+            if (key === 'expenseInflationRate') column = 'expense_inflation_rate';
+            if (key === 'cellOverrides' || key === 'extraColumns') {
+                column = 'cell_overrides';
+                valToSave = {
+                    overrides: key === 'cellOverrides' ? newValue : profileData.cellOverrides,
+                    extraColumns: key === 'extraColumns' ? newValue : profileData.extraColumns
+                };
+            }
+            if (column) {
+                supabase.from('profiles').upsert({ user_id: user.id, [column]: valToSave }, { onConflict: 'user_id' }).then();
+            }
+        }
+    },
+
+    setStartingSavings: (val) => get().updateProfileField('startingSavings', val),
+    setIncomeGrowthRate: (val) => get().updateProfileField('incomeGrowthRate', val),
+    setExpenseInflationRate: (val) => get().updateProfileField('expenseInflationRate', val),
+    setCellOverrides: (val) => get().updateProfileField('cellOverrides', val),
+    setExtraColumns: (val) => get().updateProfileField('extraColumns', val),
+}));

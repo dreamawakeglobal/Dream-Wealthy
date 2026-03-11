@@ -1,0 +1,90 @@
+.dream-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border-radius: 50px 50px 50px 50px;
+    /* Base pill shape */
+    animation: cloud-morph 6s ease-in-out infinite alternate;
+    position: relative;
+    z-index: 1;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-float);
+    border: 1px solid transparent;
+}
+
+/* Variants */
+.btn-primary {
+    background: var(--accent-gradient);
+    color: #ffffff;
+    box-shadow: var(--shadow-light);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-float);
+    filter: brightness(1.05);
+}
+
+.btn-secondary {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.btn-secondary:hover {
+    background-color: #ffffff;
+    border-color: var(--accent-secondary);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-light);
+}
+
+[data-theme='dark'] .btn-secondary {
+    color: #000000;
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+.btn-ghost:hover {
+    background-color: var(--surface);
+    color: var(--text-primary);
+}
+
+/* Sizes */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.875rem;
+}
+
+.btn-md {
+    padding: 10px 20px;
+    font-size: 1rem;
+}
+
+.btn-lg {
+    padding: 14px 28px;
+    font-size: 1.125rem;
+}
+
+@keyframes cloud-morph {
+    0% {
+        border-radius: 60px 40px 50px 40px / 40px 50px 40px 60px;
+    }
+
+    33% {
+        border-radius: 40px 60px 40px 50px / 50px 40px 60px 40px;
+    }
+
+    66% {
+        border-radius: 50px 40px 60px 40px / 60px 50px 40px 50px;
+    }
+
+    100% {
+        border-radius: 60px 40px 50px 40px / 40px 50px 40px 60px;
+    }
+}

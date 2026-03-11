@@ -1,0 +1,322 @@
+.investments-page {
+    /* Align with the global page margins */
+    display: flex;
+    flex-direction: column;
+}
+
+.investments-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr 380px;
+    gap: 24px;
+    margin-top: 0px;
+}
+
+
+/* Sidebar Elements */
+.asset-sidebar {
+    height: 100%;
+}
+
+.sidebar-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 24px !important;
+    gap: 16px;
+}
+
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-bottom: 1px solid var(--surface-border);
+    padding-bottom: 16px;
+}
+
+.asset-class-dropdown {
+    background: var(--surface-dropdown);
+    color: var(--text-primary);
+    border: 1px solid var(--surface-border);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+}
+
+.asset-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    padding-right: 8px;
+    max-height: 420px;
+}
+
+.draggable-asset {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.draggable-asset:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+    opacity: 0.8;
+}
+
+.draggable-asset:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.drag-handle {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+}
+
+.asset-info {
+    flex: 1;
+}
+
+.asset-symbol {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.asset-name {
+    font-size: 0.8rem;
+}
+
+.asset-price-col {
+    text-align: right;
+}
+
+.asset-price {
+    font-weight: 500;
+}
+
+.asset-change {
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Central Dropzone */
+.portfolio-dropzone-container {
+    height: 100%;
+}
+
+.dropzone-card {
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    padding: 24px !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dropzone-card.empty {
+    border-style: dashed;
+    border-width: 2px;
+}
+
+.dropzone-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.empty-dropzone-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    text-align: center;
+    border: 2px dashed var(--surface-border);
+    border-radius: 16px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.holdings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    padding-right: 8px;
+    flex: 1;
+}
+
+.holding-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.holding-identity {
+    display: flex;
+    flex-direction: column;
+    min-width: 80px;
+}
+
+.holding-symbol {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.holding-controls {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.qty-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid var(--surface-border);
+}
+
+.qty-input-wrapper label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.qty-input {
+    width: 80px;
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    outline: none;
+    text-align: right;
+}
+
+/* Hide number spin buttons */
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.holding-value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--success);
+    min-width: 100px;
+    text-align: right;
+}
+
+.remove-btn {
+    opacity: 0.5;
+}
+
+.remove-btn:hover {
+    opacity: 1;
+}
+
+/* Visualization Card */
+.portfolio-viz-container {
+    height: 100%;
+}
+
+.viz-card {
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    padding: 32px !important;
+}
+
+/* Responsiveness */
+@media (max-width: 1200px) {
+    .investments-layout {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .portfolio-viz-container {
+        grid-column: 1 / -1;
+        /* Span full width on medium screens */
+    }
+
+    .viz-card {
+        min-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .investments-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .holding-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .holding-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Search Container */
+.search-bar-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-bar-container .input-wrapper {
+    margin-bottom: 0;
+}
+
+.asset-search-input {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--surface-border);
+}
+
+[data-theme='dark'] .asset-search-input {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Search Popup */
+.search-popup {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 8px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    max-height: 350px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}

@@ -1,0 +1,215 @@
+.expense-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.metric-box {
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+.metric-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.metric-title {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-box .metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.text-danger {
+    color: var(--danger);
+}
+
+.text-success {
+    color: var(--success);
+}
+
+.text-primary {
+    color: var(--text-primary);
+}
+
+.warning-border {
+    border-top: 4px solid var(--danger);
+}
+
+.success-border {
+    border-top: 4px solid var(--success);
+}
+
+.highlight-border {
+    border-top: 4px solid var(--text-primary);
+}
+
+.metric-breakdown {
+    display: flex;
+    gap: 16px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border-top: 1px solid var(--surface-border);
+    padding-top: 12px;
+    margin-top: auto;
+}
+
+.metric-subtext {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-top: auto;
+}
+
+.expense-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+}
+
+.expense-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.badge.danger-badge {
+    color: var(--danger);
+    border-color: var(--danger-glow);
+    background: rgba(255, 69, 58, 0.1);
+}
+
+.badge.warning-badge {
+    color: #ff9f0a;
+    border-color: rgba(255, 159, 10, 0.3);
+    background: rgba(255, 159, 10, 0.1);
+}
+
+.negative {
+    color: var(--danger);
+}
+
+.expense-form-card {
+    padding: 20px;
+}
+
+.expense-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+[data-theme='dark'] .expense-form .dream-input {
+    color: #000000 !important;
+}
+
+@media (max-width: 768px) {
+    .expense-content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Paid Checkbox Styles */
+.checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
+}
+
+.expense-checkbox {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--text-muted);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.expense-checkbox:checked {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.expense-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    top: 2px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.expense-checkbox:hover {
+    border-color: var(--success);
+}
+
+.stream-item.paid {
+    opacity: 0.6;
+    background: rgba(16, 185, 129, 0.05);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.stream-item.paid .stream-name {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+/* Debt Destroyer Burn-Down Chart Styles */
+
+.burn-down-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.burn-down-header {
+    display: flex;
+    gap: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--surface-border);
+}
+
+.target-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.target-metric .label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.glowing-danger {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--danger);
+    text-shadow: 0 0 30px var(--danger-glow);
+    line-height: 1;
+}
+
+.text-warning {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #ff9f0a;
+}

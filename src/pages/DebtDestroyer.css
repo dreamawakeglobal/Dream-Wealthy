@@ -1,0 +1,197 @@
+.debt-destroyer-page {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.debt-dashboard {
+    display: grid;
+    grid-template-columns: 450px 1fr;
+    gap: 32px;
+    margin-top: 0px;
+}
+
+@media (max-width: 1024px) {
+    .debt-dashboard {
+        grid-template-columns: 1fr;
+    }
+}
+
+.debt-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.debt-card,
+.strategy-card,
+.burn-down-card {
+    padding: 32px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.card-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.debt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--surface-hover);
+    border-radius: 12px;
+    border: 1px solid var(--surface-border);
+}
+
+.debt-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+}
+
+.debts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.debt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border);
+    transition: all 0.2s ease;
+}
+
+.debt-item:hover {
+    border-color: var(--danger);
+    box-shadow: 0 0 15px var(--danger-glow);
+}
+
+.debt-info h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.debt-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.debt-stats .divider {
+    color: var(--surface-border);
+}
+
+.strategy-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.strategy-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.strategy-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.3s ease;
+    color: var(--text-muted);
+}
+
+.strategy-btn:hover {
+    background: var(--surface-hover);
+    border-color: var(--text-secondary);
+}
+
+.strategy-btn.active {
+    background: rgba(255, 69, 58, 0.1);
+    border-color: var(--danger);
+    color: var(--text-primary);
+    box-shadow: 0 0 20px var(--danger-glow);
+}
+
+.strategy-btn.active svg {
+    color: var(--danger);
+}
+
+.strategy-btn div {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.strategy-btn strong {
+    font-size: 1.1rem;
+}
+
+.strategy-btn span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.burn-down-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.burn-down-header {
+    display: flex;
+    gap: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--surface-border);
+}
+
+.target-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.target-metric .label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.glowing-danger {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--danger);
+    text-shadow: 0 0 30px var(--danger-glow);
+    line-height: 1;
+}
+
+.text-warning {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #ff9f0a;
+}
