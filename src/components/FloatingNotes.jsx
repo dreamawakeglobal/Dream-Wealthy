@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StickyNote, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './FloatingNotes.css';
 
 const STORAGE_KEY = 'dream-wealthy-notes';
@@ -12,6 +13,7 @@ const getPageName = (pathname) => {
 
 const FloatingNotes = () => {
     const location = useLocation();
+    const { user } = useAuth();
     const pageName = getPageName(location.pathname);
 
     // Notes state keyed by page
@@ -96,7 +98,7 @@ const FloatingNotes = () => {
 
     const charCount = currentNote.length;
 
-    if (location.pathname === '/') return null;
+    if (location.pathname === '/' || !user) return null;
 
     return (
         <>
