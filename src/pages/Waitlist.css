@@ -8,7 +8,9 @@
 
 @media (max-width: 1024px), (max-height: 600px) {
     .waitlist-hero-box {
-        margin-top: calc(15vh + 8px) !important;
+        margin-top: calc(5vh) !important;
+        transform: scale(0.6) !important;
+        transform-origin: top center;
     }
     
     .waitlist-body-lock {

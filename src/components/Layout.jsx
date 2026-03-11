@@ -77,7 +77,7 @@ const Layout = () => {
                     <Outlet />
                 </Suspense>
             </main>
-            <Footer />
+            {location.pathname !== '/' && <Footer />}
         </div>
     );
 };
