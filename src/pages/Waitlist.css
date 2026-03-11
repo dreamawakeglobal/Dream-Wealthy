@@ -2,6 +2,11 @@
     margin-top: calc(30vh + 8px); /* slightly raised for regular screens too */
 }
 
+/* Force the video background to stay locked when scrolling on the Waitlist page */
+.waitlist-video-bg {
+    position: fixed !important;
+}
+
 .waitlist-body-lock {
     overflow: hidden;
 }

@@ -99,7 +99,7 @@ const Waitlist = () => {
                     loop
                     muted
                     playsInline
-                    className="hero-video-bg"
+                    className="hero-video-bg waitlist-video-bg"
                 >
                     <source src="/hero-bg.mp4" type="video/mp4" />
                 </video>
