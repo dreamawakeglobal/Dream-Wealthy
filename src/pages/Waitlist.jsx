@@ -22,6 +22,8 @@ const Waitlist = () => {
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 0.65;
+            // Force play for some mobile browsers that ignore autoPlay attribute
+            videoRef.current.play().catch(e => console.log("Video auto-play prevented:", e));
         }
     }, []);
 
