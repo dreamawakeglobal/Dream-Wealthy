@@ -32,7 +32,7 @@ const Navigation = () => {
                 {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
 
-            <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`} style={location.pathname === '/' ? { pointerEvents: 'none' } : {}}>
+            <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`}>
                 {navItems.map(({ path, label, icon: Icon, customIcon, customSize, customStyle }) => (
                     <NavLink
                         key={path}
@@ -41,6 +41,11 @@ const Navigation = () => {
                             `nav-link ${customIcon ? 'is-custom' : ''} ${isActive ? 'active' : ''}`
                         }
                         style={customStyle || {}}
+                        onClick={(e) => {
+                            if (location.pathname === '/') {
+                                e.preventDefault();
+                            }
+                        }}
                     >
                         {customIcon ? (
                             <>
