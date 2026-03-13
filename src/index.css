@@ -205,6 +205,22 @@ a {
   background: var(--text-muted);
 }
 
+/* Global Utilities */
+.badge {
+  background: var(--surface);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid var(--surface-border);
+}
+
+.badge.gold {
+  color: var(--sunlight);
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.1);
+}
+
 /* Global Page Layouts (Code Splitting Fix) */
 .page-container {
   display: flex;
@@ -366,4 +382,12 @@ a {
 [data-theme='dark'] input::placeholder,
 [data-theme='dark'] textarea::placeholder {
   color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Force specific colors in dark mode for savings popup */
+[data-theme='dark'] .savings-goal-popup h3,
+[data-theme='dark'] .savings-goal-popup label,
+[data-theme='dark'] .savings-goal-popup span,
+[data-theme='dark'] .savings-goal-popup input {
+  color: #000000 !important;
 }

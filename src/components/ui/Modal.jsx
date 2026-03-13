@@ -1,20 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import './Modal.css';
 
 export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
-    // Make sure we don't scroll the body when modal is open
+    const [scrollY, setScrollY] = useState(0);
+    const [docHeight, setDocHeight] = useState(0);
+
     useEffect(() => {
         if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto'; // or '' empty string
+            setScrollY(window.scrollY);
+            setDocHeight(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, window.innerHeight));
         }
-
-        // Cleanup function in case component unmounts
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
     }, [isOpen]);
 
     if (!isOpen) return null;
@@ -26,9 +23,21 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
         }
     };
 
-    return (
-        <div className="modal-overlay" onClick={handleOverlayClick}>
-            <div className={`modal-content ${glass ? 'glass' : ''}`}>
+    const modalContent = (
+        <div 
+            className="modal-overlay" 
+            onClick={handleOverlayClick}
+            style={{ 
+                position: 'absolute', 
+                top: 0, 
+                height: `${docHeight}px`,
+                alignItems: 'flex-start'
+            }}
+        >
+            <div 
+                className={`modal-content ${glass ? 'glass' : ''}`}
+                style={{ marginTop: `${scrollY + Math.max(40, window.innerHeight * 0.1)}px` }}
+            >
                 <div className="modal-header">
                     <h2>{title}</h2>
                     <button className="modal-close-btn" onClick={onClose}>
@@ -41,4 +50,6 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
             </div>
         </div>
     );
+
+    return createPortal(modalContent, document.body);
 };

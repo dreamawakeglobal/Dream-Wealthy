@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Wallet, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -105,7 +105,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
         <div className="stream-list">
             {currentExpenses.map((expense) => (
                 <AnimateOnScroll key={expense.id} delay={0.05} yOffset={20}>
-                    <div className={`stream-item ${expense.is_paid ? 'paid' : ''} glass`}>
+                    <div className={`stream-item ${expense.isPaid ? 'paid' : ''} glass`}>
                         {editingId === expense.id ? (
                             <div className="stream-edit-form" style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center' }}>
                                 <div style={{ flex: 1, display: 'flex', gap: '8px' }}>
@@ -136,9 +136,9 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             <input
                                                 type="checkbox"
                                                 className="expense-checkbox"
-                                                checked={expense.is_paid || false}
-                                                onChange={(e) => onEdit(expense.id, { is_paid: e.target.checked })}
-                                                title={expense.is_paid ? "Mark as unpaid" : "Mark as paid"}
+                                                checked={expense.isPaid || false}
+                                                onChange={(e) => onEdit(expense.id, { isPaid: e.target.checked })}
+                                                title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
                                             />
                                         </div>
                                     )}
@@ -154,10 +154,10 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
                                             <input
                                                 type="number"
-                                                value={expense.manual_spent !== undefined ? expense.manual_spent : (transactionsByCategory[expense.name] || '')}
+                                                value={expense.manualSpent !== undefined ? expense.manualSpent : (transactionsByCategory[expense.name] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
-                                                    onEdit(expense.id, { manual_spent: val === '' ? undefined : Number(val) });
+                                                    onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
                                                 }}
                                                 style={{ width: '80px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
                                                 onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
@@ -168,14 +168,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             fontSize: '0.85rem',
                                             fontWeight: 600,
                                             color: (() => {
-                                                const spent = expense.manual_spent !== undefined ? Number(expense.manual_spent) : (Number(transactionsByCategory[expense.name]) || 0);
+                                                const spent = expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.name]) || 0);
                                                 const left = expense.amount - spent;
                                                 if (left <= 0) return 'var(--danger)';
                                                 if (left <= expense.amount * 0.1) return '#ff9f0a';
                                                 return 'var(--success)';
                                             })()
                                         }}>
-                                            Left: ${(expense.amount - (expense.manual_spent !== undefined ? Number(expense.manual_spent) : (Number(transactionsByCategory[expense.name]) || 0))).toLocaleString()}
+                                            Left: ${(expense.amount - (expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.name]) || 0))).toLocaleString()}
                                         </div>
                                     </div>
                                 )}
@@ -224,8 +224,10 @@ const Expenses = () => {
         fixedExpenses, setFixedExpenses,
         variableExpenses, setVariableExpenses,
         totalFixedExpenses, totalVariableExpenses, totalMonthlyExpenses,
-        netMonthlyCashFlow, savingsRate, debts, setDebts,
-        transactionsByCategory, transactions
+        netMonthlyCashFlow, savingsRate,
+        transactionsByCategory, transactions,
+        trackedDebts, setTrackedDebts,
+        subscriptions, setSubscriptions
     } = useFinancialContext();
 
     // --- Modal State ---
@@ -256,9 +258,104 @@ const Expenses = () => {
 
     // --- Debt Destroyer State & Handlers ---
     const [strategy, setStrategy] = useState('avalanche');
-    const [extraPayment, setExtraPayment] = useState(0);
-    const [showAddForm, setShowAddForm] = useState(false);
-    const [newDebt, setNewDebt] = useState({ name: '', balance: '', rate: '', minPayment: '' });
+
+    // Tracker aggregate metrics
+    const totalTrackedDebtBalance = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.balance) || 0), 0);
+    const totalTrackedMonthlyPayments = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
+
+    const [showAddTrackerForm, setShowAddTrackerForm] = useState(false);
+    const [newTrackedDebt, setNewTrackedDebt] = useState({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', dueDate: '' });
+    const [justPaidId, setJustPaidId] = useState(null);
+    const [editingDebtId, setEditingDebtId] = useState(null);
+    const [editDebtForm, setEditDebtForm] = useState({ name: '', type: '', balance: '', rate: '', minPayment: '', dueDate: '' });
+
+    const startEditingDebt = (debt) => {
+        setEditingDebtId(debt.id);
+        setEditDebtForm({
+            name: debt.name,
+            type: debt.type || 'Credit Card',
+            balance: debt.balance.toString(),
+            rate: debt.interestRate?.toString() || '',
+            minPayment: debt.minimumPayment.toString(),
+            dueDate: debt.dueDate || ''
+        });
+    };
+
+    const saveDebtEdit = (id) => {
+        if (editDebtForm.name && editDebtForm.balance && editDebtForm.rate && editDebtForm.minPayment) {
+            handleEditTrackedDebt(id, {
+                name: editDebtForm.name,
+                type: editDebtForm.type,
+                balance: Number(editDebtForm.balance),
+                interestRate: Number(editDebtForm.rate),
+                minimumPayment: Number(editDebtForm.minPayment),
+                dueDate: editDebtForm.dueDate
+            });
+        }
+        setEditingDebtId(null);
+    };
+
+    const handleEditTrackedDebt = (id, updatedFields) => {
+        if (updatedFields.isPaid) {
+            setJustPaidId(id);
+            setTimeout(() => setJustPaidId(null), 600);
+        }
+        setTrackedDebts(prev => prev.map(d => String(d.id) === String(id) ? { ...d, ...updatedFields } : d));
+    };
+
+    const handleExtraPaymentChange = (id, amount) => {
+        handleEditTrackedDebt(id, { extraPayment: Number(amount) });
+    };
+
+    const calculatePayoffDetails = (balance, rate, payment) => {
+        if (!payment || payment <= 0 || balance <= 0) return { dateStr: 'N/A', months: 0, totalInterest: 0 };
+        const r = (rate || 0) / 100 / 12; 
+        
+        if (r * balance >= payment) return { dateStr: 'Payment too low', months: Infinity, totalInterest: Infinity };
+        
+        let months;
+        let totalInterest = 0;
+        
+        if (r === 0) {
+            months = balance / payment;
+        } else {
+            months = -Math.log(1 - (r * balance) / payment) / Math.log(1 + r);
+            totalInterest = (payment * months) - balance;
+        }
+        
+        const payoffDate = new Date();
+        payoffDate.setMonth(payoffDate.getMonth() + Math.ceil(months));
+        
+        return { 
+            dateStr: payoffDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+            months: Math.ceil(months),
+            totalInterest: Math.max(0, totalInterest)
+        };
+    };
+
+    const handleAddTrackedDebt = (e) => {
+        e.preventDefault();
+        if (newTrackedDebt.name && newTrackedDebt.balance && newTrackedDebt.rate && newTrackedDebt.minPayment) {
+            setTrackedDebts(prev => [...prev, {
+                id: Date.now().toString(),
+                name: newTrackedDebt.name,
+                type: newTrackedDebt.type,
+                balance: Number(newTrackedDebt.balance),
+                interestRate: Number(newTrackedDebt.rate),
+                minimumPayment: Number(newTrackedDebt.minPayment),
+                dueDate: newTrackedDebt.dueDate,
+                isPaid: false,
+                extraPayment: 0,
+                paidCircles: []
+            }]);
+            setNewTrackedDebt({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', dueDate: '' });
+            setShowAddTrackerForm(false);
+        }
+    };
+    
+    const handleRemoveTrackedDebt = (id) => {
+        setTrackedDebts(prev => prev.filter(d => String(d.id) !== String(id)));
+    };
 
     // --- Subscriptions State ---
     const COMMON_SUBSCRIPTIONS = [
@@ -275,16 +372,18 @@ const Expenses = () => {
         { id: 'paramount', name: 'Paramount+', domain: 'paramountplus.com', cost: 11.99 },
         { id: 'peacock', name: 'Peacock', domain: 'peacocktv.com', cost: 7.99 },
     ];
-    const [activeSubscriptions, setActiveSubscriptions] = useState([]);
+    const activeSubscriptions = subscriptions || [];
     const [showAddSub, setShowAddSub] = useState(false);
     const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '' });
 
     const toggleSubscription = (sub) => {
-        setActiveSubscriptions(prev => {
-            const exists = prev.find(s => s.id === sub.id);
-            if (exists) return prev.filter(s => s.id !== sub.id);
-            return [...prev, sub];
-        });
+        const prev = subscriptions || [];
+        const exists = prev.find(s => s.id === sub.id);
+        if (exists) {
+            setSubscriptions(prev.filter(s => s.id !== sub.id));
+        } else {
+            setSubscriptions([...prev, sub]);
+        }
     };
 
     const addCustomSubscription = (e) => {
@@ -296,14 +395,16 @@ const Expenses = () => {
                 domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
                 cost: parseFloat(newSub.cost)
             };
-            setActiveSubscriptions(prev => [...prev, custom]);
+            const prev = subscriptions || [];
+            setSubscriptions([...prev, custom]);
             setNewSub({ name: '', cost: '', domain: '' });
             setShowAddSub(false);
         }
     };
 
     const removeSubscription = (id) => {
-        setActiveSubscriptions(prev => prev.filter(s => s.id !== id));
+        const prev = subscriptions || [];
+        setSubscriptions(prev.filter(s => String(s.id) !== String(id)));
     };
 
     const [editingSubId, setEditingSubId] = useState(null);
@@ -318,38 +419,21 @@ const Expenses = () => {
 
     const saveSubEdit = (id) => {
         if (editSubName && editSubCost) {
-            setActiveSubscriptions(prev => prev.map(s => s.id === id ? { ...s, name: editSubName, cost: parseFloat(editSubCost) } : s));
+            const prev = subscriptions || [];
+            setSubscriptions(prev.map(s => String(s.id) === String(id) ? { ...s, name: editSubName, cost: parseFloat(editSubCost) } : s));
         }
         setEditingSubId(null);
     };
 
     const totalSubscriptionCost = activeSubscriptions.reduce((sum, s) => sum + s.cost, 0);
 
-    const handleAddDebt = (e) => {
-        e.preventDefault();
-        if (newDebt.name && newDebt.balance && newDebt.rate && newDebt.minPayment) {
-            setDebts([...debts, {
-                id: Date.now().toString(),
-                name: newDebt.name,
-                balance: Number(newDebt.balance),
-                interestRate: Number(newDebt.rate),
-                minimumPayment: Number(newDebt.minPayment)
-            }]);
-            setNewDebt({ name: '', balance: '', rate: '', minPayment: '' });
-            setShowAddForm(false);
-        }
-    };
-
-    const handleRemoveDebt = (id) => {
-        setDebts(debts.filter(d => d.id !== id));
-    };
 
     // Projection Engine
     const projectionData = useMemo(() => {
-        if (!debts || debts.length === 0) return { data: [], totalInterest: 0, monthsToZero: 0 };
+        if (!trackedDebts || trackedDebts.length === 0) return { data: [], totalInterest: 0, monthsToZero: 0 };
 
         // Clone debts for simulation
-        let simDebts = debts.map(d => ({ ...d }));
+        let simDebts = (trackedDebts || []).map(d => ({ ...d }));
         let currentMonth = 0;
         let totalInterestPaid = 0;
         const data = [];
@@ -369,7 +453,6 @@ const Expenses = () => {
                 simDebts.sort((a, b) => a.interestRate - b.interestRate); // Lowest rate first
             }
 
-            let availableExtra = Number(extraPayment) || 0;
             let monthInterest = 0;
 
             // First pass: apply minimum payments and interest
@@ -379,18 +462,43 @@ const Expenses = () => {
                     monthInterest += monthlyInterest;
                     d.balance += monthlyInterest; // add interest
 
+                    // The minimum payment is applied FIRST
                     let payment = Math.min(d.balance, d.minimumPayment);
                     d.balance -= payment;
                 }
             });
 
-            // Second pass: apply extra payments to the targeted debt
+            // Second pass: apply the individual extra payments assigned to each debt
+            simDebts.forEach(d => {
+                const individualExtra = d.extraPayment || 0;
+                if (d.balance > 0 && individualExtra > 0) {
+                    let extraToApply = Math.min(d.balance, individualExtra);
+                    d.balance -= extraToApply;
+                }
+            });
+
+            // Third pass (Avalanche/Snowball Strategy): If any debt was paid off from minimums + individual extras this month, 
+            // the money you WERE paying towards it (the "snowball" amount) now needs to be applied to the highest priority debt.
+            // Calculate total money we normally spend across all *tracked* debts
+            const originalTotalMonthlyCommitment = (trackedDebts || []).reduce((sum, d) => sum + d.minimumPayment + (Number(d.extraPayment) || 0), 0);
+            
+            // Calculate how much we actually spent this month on remaining debts
+            const actualSpentThisMonth = simDebts.reduce((sum, d) => {
+                if (d.balance > 0) {
+                   return sum + Math.min(d.balance, d.minimumPayment + (Number(d.extraPayment) || 0));
+                }
+                return sum;
+            }, 0);
+
+            // Any difference is the "free" money from paid-off debts that we can now throw at the #1 target
+            let remainingSnowballAmmount = originalTotalMonthlyCommitment - actualSpentThisMonth;
+
             for (let i = 0; i < simDebts.length; i++) {
-                if (availableExtra <= 0) break;
+                if (remainingSnowballAmmount <= 0) break;
                 if (simDebts[i].balance > 0) {
-                    let extraToApply = Math.min(simDebts[i].balance, availableExtra);
-                    simDebts[i].balance -= extraToApply;
-                    availableExtra -= extraToApply;
+                    let extremeExtra = Math.min(simDebts[i].balance, remainingSnowballAmmount);
+                    simDebts[i].balance -= extremeExtra;
+                    remainingSnowballAmmount -= extremeExtra;
                 }
             }
 
@@ -413,7 +521,7 @@ const Expenses = () => {
         }
 
         return { data, totalInterest: totalInterestPaid, monthsToZero: currentMonth };
-    }, [debts, strategy, extraPayment]);
+    }, [trackedDebts, strategy]);
     // ---------------------------------------
 
     const addFixed = (expense) => setFixedExpenses(prev => [...prev, expense]);
@@ -482,6 +590,20 @@ const Expenses = () => {
                     <div className="column-header" style={{ display: 'flex', alignItems: 'center' }}>
                         <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
                         <span className="badge danger-badge" style={{ marginLeft: '12px' }}>${totalFixedExpenses.toLocaleString()}</span>
+                        {(() => {
+                            const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
+                            const left = totalFixedExpenses - paid;
+                            return (
+                                <>
+                                    <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
+                                        Paid: ${paid.toLocaleString()}
+                                    </span>
+                                    <span className={`badge ${left > 0 ? 'warning-badge' : 'success-badge'}`} style={{ marginLeft: '8px' }}>
+                                        Left: ${left.toLocaleString()}
+                                    </span>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     <ExpenseForm
@@ -506,8 +628,21 @@ const Expenses = () => {
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
                             <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manual_spent !== undefined ? Number(exp.manual_spent) : (Number(transactionsByCategory[exp.name]) || 0)), 0).toLocaleString()}
+                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.name]) || 0)), 0).toLocaleString()}
                             </span>
+                            {(() => {
+                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.name]) || 0)), 0);
+                                const left = totalVariableExpenses - spent;
+                                const isNegative = left < 0;
+                                const isWarning = left > 0 && left <= (totalVariableExpenses * 0.1);
+                                const badgeClass = isNegative ? 'danger-badge' : isWarning ? 'warning-badge' : 'success-badge';
+                                
+                                return (
+                                    <span className={`badge ${badgeClass}`} style={{ marginLeft: '8px' }}>
+                                        Left: ${left.toLocaleString()}
+                                    </span>
+                                );
+                            })()}
                         </div>
                         <Button
                             variant="secondary"
@@ -645,154 +780,412 @@ const Expenses = () => {
                 </Card>
             </AnimateOnScroll>
 
-            {/* Debt Destroyer Summary Section */}
-            <div className="expense-content-grid" style={{ marginTop: '40px' }}>
-                {/* Your Debts (Editable) */}
-                <AnimateOnScroll delay={0.1} style={{ height: '100%' }}>
-                    <Card glass className="debt-card" style={{ height: '100%' }}>
-                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                                <Flame size={20} className="text-danger" /> Your Debts
-                            </h2>
-                            <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
-                                {showAddForm ? 'Cancel' : <><Plus size={16} /> Add Debt</>}
+            {/* Monthly Debt Tracker Section (Standalone) */}
+            <div style={{ marginTop: '40px', width: '100vw', marginLeft: 'calc(-50vw + 50%)', padding: '0 24px', boxSizing: 'border-box' }}>
+                <AnimateOnScroll delay={0.1}>
+                    <Card glass className="debt-tracker-card" style={{ height: '100%' }}>
+                        <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                            <div>
+                                <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                    Monthly Debt Tracker
+                                </h2>
+                                {(trackedDebts || []).length > 0 ? (
+                                    <div style={{ display: 'flex', gap: '16px', marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <strong>Total Debt:</strong> ${totalTrackedDebtBalance.toLocaleString()}
+                                        </span>
+                                        <span style={{ color: 'var(--surface-border)' }}>|</span>
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <strong>Monthly Min:</strong> ${totalTrackedMonthlyPayments.toLocaleString()}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <p className="text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                                        Track minimum payments, due dates, and mark bills as paid for the month.
+                                    </p>
+                                )}
+                            </div>
+                            <Button size="sm" onClick={() => setShowAddTrackerForm(!showAddTrackerForm)}>
+                                {showAddTrackerForm ? 'Cancel' : <><Plus size={16} /> Add Tracker</>}
                             </Button>
                         </div>
 
-                        {showAddForm && (
-                            <form className="debt-form animate-fade-in" onSubmit={handleAddDebt} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', padding: '16px', background: 'var(--surface-hover)', borderRadius: '12px' }}>
-                                <Input
-                                    placeholder="Debt Name (e.g. Visa Card)"
-                                    value={newDebt.name}
-                                    onChange={e => setNewDebt({ ...newDebt, name: e.target.value })}
-                                    required
-                                />
-                                <div className="debt-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                        {showAddTrackerForm && (
+                            <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', padding: '16px', background: 'var(--surface-hover)', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                    <Input
+                                        placeholder="Debt Name (e.g. Visa Card)"
+                                        value={newTrackedDebt.name}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, name: e.target.value })}
+                                        required
+                                        style={{ flex: 1, minWidth: '200px' }}
+                                    />
+                                    <select 
+                                        value={newTrackedDebt.type}
+                                        onChange={e => setNewTrackedDebt({...newTrackedDebt, type: e.target.value})}
+                                        className="dream-input"
+                                        style={{ width: '160px', backgroundColor: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '12px 16px' }}
+                                    >
+                                        <option value="Credit Card">Credit Card</option>
+                                        <option value="Auto Loan">Auto Loan</option>
+                                        <option value="Student Loan">Student Loan</option>
+                                        <option value="Personal Loan">Personal Loan</option>
+                                        <option value="Mortgage">Mortgage</option>
+                                        <option value="Medical">Medical</option>
+                                    </select>
+                                </div>
+                                <div className="debt-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                                     <Input
                                         type="number"
-                                        placeholder="Balance ($)"
-                                        value={newDebt.balance}
-                                        onChange={e => setNewDebt({ ...newDebt, balance: e.target.value })}
+                                        placeholder="Total Bal ($)"
+                                        value={newTrackedDebt.balance}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, balance: e.target.value })}
                                         required
                                     />
                                     <Input
                                         type="number"
                                         step="0.1"
                                         placeholder="Rate (%)"
-                                        value={newDebt.rate}
-                                        onChange={e => setNewDebt({ ...newDebt, rate: e.target.value })}
+                                        value={newTrackedDebt.rate}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, rate: e.target.value })}
                                         required
                                     />
                                     <Input
                                         type="number"
-                                        placeholder="Min ($)"
-                                        value={newDebt.minPayment}
-                                        onChange={e => setNewDebt({ ...newDebt, minPayment: e.target.value })}
+                                        placeholder="Monthly ($)"
+                                        value={newTrackedDebt.minPayment}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, minPayment: e.target.value })}
                                         required
                                     />
+                                    <Input
+                                        type="number"
+                                        placeholder="Due Day (1-31)"
+                                        min="1" max="31"
+                                        value={newTrackedDebt.dueDate}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, dueDate: e.target.value })}
+                                    />
                                 </div>
-                                <Button type="submit" variant="primary">Save Debt</Button>
+                                <Button type="submit" variant="primary">Start Tracking</Button>
                             </form>
                         )}
 
-                        <div className="debts-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            {debts.length === 0 ? (
-                                <p className="text-muted" style={{ textAlign: 'center', padding: '24px' }}>No debts added yet.</p>
+                        <div className="debts-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+                            {(trackedDebts || []).length === 0 ? (
+                                <div className="empty-state" style={{ padding: '32px', textAlign: 'center', background: 'var(--surface-hover)', borderRadius: '12px', border: '1px dashed var(--surface-border)' }}>
+                                    <Flame size={32} style={{ color: 'var(--surface-border)', marginBottom: '8px', margin: '0 auto' }} />
+                                    <p className="text-muted" style={{ margin: 0, fontWeight: 500 }}>No debts tracked yet.</p>
+                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Add a debt above to start tracking payments.</p>
+                                </div>
                             ) : (
-                                debts.map(debt => (
-                                    <div key={debt.id} className="debt-item glass stream-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-                                        <div className="debt-info">
-                                            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{debt.name}</h3>
-                                            <div className="debt-stats" style={{ display: 'flex', gap: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                                                <span>Bal: ${debt.balance.toLocaleString()}</span>
-                                                <span style={{ color: 'var(--surface-border)' }}>|</span>
-                                                <span>Rate: {debt.interestRate}%</span>
-                                                <span style={{ color: 'var(--surface-border)' }}>|</span>
-                                                <span>Min: ${debt.minimumPayment}</span>
+                                (() => {
+                                    // Calculate urgency & sort
+                                    const today = new Date();
+                                    const currentDay = today.getDate();
+                                    
+                                    const sortedDebts = [...(trackedDebts || [])].sort((a, b) => {
+                                        // 1. Paid items always go to the very bottom
+                                        if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
+                                        
+                                        // 2. Sort unpaid items by due date urgency
+                                        const dueA = Number(a.dueDate) || 31;
+                                        const dueB = Number(b.dueDate) || 31;
+                                        
+                                        let diffA = dueA - currentDay;
+                                        let diffB = dueB - currentDay;
+                                        
+                                        // If due date has passed this month and wasn't paid, it's overdue (-)
+                                        // Treat next month's dates as +30 days
+                                        if (diffA < -5) diffA += 30; // Due early in the month, currently end of month
+                                        if (diffB < -5) diffB += 30;
+                                        
+                                        return diffA - diffB;
+                                    });
+
+                                    const getIconForType = (type) => {
+                                        switch(type) {
+                                            case 'Auto Loan': return <Car size={14} />;
+                                            case 'Mortgage': return <Home size={14} />;
+                                            case 'Student Loan': return <GraduationCap size={14} />;
+                                            case 'Medical': return <HeartPulse size={14} />;
+                                            default: return <CreditCard size={14} />;
+                                        }
+                                    };
+
+                                    return sortedDebts.map(debt => {
+                                        let urgencyClass = 'badge';
+                                        let statusText = debt.dueDate ? `Due: ${debt.dueDate}` : 'No due date';
+                                        
+                                        if (debt.isPaid) {
+                                            urgencyClass = 'badge success-badge';
+                                            statusText = 'Paid';
+                                        } else if (debt.dueDate) {
+                                            const dueDay = Number(debt.dueDate);
+                                            let diff = dueDay - currentDay;
+                                            if (diff < -5) diff += 30; // Next month wrapping
+                                            
+                                            if (diff <= 3) {
+                                                urgencyClass = 'badge danger-badge';
+                                                statusText = diff < 0 ? `Overdue (${Math.abs(diff)}d)` : diff === 0 ? 'Due Today!' : `Due in ${diff}d`;
+                                            } else if (diff <= 7) {
+                                                urgencyClass = 'badge warning-badge';
+                                                statusText = `Due in ${diff}d`;
+                                            }
+                                        }
+
+                                        const extra = debt.extraPayment || 0;
+                                        const totalPayment = debt.minimumPayment + extra;
+                                        
+                                        const basePayoff = calculatePayoffDetails(debt.balance, debt.interestRate, debt.minimumPayment);
+                                        const newPayoff = calculatePayoffDetails(debt.balance, debt.interestRate, totalPayment);
+                                        
+                                        let savingsText = null;
+                                        if (extra > 0 && basePayoff.months < Infinity && newPayoff.months < Infinity) {
+                                            const monthsSaved = basePayoff.months - newPayoff.months;
+                                            const interestSaved = basePayoff.totalInterest - newPayoff.totalInterest;
+                                            if (monthsSaved > 0 || interestSaved > 0) {
+                                                savingsText = `Saves ${monthsSaved > 0 ? monthsSaved + ' mos ' : ''}${monthsSaved > 0 && interestSaved > 0 ? '& ' : ''}${interestSaved > 0 ? '$' + Math.round(interestSaved).toLocaleString() : ''}!`;
+                                            }
+                                        }
+
+                                        const payoffDateStr = newPayoff.dateStr;
+                                        const isJustPaid = justPaidId === debt.id;
+
+                                        const totalRemainingMonths = isFinite(newPayoff.months) ? newPayoff.months : 0;
+                                        const displayMonths = Math.min(totalRemainingMonths + (debt.paidCircles?.length || 0), 360); // Total width includes paid ones
+                                        
+                                        const renderCircles = () => {
+                                            if (displayMonths <= 0) return null;
+                                            const circles = [];
+                                            const currentMonth = new Date();
+                                            const paidIndices = debt.paidCircles || [];
+
+                                            for (let i = 0; i < displayMonths; i++) {
+                                                const isBlackedOut = paidIndices.includes(i);
+                                                
+                                                // Calculate the projected month for this circle
+                                                const circleDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + i, 1);
+                                                const monthLabel = circleDate.toLocaleString('default', { month: 'short' });
+
+                                                circles.push(
+                                                    <div key={i} className="payment-circle-wrapper">
+                                                        <div 
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                
+                                                                if (isBlackedOut) {
+                                                                    // Undo operation
+                                                                    const undoBalance = debt.balance + totalPayment;
+                                                                    const newPaidCircles = paidIndices.filter(idx => idx !== i);
+                                                                    
+                                                                    handleEditTrackedDebt(debt.id, { 
+                                                                        balance: undoBalance,
+                                                                        paidCircles: newPaidCircles,
+                                                                        isPaid: false
+                                                                    });
+                                                                } else {
+                                                                    const newBalance = Math.max(0, debt.balance - totalPayment);
+                                                                    const newPaidCircles = [...paidIndices, i];
+                                                                    
+                                                                    handleEditTrackedDebt(debt.id, { 
+                                                                        balance: newBalance,
+                                                                        paidCircles: newPaidCircles,
+                                                                        ...(newBalance === 0 ? { isPaid: true } : {})
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className={`payment-circle ${isBlackedOut ? 'blacked-out' : ''}`}
+                                                            title={isBlackedOut ? `Paid in ${monthLabel}` : `Click to mark payment of $${totalPayment.toLocaleString()} for ${monthLabel}`}
+                                                        />
+                                                        <span className="payment-circle-month">{monthLabel}</span>
+                                                    </div>
+                                                );
+                                            }
+                                            return (
+                                                <div className="payment-circles-container" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '16px', maxWidth: '100%' }}>
+                                                    {circles}
+                                                </div>
+                                            );
+                                        };
+
+                                        return (
+                                            <div key={debt.id} className={`debt-item glass stream-item ${debt.isPaid ? 'paid' : ''} ${isJustPaid ? 'just-paid' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', transition: 'all 0.3s ease' }}>
+                                                {editingDebtId === debt.id ? (
+                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '8px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                                            <Input placeholder="Debt Name" value={editDebtForm.name} onChange={e => setEditDebtForm({ ...editDebtForm, name: e.target.value })} style={{ flex: 1, minWidth: '200px' }} />
+                                                            <select value={editDebtForm.type} onChange={e => setEditDebtForm({...editDebtForm, type: e.target.value})} className="dream-input" style={{ width: '160px', backgroundColor: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '12px 16px' }}>
+                                                                <option value="Credit Card">Credit Card</option>
+                                                                <option value="Auto Loan">Auto Loan</option>
+                                                                <option value="Student Loan">Student Loan</option>
+                                                                <option value="Personal Loan">Personal Loan</option>
+                                                                <option value="Mortgage">Mortgage</option>
+                                                                <option value="Medical">Medical</option>
+                                                            </select>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+                                                            <Input type="number" placeholder="Bal ($)" value={editDebtForm.balance} onChange={e => setEditDebtForm({ ...editDebtForm, balance: e.target.value })} />
+                                                            <Input type="number" step="0.1" placeholder="Rate (%)" value={editDebtForm.rate} onChange={e => setEditDebtForm({ ...editDebtForm, rate: e.target.value })} />
+                                                            <Input type="number" placeholder="Min ($)" value={editDebtForm.minPayment} onChange={e => setEditDebtForm({ ...editDebtForm, minPayment: e.target.value })} />
+                                                            <Input type="number" min="1" max="31" placeholder="Due Day (1-31)" value={editDebtForm.dueDate} onChange={e => setEditDebtForm({ ...editDebtForm, dueDate: e.target.value })} />
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+                                                            <Button size="sm" variant="secondary" onClick={() => setEditingDebtId(null)}>Cancel</Button>
+                                                            <Button size="sm" variant="primary" onClick={() => saveDebtEdit(debt.id)}>Save</Button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                <>
+                                                <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '16px' }}>
+                                                    <div className="checkbox-wrapper" style={{ margin: 0 }}>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="expense-checkbox"
+                                                            checked={debt.isPaid || false}
+                                                            onChange={(e) => handleEditTrackedDebt(debt.id, { isPaid: e.target.checked })}
+                                                            title={debt.isPaid ? "Mark as unpaid" : "Mark as paid this month"}
+                                                            style={{ 
+                                                                cursor: 'pointer',
+                                                                width: '24px', 
+                                                                height: '24px',
+                                                                borderRadius: '50%',
+                                                                border: debt.isPaid ? '2px solid var(--success)' : '2px solid var(--surface-border)'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="debt-info" style={{ opacity: debt.isPaid ? 0.6 : 1, transition: 'opacity 0.3s', flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                            <h3 className="stream-name" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                {debt.type ? getIconForType(debt.type) : <CreditCard size={14} />}
+                                                                {debt.name}
+                                                            </h3>
+                                                            {debt.type && <span className="badge" style={{ fontSize: '0.7rem', padding: '2px 8px', background: 'transparent' }}>{debt.type}</span>}
+                                                            <span className={urgencyClass} style={{ fontSize: '0.75rem', padding: '2px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                {debt.isPaid ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                                                                {statusText}
+                                                            </span>
+                                                        </div>
+                                                        <div className="debt-stats stream-freq" style={{ display: 'flex', gap: '12px', fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                                                            <span>Total: ${debt.balance.toLocaleString()}</span>
+                                                            <span title="Projected Total Interest on Minimum Payment">Rate: {debt.interestRate}% <span style={{ color: 'var(--warning)', fontWeight: 500 }}>({isFinite(basePayoff.totalInterest) ? `$${Math.round(basePayoff.totalInterest).toLocaleString()} Int` : '∞ Int'})</span></span>
+                                                            <span style={{ color: 'var(--surface-border)' }}>|</span>
+                                                            <span style={{ color: debt.isPaid ? 'var(--text-secondary)' : 'var(--text-primary)', fontWeight: 600 }}>Mo: ${(debt.minimumPayment + extra).toLocaleString()}</span>
+                                                        </div>
+
+                                                        {!debt.isPaid && renderCircles()}
+                                                        
+                                                        {!debt.isPaid && (
+                                                            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '400px' }}>
+                                                                <input 
+                                                                    type="range" 
+                                                                    min="0" 
+                                                                    max={Math.max(500, debt.balance * 0.1)} 
+                                                                    step="10" 
+                                                                    value={extra}
+                                                                    onChange={(e) => handleExtraPaymentChange(debt.id, e.target.value)}
+                                                                    style={{ flex: 1, accentColor: 'var(--primary)' }}
+                                                                />
+                                                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)', minWidth: '40px' }}>
+                                                                    +${extra}
+                                                                </span>
+                                                                {savingsText && (
+                                                                    <span className="badge success-badge animate-fade-in" style={{ fontSize: '0.7rem', padding: '2px 8px', whiteSpace: 'nowrap' }}>
+                                                                        {savingsText}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="stream-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '90px' }}>
+                                                            <span className="stream-amount text-warning" style={{ fontWeight: 'bold', margin: '0 0 4px 0', lineHeight: 1 }}>
+                                                                ${debt.balance.toLocaleString()} left
+                                                            </span>
+                                                            {!debt.isPaid && payoffDateStr !== 'N/A' && (
+                                                                <span style={{ fontSize: '0.75rem', color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: 500, lineHeight: 1 }}>
+                                                                    Free by: <span style={{ color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : 'var(--text-primary)', fontWeight: 600 }}>{payoffDateStr}</span>
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <Button size="sm" variant="secondary" style={{ padding: '4px 12px', fontSize: '0.75rem', height: '28px' }} onClick={() => startEditingDebt(debt)}>Edit</Button>
+                                                        <button 
+                                                            onClick={() => handleRemoveTrackedDebt(debt.id)} 
+                                                            className="btn-icon danger"
+                                                            style={{ opacity: debt.isPaid ? 0.6 : 1 }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                </>
+                                                )}
                                             </div>
-                                        </div>
-                                        <button onClick={() => handleRemoveDebt(debt.id)} className="btn-icon danger">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                ))
+                                        );
+                                    })
+                                })()
                             )}
-                        </div>
-                    </Card>
-                </AnimateOnScroll>
-
-                {/* Attack Strategy */}
-                <AnimateOnScroll delay={0.2} style={{ height: '100%' }}>
-                    <Card glass className="strategy-card" style={{ display: 'flex', flexDirection: 'column', color: 'var(--text-primary)', height: '100%' }}>
-                        <h3 style={{ marginBottom: '20px', color: 'var(--text-primary)' }}>Attack Strategy</h3>
-                        <div className="strategy-toggle" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
-                            <button
-                                style={{ padding: '16px', borderRadius: '12px', border: strategy === 'avalanche' ? '1px solid var(--primary)' : '1px solid var(--surface-border)', background: strategy === 'avalanche' ? 'rgba(79, 70, 229, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('avalanche')}
-                            >
-                                <TrendingDown size={18} style={{ color: strategy === 'avalanche' ? 'var(--primary)' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '4px' }}>Avalanche</strong>
-                                    <span style={{ fontSize: '0.8rem' }}>Highest Interest</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '16px', borderRadius: '12px', border: strategy === 'snowball' ? '1px solid var(--danger)' : '1px solid var(--surface-border)', background: strategy === 'snowball' ? 'rgba(255, 69, 58, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('snowball')}
-                            >
-                                <Flame size={18} style={{ color: strategy === 'snowball' ? 'var(--danger)' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '4px' }}>Snowball</strong>
-                                    <span style={{ fontSize: '0.8rem' }}>Lowest Balance</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '16px', borderRadius: '12px', border: strategy === 'snowflake' ? '1px solid #0ea5e9' : '1px solid var(--surface-border)', background: strategy === 'snowflake' ? 'rgba(14, 165, 233, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('snowflake')}
-                            >
-                                <CloudRain size={18} style={{ color: strategy === 'snowflake' ? '#0ea5e9' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '4px' }}>Snowflake</strong>
-                                    <span style={{ fontSize: '0.8rem' }}>Highest Balance</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '16px', borderRadius: '12px', border: strategy === 'blizzard' ? '1px solid #8b5cf6' : '1px solid var(--surface-border)', background: strategy === 'blizzard' ? 'rgba(139, 92, 246, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'flex-start', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('blizzard')}
-                            >
-                                <Wind size={18} style={{ color: strategy === 'blizzard' ? '#8b5cf6' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '4px' }}>Blizzard</strong>
-                                    <span style={{ fontSize: '0.8rem' }}>Lowest Interest</span>
-                                </div>
-                            </button>
-                        </div>
-
-                        <div className="extra-payment-control" style={{ marginTop: 'auto' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                                <label style={{ color: 'var(--text-primary)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Extra Monthly Payment</label>
-                                <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                                    ${Number(extraPayment).toLocaleString()}
-                                </span>
-                            </div>
-                            <input
-                                type="range"
-                                min="0"
-                                max="5000"
-                                step="50"
-                                value={extraPayment}
-                                onChange={e => setExtraPayment(Number(e.target.value))}
-                                style={{ width: '100%', accentColor: 'var(--danger)' }}
-                            />
                         </div>
                     </Card>
                 </AnimateOnScroll>
             </div>
 
-            <div className="debt-visuals" style={{ marginTop: '32px' }}>
-                <AnimateOnScroll yOffset={50} delay={0.1}>
-                    <Card glass className="burn-down-card">
-                        {debts.length > 0 ? (
+            {/* Debt Destroyer Summary Section */}
+            <div className="debt-destroyer-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', marginTop: '40px' }}>
+
+                {/* Attack Strategy */}
+                <AnimateOnScroll delay={0.2} style={{ height: '100%' }}>
+                    <Card glass className="strategy-card" style={{ display: 'flex', flexDirection: 'column', color: 'var(--text-primary)', height: '100%' }}>
+                        <h3 style={{ marginBottom: '20px', color: 'var(--text-primary)' }}>Attack Strategy</h3>
+                        <div className="strategy-toggle" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
+                            <button
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'avalanche' ? '1px solid var(--primary)' : '1px solid var(--surface-border)', background: strategy === 'avalanche' ? 'rgba(79, 70, 229, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={() => setStrategy('avalanche')}
+                            >
+                                <TrendingDown size={18} style={{ color: strategy === 'avalanche' ? 'var(--primary)' : 'var(--text-primary)' }} />
+                                <div style={{ color: 'var(--text-primary)' }}>
+                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Avalanche</strong>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Highest Interest</span>
+                                </div>
+                            </button>
+                            <button
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'snowball' ? '1px solid var(--danger)' : '1px solid var(--surface-border)', background: strategy === 'snowball' ? 'rgba(255, 69, 58, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={() => setStrategy('snowball')}
+                            >
+                                <Flame size={18} style={{ color: strategy === 'snowball' ? 'var(--danger)' : 'var(--text-primary)' }} />
+                                <div style={{ color: 'var(--text-primary)' }}>
+                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Snowball</strong>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Lowest Balance</span>
+                                </div>
+                            </button>
+                            <button
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'snowflake' ? '1px solid #0ea5e9' : '1px solid var(--surface-border)', background: strategy === 'snowflake' ? 'rgba(14, 165, 233, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={() => setStrategy('snowflake')}
+                            >
+                                <CloudRain size={18} style={{ color: strategy === 'snowflake' ? '#0ea5e9' : 'var(--text-primary)' }} />
+                                <div style={{ color: 'var(--text-primary)' }}>
+                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Snowflake</strong>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Highest Balance</span>
+                                </div>
+                            </button>
+                            <button
+                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'blizzard' ? '1px solid #8b5cf6' : '1px solid var(--surface-border)', background: strategy === 'blizzard' ? 'rgba(139, 92, 246, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onClick={() => setStrategy('blizzard')}
+                            >
+                                <Wind size={18} style={{ color: strategy === 'blizzard' ? '#8b5cf6' : 'var(--text-primary)' }} />
+                                <div style={{ color: 'var(--text-primary)' }}>
+                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Blizzard</strong>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Lowest Interest</span>
+                                </div>
+                            </button>
+                        </div>
+                    </Card>
+                </AnimateOnScroll>
+
+                <AnimateOnScroll yOffset={50} delay={0.1} style={{ height: '100%' }}>
+                    <Card glass className="burn-down-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        {(trackedDebts || []).length > 0 ? (
                             <>
                                 <div className="burn-down-header">
                                     <div className="target-metric">
@@ -809,7 +1202,7 @@ const Expenses = () => {
                                     </div>
                                 </div>
 
-                                <div className="burn-down-chart-wrapper" style={{ height: '400px', width: '100%', marginTop: '32px' }}>
+                                <div className="burn-down-chart-wrapper" style={{ flex: 1, width: '100%', marginTop: '32px', minHeight: '400px' }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={projectionData.data} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
                                             <defs>

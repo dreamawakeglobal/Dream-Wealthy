@@ -117,10 +117,10 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
                         <input
                             type="number"
-                            value={stream.manual_received !== undefined ? stream.manual_received : (incomeTransactionsByCategory[stream.name] || '')}
+                            value={stream.manualReceived !== undefined ? stream.manualReceived : (incomeTransactionsByCategory[stream.name] || '')}
                             onChange={(e) => {
                                 const val = e.target.value;
-                                onUpdate({ ...stream, manual_received: val === '' ? undefined : Number(val) });
+                                onUpdate({ ...stream, manualReceived: val === '' ? undefined : Number(val) });
                             }}
                             style={{ width: '80px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
                             onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
@@ -131,7 +131,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                         fontSize: '0.85rem',
                         fontWeight: 600,
                         color: (() => {
-                            const received = stream.manual_received !== undefined ? Number(stream.manual_received) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
+                            const received = stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
                             const diff = stream.amount - received;
                             if (diff <= 0) return 'var(--success)';
                             if (received > 0) return '#ff9f0a';
@@ -139,7 +139,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                         })()
                     }}>
                         {(() => {
-                            const received = stream.manual_received !== undefined ? Number(stream.manual_received) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
+                            const received = stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
                             const diff = stream.amount - received;
                             if (diff <= 0) return `Target Met! (+$${Math.abs(diff).toLocaleString()})`;
                             return `${diff.toLocaleString()} to go`;
@@ -339,7 +339,7 @@ const Income = () => {
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
                                 <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                    Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manual_received !== undefined ? Number(stream.manual_received) : (Number(incomeTransactionsByCategory[stream.name]) || 0)), 0).toLocaleString()}
+                                    Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0)), 0).toLocaleString()}
                                 </span>
                             </div>
                             <Button

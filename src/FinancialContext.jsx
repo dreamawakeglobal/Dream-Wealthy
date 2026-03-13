@@ -149,7 +149,15 @@ export const FinancialProvider = ({ children }) => {
         // Auto-Categorized Data for UI
         transactionsByCategory,
         incomeTransactionsByCategory,
-        transactions: store.transactions
+        transactions: store.transactions,
+
+        // Monthly Debt Tracker
+        trackedDebts: store.trackedDebts,
+        setTrackedDebts: store.setTrackedDebts,
+
+        // Subscriptions
+        subscriptions: store.subscriptions,
+        setSubscriptions: store.setSubscriptions
     };
 
     return (

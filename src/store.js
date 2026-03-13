@@ -18,6 +18,12 @@ const mapToCamel = (item) => {
     if (mapped.manual_received !== undefined) { mapped.manualReceived = mapped.manual_received; delete mapped.manual_received; }
     if (mapped.manual_spent !== undefined) { mapped.manualSpent = mapped.manual_spent; delete mapped.manual_spent; }
 
+    // Tracked Debt Fields
+    if (mapped.is_paid !== undefined) { mapped.isPaid = mapped.is_paid; delete mapped.is_paid; }
+    if (mapped.paid_circles !== undefined) { mapped.paidCircles = mapped.paid_circles; delete mapped.paid_circles; }
+    if (mapped.extra_payment !== undefined) { mapped.extraPayment = mapped.extra_payment; delete mapped.extra_payment; }
+    if (mapped.due_date !== undefined) { mapped.dueDate = mapped.due_date; delete mapped.due_date; }
+
     return mapped;
 };
 
@@ -38,6 +44,12 @@ const mapToSnake = (item) => {
     if (snakeItem.manualReceived !== undefined) { snakeItem.manual_received = snakeItem.manualReceived; delete snakeItem.manualReceived; }
     if (snakeItem.manualSpent !== undefined) { snakeItem.manual_spent = snakeItem.manualSpent; delete snakeItem.manualSpent; }
 
+    // Tracked Debt Fields
+    if (snakeItem.isPaid !== undefined) { snakeItem.is_paid = snakeItem.isPaid; delete snakeItem.isPaid; }
+    if (snakeItem.paidCircles !== undefined) { snakeItem.paid_circles = snakeItem.paidCircles; delete snakeItem.paidCircles; }
+    if (snakeItem.extraPayment !== undefined) { snakeItem.extra_payment = snakeItem.extraPayment; delete snakeItem.extraPayment; }
+    if (snakeItem.dueDate !== undefined) { snakeItem.due_date = snakeItem.dueDate; delete snakeItem.dueDate; }
+
     return snakeItem;
 }
 
@@ -53,10 +65,12 @@ export const useStore = create((set, get) => ({
     variableExpenses: [],
     allocations: [],
     debts: [],
+    trackedDebts: [],
     goals: [],
     customProjections: [],
     transactions: [], // Plaid Database Cache
     portfolio: [],     // User Investment Holdings
+    subscriptions: [],
 
     // Profile Settings
     profileData: {
@@ -81,20 +95,24 @@ export const useStore = create((set, get) => ({
                 expensesRes,
                 allocationsRes,
                 debtsRes,
+                trackedDebtsRes,
                 goalsRes,
                 projectionsRes,
                 transactionsRes,
-                portfolioRes
+                portfolioRes,
+                subscriptionsRes
             ] = await Promise.all([
                 supabase.from('profiles').select('*').eq('user_id', user.id).single(),
                 supabase.from('income_streams').select('*').eq('user_id', user.id),
                 supabase.from('expenses').select('*').eq('user_id', user.id),
                 supabase.from('allocations').select('*').eq('user_id', user.id),
                 supabase.from('debts').select('*').eq('user_id', user.id),
+                supabase.from('tracked_debts').select('*').eq('user_id', user.id),
                 supabase.from('goals').select('*').eq('user_id', user.id),
                 supabase.from('custom_projections').select('*').eq('user_id', user.id),
                 supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
-                supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true })
+                supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
+                supabase.from('subscriptions').select('*').eq('user_id', user.id)
             ]);
 
             const newProfileData = profileRes.data ? {
@@ -114,10 +132,12 @@ export const useStore = create((set, get) => ({
                 variableExpenses: (expensesRes.data || []).filter(e => e.is_variable).map(mapToCamel),
                 allocations: (allocationsRes.data || []).map(mapToCamel),
                 debts: (debtsRes.data || []).map(mapToCamel),
+                trackedDebts: (trackedDebtsRes.data || []).map(mapToCamel),
                 goals: (goalsRes.data || []).map(mapToCamel),
                 customProjections: (projectionsRes.data || []).map(mapToCamel),
                 transactions: (transactionsRes.data || []),
-                portfolio: (portfolioRes.data || []).map(mapToCamel)
+                portfolio: (portfolioRes.data || []).map(mapToCamel),
+                subscriptions: (subscriptionsRes.data || []).map(mapToCamel)
             });
         } catch (err) {
             console.error("Zustand fetchAllData failed:", err);
@@ -187,9 +207,11 @@ export const useStore = create((set, get) => ({
     setVariableExpenses: (data) => get().setCollection('variableExpenses', 'expenses', { is_variable: true }, data),
     setAllocations: (data) => get().setCollection('allocations', 'allocations', {}, data),
     setDebts: (data) => get().setCollection('debts', 'debts', {}, data),
+    setTrackedDebts: (data) => get().setCollection('trackedDebts', 'tracked_debts', {}, data),
     setGoals: (data) => get().setCollection('goals', 'goals', {}, data),
     setCustomProjections: (data) => get().setCollection('customProjections', 'custom_projections', {}, data),
     setPortfolio: (data) => get().setCollection('portfolio', 'portfolios', {}, data),
+    setSubscriptions: (data) => get().setCollection('subscriptions', 'subscriptions', {}, data),
 
     // Profile Modifiers
     updateProfileField: async (key, newValueOrFn) => {

@@ -1,15 +1,11 @@
 .modal-overlay {
-    position: fixed;
-    top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
     background: transparent;
-    backdrop-filter: blur(12px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 99999;
     padding: 20px;
     animation: fadeIn 0.2s ease-out forwards;
 }
@@ -39,11 +35,7 @@
     border: 1px solid var(--surface-border);
 }
 
-[data-theme='light'] .modal-content.glass {
-    background: rgba(255, 255, 255, 0.05);
-    /* Let the blur do the work, like nav bar */
-    border: 1px solid rgba(255, 255, 255, 0.4);
-}
+
 
 .modal-header {
     display: flex;

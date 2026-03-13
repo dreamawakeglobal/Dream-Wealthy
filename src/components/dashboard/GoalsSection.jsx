@@ -89,7 +89,7 @@ export const GoalsSection = () => {
                     padding: '0 20px',
                     pointerEvents: 'none'
                 }}>
-                    <Card glass style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+                    <Card glass className="savings-goal-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                             <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{editingGoalId ? 'Edit Goal' : 'Create New Goal'}</h3>
                             <button onClick={() => setShowForm(false)} className="btn-icon">
