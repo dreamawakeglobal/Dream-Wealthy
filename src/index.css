@@ -217,7 +217,8 @@ a {
   box-sizing: border-box;
   position: relative;
   z-index: 1;
-  overflow-x: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   -webkit-overflow-scrolling: touch;
   min-height: 100vh;
 }
