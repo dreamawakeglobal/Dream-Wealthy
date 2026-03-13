@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -8,8 +10,14 @@ import './Home.css'; // Re-use the existing Home styles for the hero section
 import './Waitlist.css';
 
 const Waitlist = () => {
+    const { user } = useAuth();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const videoRef = useRef(null);
+
+    // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     // Waitlist Form State
     const [showForm, setShowForm] = useState(false);

@@ -63,7 +63,7 @@ const SignUp = () => {
                     password,
                 });
                 if (error) throw error;
-                navigate('/');
+                navigate('/dashboard');
             } else {
                 if (password !== confirmPassword) {
                     throw new Error("Passwords do not match");
@@ -86,7 +86,7 @@ const SignUp = () => {
                     throw new Error("Account created! Please check your email to verify your account before logging in. (Or disable Email Confirmations in Supabase dashboard).");
                 }
 
-                navigate('/');
+                navigate('/dashboard');
             }
         } catch (error) {
             setErrorMsg(error.message);
