@@ -5,8 +5,11 @@ import { useAuth } from '../contexts/AuthContext';
 export const ProtectedRoute = ({ children }) => {
     const { user } = useAuth();
 
-    if (!user) {
-        // If user is not authenticated, redirect to sign up page
+    const ALLOWED_EMAIL = 'w.shamerer@gmail.com';
+
+    // If no user is logged in, OR the user is logged in but is NOT the allowed email
+    if (!user || user.email !== ALLOWED_EMAIL) {
+        // Redirect to signup page
         return <Navigate to="/signup" replace />;
     }
 
