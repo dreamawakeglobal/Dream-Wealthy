@@ -19,6 +19,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { FinancialProvider } from './FinancialContext';
+import { SoundProvider } from './SoundContext';
 import ThemeToggle from './components/ThemeToggle';
 
 function App() {
@@ -26,25 +27,27 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <FinancialProvider>
-          <BrowserRouter>
-            <ScrollToTop />
-            <AudioPlayer />
-            <FloatingNotes />
-            <ThemeToggle />
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                <Route index element={<Waitlist />} />
-                <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
-                <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-                <Route path="projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
-                <Route path="investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
-                <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
-                <Route path="signup" element={<SignUp />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+          <SoundProvider>
+            <BrowserRouter>
+              <ScrollToTop />
+              <AudioPlayer />
+              <FloatingNotes />
+              <ThemeToggle />
+              <Routes>
+                <Route path="/" element={<Layout />}>
+                  <Route index element={<Waitlist />} />
+                  <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                  <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
+                  <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+                  <Route path="projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
+                  <Route path="investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
+                  <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                  <Route path="pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                  <Route path="signup" element={<SignUp />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </SoundProvider>
         </FinancialProvider>
       </AuthProvider>
     </ThemeProvider>

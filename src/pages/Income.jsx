@@ -7,16 +7,19 @@ import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
 import { useFinancialContext } from '../FinancialContext';
+import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Income.css';
 
 const IncomeStreamForm = ({ onAdd, title }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
+    const { playKaChing } = useSound();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (name && amount) {
+            playKaChing();
             onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly' });
             setName('');
             setAmount('');

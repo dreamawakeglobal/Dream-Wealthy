@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { useSound } from '../../SoundContext';
 import './Modal.css';
 
 export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
     const [scrollY, setScrollY] = useState(0);
     const [docHeight, setDocHeight] = useState(0);
+    const { playWhoosh } = useSound();
 
     useEffect(() => {
         if (isOpen) {
             setScrollY(window.scrollY);
             setDocHeight(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, window.innerHeight));
+            playWhoosh();
         }
-    }, [isOpen]);
+    }, [isOpen, playWhoosh]);
 
     if (!isOpen) return null;
 

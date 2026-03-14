@@ -9,7 +9,7 @@ const AudioPlayer = () => {
     // Try to auto-play when the component mounts
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = 0.05;
+            audioRef.current.volume = 0.025;
 
             // Browsers often block autoplay on refresh unless the user interacts first.
             // We initiate a play attempt and catch any AbortErrors.

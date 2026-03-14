@@ -14,6 +14,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { useFinancialContext } from '../FinancialContext';
+import { useSound } from '../SoundContext';
 import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Expenses.css';
@@ -21,10 +22,12 @@ import './Expenses.css';
 const ExpenseForm = ({ onAdd, title, placeholder }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
+    const { playReceiptTear } = useSound();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (name && amount) {
+            playReceiptTear();
             onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly' });
             setName('');
             setAmount('');
@@ -63,6 +66,7 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
 };
 
 const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {} }) => {
+    const { playCheck } = useSound();
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editAmount, setEditAmount] = useState('');
@@ -137,7 +141,13 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                                 type="checkbox"
                                                 className="expense-checkbox"
                                                 checked={expense.isPaid || false}
-                                                onChange={(e) => onEdit(expense.id, { isPaid: e.target.checked })}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    if (isChecked) {
+                                                        playCheck();
+                                                    }
+                                                    onEdit(expense.id, { isPaid: isChecked });
+                                                }}
                                                 title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
                                             />
                                         </div>
@@ -229,6 +239,7 @@ const Expenses = () => {
         trackedDebts, setTrackedDebts,
         subscriptions, setSubscriptions
     } = useFinancialContext();
+    const { playCheck, playPop } = useSound();
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -377,6 +388,7 @@ const Expenses = () => {
     const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '' });
 
     const toggleSubscription = (sub) => {
+        playPop();
         const prev = subscriptions || [];
         const exists = prev.find(s => s.id === sub.id);
         if (exists) {
@@ -403,6 +415,7 @@ const Expenses = () => {
     };
 
     const removeSubscription = (id) => {
+        playPop();
         const prev = subscriptions || [];
         setSubscriptions(prev.filter(s => String(s.id) !== String(id)));
     };
@@ -984,6 +997,7 @@ const Expenses = () => {
                                                                         isPaid: false
                                                                     });
                                                                 } else {
+                                                                    playCheck();
                                                                     const newBalance = Math.max(0, debt.balance - totalPayment);
                                                                     const newPaidCircles = [...paidIndices, i];
                                                                     
@@ -1042,7 +1056,11 @@ const Expenses = () => {
                                                             type="checkbox"
                                                             className="expense-checkbox"
                                                             checked={debt.isPaid || false}
-                                                            onChange={(e) => handleEditTrackedDebt(debt.id, { isPaid: e.target.checked })}
+                                                            onChange={(e) => {
+                                                                const isChecked = e.target.checked;
+                                                                if (isChecked) playCheck();
+                                                                handleEditTrackedDebt(debt.id, { isPaid: isChecked });
+                                                            }}
                                                             title={debt.isPaid ? "Mark as unpaid" : "Mark as paid this month"}
                                                             style={{ 
                                                                 cursor: 'pointer',

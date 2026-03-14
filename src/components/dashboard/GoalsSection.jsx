@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Target, Plus, X } from 'lucide-react';
 import { useFinancialContext } from '../../FinancialContext';
+import { useSound } from '../../SoundContext';
 import { GoalOrb } from './GoalOrb';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -8,11 +9,13 @@ import { Card } from '../ui/Card';
 
 export const GoalsSection = () => {
     const { goals, setGoals } = useFinancialContext();
+    const { playPop, playChime, playCrunch } = useSound();
     const [showForm, setShowForm] = useState(false);
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [newGoal, setNewGoal] = useState({ name: '', targetAmount: '', currentAmount: '', color: '#4FA3F7' });
 
     const handleOpenForm = (id = null) => {
+        playPop();
         if (id) {
             const goalToEdit = goals.find(g => g.id === id);
             if (goalToEdit) {
@@ -34,6 +37,7 @@ export const GoalsSection = () => {
     const handleSaveGoal = (e) => {
         e.preventDefault();
         if (newGoal.name && newGoal.targetAmount) {
+            playChime();
             if (editingGoalId) {
                 // Update existing
                 setGoals(goals.map(g => g.id === editingGoalId ? {
@@ -59,6 +63,7 @@ export const GoalsSection = () => {
     };
 
     const handleRemoveGoal = (id) => {
+        playCrunch();
         setGoals(goals.filter(g => g.id !== id));
     };
 

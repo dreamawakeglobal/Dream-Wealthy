@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { DollarSign, CreditCard, TrendingUp, PieChart, Flame, Menu, X } from 'lucide-react';
+import { useSound } from '../SoundContext';
 import './Navigation.css';
 
 const Navigation = () => {
     const location = useLocation();
+    const { playNavClick } = useSound();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Close menu when route changes
@@ -42,6 +44,7 @@ const Navigation = () => {
                         }
                         style={customStyle || {}}
                         onClick={(e) => {
+                            playNavClick();
                             if (location.pathname === '/') {
                                 e.preventDefault();
                             }
