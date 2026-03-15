@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
 import { useLocation } from 'react-router-dom';
 import './ThemeToggle.css';
@@ -9,8 +10,9 @@ const ThemeToggle = () => {
     const { theme, toggleTheme } = useTheme();
     const { playPop } = useSound();
     const location = useLocation();
+    const { user } = useAuth();
 
-    if (location.pathname === '/') return null;
+    if (!user || location.pathname === '/') return null;
 
     const handleThemeToggle = () => {
         playPop();

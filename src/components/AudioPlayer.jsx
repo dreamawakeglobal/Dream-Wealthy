@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import './AudioPlayer.css';
 
 const AudioPlayer = () => {
+    const { user } = useAuth();
     const [isPlaying, setIsPlaying] = useState(true);
     const audioRef = useRef(null);
 
@@ -44,13 +46,15 @@ const AudioPlayer = () => {
                 preload="auto"
                 autoPlay
             />
-            <button
-                className="audio-toggle-btn"
-                onClick={togglePlay}
-                title={isPlaying ? "Mute Background Music" : "Play Background Music"}
-            >
-                {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            </button>
+            {user && (
+                <button
+                    className="audio-toggle-btn"
+                    onClick={togglePlay}
+                    title={isPlaying ? "Mute Background Music" : "Play Background Music"}
+                >
+                    {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                </button>
+            )}
         </div>
     );
 };
