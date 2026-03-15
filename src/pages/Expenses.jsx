@@ -700,9 +700,9 @@ const Expenses = () => {
 
                     {showAddSub && (
                         <form onSubmit={addCustomSubscription} style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '12px', background: 'var(--surface-hover)', borderRadius: '12px', alignItems: 'center' }}>
-                            <Input placeholder="Service Name" value={newSub.name} onChange={e => setNewSub({ ...newSub, name: e.target.value })} required style={{ flex: 1 }} />
-                            <Input type="number" step="0.01" placeholder="$/mo" value={newSub.cost} onChange={e => setNewSub({ ...newSub, cost: e.target.value })} required style={{ width: '100px' }} />
-                            <Input placeholder="domain.com (optional)" value={newSub.domain} onChange={e => setNewSub({ ...newSub, domain: e.target.value })} style={{ flex: 1 }} />
+                            <Input className="light-accent-input" placeholder="Service Name" value={newSub.name} onChange={e => setNewSub({ ...newSub, name: e.target.value })} required style={{ flex: 1 }} />
+                            <Input className="light-accent-input" type="number" step="0.01" placeholder="$/mo" value={newSub.cost} onChange={e => setNewSub({ ...newSub, cost: e.target.value })} required style={{ width: '100px' }} />
+                            <Input className="light-accent-input" placeholder="domain.com (optional)" value={newSub.domain} onChange={e => setNewSub({ ...newSub, domain: e.target.value })} style={{ flex: 1 }} />
                             <Button type="submit" variant="primary" size="sm">Add</Button>
                         </form>
                     )}
@@ -829,6 +829,7 @@ const Expenses = () => {
                             <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', padding: '16px', background: 'var(--surface-hover)', borderRadius: '12px' }}>
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                     <Input
+                                        className="light-accent-input"
                                         placeholder="Debt Name (e.g. Visa Card)"
                                         value={newTrackedDebt.name}
                                         onChange={e => setNewTrackedDebt({ ...newTrackedDebt, name: e.target.value })}
@@ -838,7 +839,7 @@ const Expenses = () => {
                                     <select 
                                         value={newTrackedDebt.type}
                                         onChange={e => setNewTrackedDebt({...newTrackedDebt, type: e.target.value})}
-                                        className="dream-input"
+                                        className="dream-input light-accent-input"
                                         style={{ width: '160px', backgroundColor: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '12px 16px' }}
                                     >
                                         <option value="Credit Card">Credit Card</option>
@@ -851,6 +852,7 @@ const Expenses = () => {
                                 </div>
                                 <div className="debt-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                                     <Input
+                                        className="light-accent-input"
                                         type="number" step="0.01"
                                         placeholder="Total Bal ($)"
                                         value={newTrackedDebt.balance}
@@ -858,6 +860,7 @@ const Expenses = () => {
                                         required
                                     />
                                     <Input
+                                        className="light-accent-input"
                                         type="number"
                                         step="0.1"
                                         placeholder="Rate (%)"
@@ -866,6 +869,7 @@ const Expenses = () => {
                                         required
                                     />
                                     <Input
+                                        className="light-accent-input"
                                         type="number" step="0.01"
                                         placeholder="Monthly ($)"
                                         value={newTrackedDebt.minPayment}
@@ -873,12 +877,14 @@ const Expenses = () => {
                                         required
                                     />
                                     <Input
+                                        className="light-accent-input"
                                         type="number" step="0.01"
                                         placeholder="Down Payment ($)"
                                         value={newTrackedDebt.downPayment || ''}
                                         onChange={e => setNewTrackedDebt({ ...newTrackedDebt, downPayment: e.target.value })}
                                     />
                                     <Input
+                                        className="light-accent-input"
                                         type="number"
                                         placeholder="Due Day (1-31)"
                                         min="1" max="31"
