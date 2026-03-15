@@ -603,22 +603,24 @@ const Expenses = () => {
                 {/* Fixed Expenses */}
                 <AnimateOnScroll delay={0.1} className="expense-column">
                     <div className="column-header" style={{ display: 'flex', alignItems: 'center' }}>
-                        <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
-                        <span className="badge danger-badge" style={{ marginLeft: '12px' }}>${totalFixedExpenses.toLocaleString()}</span>
-                        {(() => {
-                            const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
-                            const left = totalFixedExpenses - paid;
-                            return (
-                                <>
-                                    <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                        Paid: ${paid.toLocaleString()}
-                                    </span>
-                                    <span className={`badge ${left > 0 ? 'warning-badge' : 'success-badge'}`} style={{ marginLeft: '8px' }}>
-                                        Left: ${left.toLocaleString()}
-                                    </span>
-                                </>
-                            );
-                        })()}
+                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                            <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
+                            <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
+                            {(() => {
+                                const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
+                                const left = totalFixedExpenses - paid;
+                                return (
+                                    <>
+                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
+                                            Paid: ${paid.toLocaleString()}
+                                        </span>
+                                        <span className={`badge ${left > 0 ? 'warning-badge' : 'success-badge'}`}>
+                                            Left: ${left.toLocaleString()}
+                                        </span>
+                                    </>
+                                );
+                            })()}
+                        </div>
                     </div>
 
                     <ExpenseForm
