@@ -154,3 +154,69 @@
         margin-top: 0;
     }
 }
+.oauth-provider-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 12px;
+}
+
+.auth-pill-btn {
+    width: 100%;
+    padding: 14px 24px;
+    border-radius: 50px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.auth-pill-btn.white {
+    background: #ffffff;
+    color: #111827;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.auth-pill-btn.white:hover {
+    background: #f9fafb;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.auth-pill-btn.gray {
+    background: #eef2f6;
+    color: #111827;
+}
+
+.auth-pill-btn.gray:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
+}
+
+/* Ensure pill buttons look right in Dark Mode */
+[data-theme='dark'] .auth-pill-btn.white {
+    background: #ffffff;
+    color: #000000;
+}
+
+[data-theme='dark'] .auth-pill-btn.gray {
+    background: #334155;
+    color: #f8fafc;
+}
+
+[data-theme='dark'] .auth-pill-btn.gray:hover {
+    background: #475569;
+}
+
+.auth-divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(148, 163, 184, 0.4);
+}
+
+[data-theme='dark'] .auth-divider-line {
+    background: rgba(148, 163, 184, 0.2);
+}
