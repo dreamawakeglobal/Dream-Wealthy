@@ -450,3 +450,42 @@
         transform: translate(-50%, -50%);
     }
 }
+
+/* Mobile Landscape Optimizations */
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+    .dashboard-panels {
+        gap: 12px;
+    }
+
+    .glass-panel-card {
+        padding: 16px;
+    }
+
+    .panel-header {
+        margin-bottom: 12px;
+    }
+
+    .panel-title {
+        font-size: 1.1rem;
+    }
+
+    .panel-hero-number {
+        font-size: 1.8rem;
+    }
+
+    .metrics-grid {
+        gap: 8px;
+    }
+
+    .metric-card {
+        padding: 8px;
+    }
+
+    .metric-value {
+        font-size: 1rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem !important;
+    }
+}

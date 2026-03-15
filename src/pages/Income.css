@@ -300,6 +300,46 @@
     color: var(--text-muted);
 }
 
+/* Mobile Landscape Optimizations */
+@media (max-width: 932px) and (max-height: 500px) and (orientation: landscape) {
+    .income-content-grid {
+        gap: 12px;
+    }
+
+    .income-content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .income-column {
+        gap: 12px;
+    }
+
+    .income-form-card {
+        padding: 12px;
+    }
+
+    .allocation-row {
+        gap: 6px;
+    }
+
+    .category-label {
+        font-size: 0.95rem;
+    }
+
+    .category-amount {
+        font-size: 1rem;
+    }
+    
+    .chart-card {
+        padding: 12px;
+        min-height: 200px;
+    }
+    
+    .pie-wrapper {
+        min-height: 150px;
+    }
+}
+
 .total-allocated-metric {
     margin-top: 32px;
     padding-top: 24px;

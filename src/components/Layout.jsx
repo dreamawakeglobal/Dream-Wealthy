@@ -32,6 +32,7 @@ const Layout = () => {
 
     return (
         <div className="app-container">
+            <div className="global-bg-image"></div>
             <Link to="/" className="logo-stamp-link">
                 <img src="/logo-stamp.png" alt="Dream Wealthy Logo Stamp" className="logo-stamp" />
             </Link>
