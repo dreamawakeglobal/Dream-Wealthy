@@ -402,6 +402,12 @@ a {
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+/* Force black text for these specific inputs in Dark Mode */
+[data-theme='dark'] .auto-tracker-input,
+[data-theme='dark'] .light-accent-input {
+    color: #000000 !important;
+}
+
 .auto-tracker-input:focus,
 .light-accent-input:focus {
     border: none !important;
