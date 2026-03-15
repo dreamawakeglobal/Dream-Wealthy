@@ -162,7 +162,7 @@ const Allocations = () => {
                                                     <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>$</span>
                                                     <input
                                                         autoFocus
-                                                        type="number"
+                                                        type="number" step="0.01"
                                                         value={editValue}
                                                         onChange={(e) => setEditValue(e.target.value)}
                                                         onBlur={() => handleDollarEditSave(cat.id)}

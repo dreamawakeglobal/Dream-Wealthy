@@ -148,7 +148,7 @@ const DebtDestroyer = () => {
                                 />
                                 <div className="debt-form-row">
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="Balance ($)"
                                         value={newDebt.balance}
                                         onChange={e => setNewDebt({ ...newDebt, balance: e.target.value })}
@@ -163,7 +163,7 @@ const DebtDestroyer = () => {
                                         required
                                     />
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="Min Payment ($)"
                                         value={newDebt.minPayment}
                                         onChange={e => setNewDebt({ ...newDebt, minPayment: e.target.value })}

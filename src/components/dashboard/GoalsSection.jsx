@@ -116,7 +116,7 @@ export const GoalsSection = () => {
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Target Amount ($)</label>
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="10000"
                                         value={newGoal.targetAmount}
                                         onChange={e => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
@@ -127,7 +127,7 @@ export const GoalsSection = () => {
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Saved So Far ($)</label>
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="0"
                                         value={newGoal.currentAmount}
                                         onChange={e => setNewGoal({ ...newGoal, currentAmount: e.target.value })}

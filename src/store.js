@@ -22,6 +22,7 @@ const mapToCamel = (item) => {
     if (mapped.is_paid !== undefined) { mapped.isPaid = mapped.is_paid; delete mapped.is_paid; }
     if (mapped.paid_circles !== undefined) { mapped.paidCircles = mapped.paid_circles; delete mapped.paid_circles; }
     if (mapped.extra_payment !== undefined) { mapped.extraPayment = mapped.extra_payment; delete mapped.extra_payment; }
+    if (mapped.down_payment !== undefined) { mapped.downPayment = mapped.down_payment; delete mapped.down_payment; }
     if (mapped.due_date !== undefined) { mapped.dueDate = mapped.due_date; delete mapped.due_date; }
 
     return mapped;
@@ -48,6 +49,7 @@ const mapToSnake = (item) => {
     if (snakeItem.isPaid !== undefined) { snakeItem.is_paid = snakeItem.isPaid; delete snakeItem.isPaid; }
     if (snakeItem.paidCircles !== undefined) { snakeItem.paid_circles = snakeItem.paidCircles; delete snakeItem.paidCircles; }
     if (snakeItem.extraPayment !== undefined) { snakeItem.extra_payment = snakeItem.extraPayment; delete snakeItem.extraPayment; }
+    if (snakeItem.downPayment !== undefined) { snakeItem.down_payment = snakeItem.downPayment; delete snakeItem.downPayment; }
     if (snakeItem.dueDate !== undefined) { snakeItem.due_date = snakeItem.dueDate; delete snakeItem.dueDate; }
 
     return snakeItem;

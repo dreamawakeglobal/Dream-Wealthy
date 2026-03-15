@@ -47,7 +47,7 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
                 />
                 <div className="amount-input-group">
                     <Input
-                        type="number"
+                        type="number" step="0.01"
                         placeholder="Amount"
                         leftIcon={Wallet}
                         value={amount}
@@ -120,7 +120,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         style={{ flex: 1 }}
                                     />
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         value={editAmount}
                                         onChange={(e) => setEditAmount(e.target.value)}
                                         placeholder="Amount"
@@ -163,7 +163,8 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
                                             <input
-                                                type="number"
+                                                className="auto-tracker-input"
+                                                type="number" step="0.01"
                                                 value={expense.manualSpent !== undefined ? expense.manualSpent : (transactionsByCategory[expense.name] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -275,7 +276,7 @@ const Expenses = () => {
     const totalTrackedMonthlyPayments = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
 
     const [showAddTrackerForm, setShowAddTrackerForm] = useState(false);
-    const [newTrackedDebt, setNewTrackedDebt] = useState({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', dueDate: '' });
+    const [newTrackedDebt, setNewTrackedDebt] = useState({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', downPayment: '', dueDate: '' });
     const [justPaidId, setJustPaidId] = useState(null);
     const [editingDebtId, setEditingDebtId] = useState(null);
     const [editDebtForm, setEditDebtForm] = useState({ name: '', type: '', balance: '', rate: '', minPayment: '', dueDate: '' });
@@ -354,12 +355,13 @@ const Expenses = () => {
                 balance: Number(newTrackedDebt.balance),
                 interestRate: Number(newTrackedDebt.rate),
                 minimumPayment: Number(newTrackedDebt.minPayment),
+                downPayment: Number(newTrackedDebt.downPayment) || 0,
                 dueDate: newTrackedDebt.dueDate,
                 isPaid: false,
                 extraPayment: 0,
                 paidCircles: []
             }]);
-            setNewTrackedDebt({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', dueDate: '' });
+            setNewTrackedDebt({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', downPayment: '', dueDate: '' });
             setShowAddTrackerForm(false);
         }
     };
@@ -699,7 +701,7 @@ const Expenses = () => {
                     {showAddSub && (
                         <form onSubmit={addCustomSubscription} style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '12px', background: 'var(--surface-hover)', borderRadius: '12px', alignItems: 'center' }}>
                             <Input placeholder="Service Name" value={newSub.name} onChange={e => setNewSub({ ...newSub, name: e.target.value })} required style={{ flex: 1 }} />
-                            <Input type="number" placeholder="$/mo" value={newSub.cost} onChange={e => setNewSub({ ...newSub, cost: e.target.value })} required style={{ width: '100px' }} />
+                            <Input type="number" step="0.01" placeholder="$/mo" value={newSub.cost} onChange={e => setNewSub({ ...newSub, cost: e.target.value })} required style={{ width: '100px' }} />
                             <Input placeholder="domain.com (optional)" value={newSub.domain} onChange={e => setNewSub({ ...newSub, domain: e.target.value })} style={{ flex: 1 }} />
                             <Button type="submit" variant="primary" size="sm">Add</Button>
                         </form>
@@ -771,7 +773,7 @@ const Expenses = () => {
                                                     style={{ width: '90%', fontSize: '0.8rem', fontWeight: 600, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px', outline: 'none' }}
                                                 />
                                                 <input
-                                                    type="number"
+                                                    type="number" step="0.01"
                                                     value={editSubCost}
                                                     onChange={e => setEditSubCost(e.target.value)}
                                                     onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
@@ -849,7 +851,7 @@ const Expenses = () => {
                                 </div>
                                 <div className="debt-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="Total Bal ($)"
                                         value={newTrackedDebt.balance}
                                         onChange={e => setNewTrackedDebt({ ...newTrackedDebt, balance: e.target.value })}
@@ -864,11 +866,17 @@ const Expenses = () => {
                                         required
                                     />
                                     <Input
-                                        type="number"
+                                        type="number" step="0.01"
                                         placeholder="Monthly ($)"
                                         value={newTrackedDebt.minPayment}
                                         onChange={e => setNewTrackedDebt({ ...newTrackedDebt, minPayment: e.target.value })}
                                         required
+                                    />
+                                    <Input
+                                        type="number" step="0.01"
+                                        placeholder="Down Payment ($)"
+                                        value={newTrackedDebt.downPayment || ''}
+                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, downPayment: e.target.value })}
                                     />
                                     <Input
                                         type="number"
@@ -1038,9 +1046,9 @@ const Expenses = () => {
                                                             </select>
                                                         </div>
                                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
-                                                            <Input type="number" placeholder="Bal ($)" value={editDebtForm.balance} onChange={e => setEditDebtForm({ ...editDebtForm, balance: e.target.value })} />
+                                                            <Input type="number" step="0.01" placeholder="Bal ($)" value={editDebtForm.balance} onChange={e => setEditDebtForm({ ...editDebtForm, balance: e.target.value })} />
                                                             <Input type="number" step="0.1" placeholder="Rate (%)" value={editDebtForm.rate} onChange={e => setEditDebtForm({ ...editDebtForm, rate: e.target.value })} />
-                                                            <Input type="number" placeholder="Min ($)" value={editDebtForm.minPayment} onChange={e => setEditDebtForm({ ...editDebtForm, minPayment: e.target.value })} />
+                                                            <Input type="number" step="0.01" placeholder="Min ($)" value={editDebtForm.minPayment} onChange={e => setEditDebtForm({ ...editDebtForm, minPayment: e.target.value })} />
                                                             <Input type="number" min="1" max="31" placeholder="Due Day (1-31)" value={editDebtForm.dueDate} onChange={e => setEditDebtForm({ ...editDebtForm, dueDate: e.target.value })} />
                                                         </div>
                                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>

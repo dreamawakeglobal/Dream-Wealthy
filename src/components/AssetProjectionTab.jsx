@@ -82,7 +82,7 @@ export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
                     <div className="controls-group">
                         <label>Monthly Contribution ($)</label>
                         <Input
-                            type="number"
+                            type="number" step="0.01"
                             value={monthlyContribution}
                             onChange={e => handleUpdate('monthlyContribution', Number(e.target.value))}
                         />

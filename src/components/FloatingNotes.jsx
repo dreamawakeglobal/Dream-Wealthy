@@ -62,8 +62,8 @@ const FloatingNotes = () => {
         const dx = Math.abs(e.clientX - startPos.current.x);
         const dy = Math.abs(e.clientY - startPos.current.y);
         if (dx > 5 || dy > 5) hasMoved.current = true;
-        const newX = Math.max(0, Math.min(window.innerWidth - 180, e.clientX - dragStart.current.x));
-        const newY = Math.max(0, Math.min(window.innerHeight - 180, e.clientY - dragStart.current.y));
+        const newX = Math.max(0, Math.min(window.innerWidth - 144, e.clientX - dragStart.current.x));
+        const newY = Math.max(0, Math.min(window.innerHeight - 144, e.clientY - dragStart.current.y));
         setPosition({ x: newX, y: newY });
     }, []);
 
@@ -111,7 +111,7 @@ const FloatingNotes = () => {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
             >
-                <img src="/notes-icon.png" alt="Notes" style={{ width: 180, height: 180, objectFit: 'contain' }} />
+                <img src="/notes-icon.png" alt="Notes" style={{ width: 144, height: 144, objectFit: 'contain' }} />
                 {currentNote.trim().length > 0 && <span className="note-indicator" />}
             </button>
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../contexts/AuthContext';
 import { Sparkles, ArrowRight, Mail } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -9,6 +10,7 @@ import './SignUp.css';
 
 const SignUp = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [isLogin, setIsLogin] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -16,7 +18,14 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    React.useEffect(() => {
+        if (user) {
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
 
     const handleGoogleLogin = async () => {
         setErrorMsg(null);
@@ -81,11 +90,6 @@ const SignUp = () => {
 
                 if (error) throw error;
 
-                // Supabase defaults to requiring email confirmation
-                if (data?.user && !data?.session) {
-                    throw new Error("Account created! Please check your email to verify your account before logging in. (Or disable Email Confirmations in Supabase dashboard).");
-                }
-
                 navigate('/dashboard');
             }
         } catch (error) {
@@ -108,6 +112,12 @@ const SignUp = () => {
                 {errorMsg && (
                     <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
                         {errorMsg}
+                    </div>
+                )}
+                
+                {successMsg && (
+                    <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center', marginBottom: '16px' }}>
+                        {successMsg}
                     </div>
                 )}
 

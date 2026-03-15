@@ -40,6 +40,7 @@ const IncomeStreamForm = ({ onAdd, title }) => {
                 <div className="amount-input-group">
                     <Input
                         type="number"
+                        step="0.01"
                         placeholder="Amount (Monthly)"
                         leftIcon={DollarSign}
                         value={amount}
@@ -88,6 +89,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                     />
                     <Input
                         type="number"
+                        step="0.01"
                         value={editAmount}
                         onChange={(e) => setEditAmount(e.target.value)}
                         placeholder="Amount"
@@ -119,7 +121,9 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
                         <input
+                            className="auto-tracker-input"
                             type="number"
+                            step="0.01"
                             value={stream.manualReceived !== undefined ? stream.manualReceived : (incomeTransactionsByCategory[stream.name] || '')}
                             onChange={(e) => {
                                 const val = e.target.value;
@@ -464,6 +468,7 @@ const Income = () => {
                                                         <input
                                                             autoFocus
                                                             type="number"
+                                                            step="0.01"
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
                                                             onBlur={() => handleDollarEditSave(cat.id)}

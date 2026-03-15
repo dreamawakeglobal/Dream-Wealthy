@@ -37,7 +37,7 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
         return (
             <input
                 autoFocus
-                type="number"
+                type="number" step="0.01"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleBlur}
@@ -142,7 +142,7 @@ const Projections = () => {
                             <div className="controls-group">
                                 <label>Starting Savings (Cumulative)</label>
                                 <Input
-                                    type="number"
+                                    type="number" step="0.01"
                                     value={startingSavings}
                                     onChange={e => setStartingSavings(Number(e.target.value))}
                                     placeholder="e.g. 5000"
@@ -152,7 +152,7 @@ const Projections = () => {
                             <div className="controls-group">
                                 <label>Starting Monthly Income</label>
                                 <Input
-                                    type="number"
+                                    type="number" step="0.01"
                                     value={localIncome}
                                     onChange={e => setLocalIncome(Number(e.target.value))}
                                 />
@@ -161,7 +161,7 @@ const Projections = () => {
                             <div className="controls-group">
                                 <label>Starting Monthly Expenses</label>
                                 <Input
-                                    type="number"
+                                    type="number" step="0.01"
                                     value={localExpenses}
                                     onChange={e => setLocalExpenses(Number(e.target.value))}
                                 />
@@ -191,7 +191,7 @@ const Projections = () => {
                                                 <span style={{ color: 'var(--text-muted)' }}>|</span>
                                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>$</span>
                                                 <input
-                                                    type="number"
+                                                    type="number" step="0.01"
                                                     value={col.amount}
                                                     onChange={e => setExtraColumns(extraColumns.map(c => c.id === col.id ? { ...c, amount: Number(e.target.value) } : c))}
                                                     style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '60px', fontSize: '0.85rem' }}

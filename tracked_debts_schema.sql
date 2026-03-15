@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS public.tracked_debts (
     is_paid BOOLEAN DEFAULT false,
     paid_circles JSONB DEFAULT '[]'::jsonb,
     extra_payment NUMERIC DEFAULT 0,
+    down_payment NUMERIC DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -38,3 +39,6 @@ WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "Users can delete their own tracked debts" 
 ON public.tracked_debts FOR DELETE 
 USING (auth.uid() = user_id);
+
+-- 4. If you already ran this previously, run this ALTER to add the down payment column
+-- ALTER TABLE public.tracked_debts ADD COLUMN IF NOT EXISTS down_payment NUMERIC DEFAULT 0;
