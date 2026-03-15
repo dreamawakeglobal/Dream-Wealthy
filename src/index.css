@@ -411,6 +411,7 @@ a {
 .auto-tracker-input:focus,
 .light-accent-input:focus {
     border: none !important;
+    background-color: #ffffff !important;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -426,5 +427,6 @@ a {
 [data-theme='light'] .auto-tracker-input:focus,
 [data-theme='light'] .light-accent-input:focus {
     border: none !important;
+    background-color: #ffffff !important;
     box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
