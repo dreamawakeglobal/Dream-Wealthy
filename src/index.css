@@ -404,14 +404,21 @@ a {
 
 /* Force black text for these specific inputs in Dark Mode */
 [data-theme='dark'] .auto-tracker-input,
-[data-theme='dark'] .light-accent-input {
+[data-theme='dark'] .light-accent-input,
+[data-theme='dark'] .light-accent-input input,
+[data-theme='dark'] .light-accent-input select,
+[data-theme='dark'] select.light-accent-input {
     color: #000000 !important;
+}
+
+[data-theme='dark'] .auto-tracker-input::placeholder,
+[data-theme='dark'] .light-accent-input input::placeholder {
+    color: rgba(0, 0, 0, 0.6) !important;
 }
 
 .auto-tracker-input:focus,
 .light-accent-input:focus {
     border: none !important;
-    background-color: #ffffff !important;
     box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
@@ -427,6 +434,5 @@ a {
 [data-theme='light'] .auto-tracker-input:focus,
 [data-theme='light'] .light-accent-input:focus {
     border: none !important;
-    background-color: #ffffff !important;
     box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
