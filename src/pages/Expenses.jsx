@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
 import {
     AreaChart,
     Area,
@@ -22,15 +22,17 @@ import './Expenses.css';
 const ExpenseForm = ({ onAdd, title, placeholder }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
+    const [dueDate, setDueDate] = useState('');
     const { playReceiptTear } = useSound();
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (name && amount) {
             playReceiptTear();
-            onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly' });
+            onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
             setName('');
             setAmount('');
+            setDueDate('');
         }
     };
 
@@ -54,7 +56,16 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
                         onChange={(e) => setAmount(e.target.value)}
                         required
                         min="0"
-                        style={{ color: 'black' }}
+                        style={{ color: 'black', flex: 1.5 }}
+                    />
+                    <Input
+                        type="number"
+                        min="1"
+                        max="31"
+                        placeholder="Day (1-31)"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        style={{ color: 'black', flex: 1 }}
                     />
                     <Button type="submit" variant="secondary">
                         <Plus size={18} /> Add
@@ -70,6 +81,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editAmount, setEditAmount] = useState('');
+    const [editDueDate, setEditDueDate] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
@@ -88,11 +100,12 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
         setEditingId(expense.id);
         setEditName(expense.name);
         setEditAmount(expense.amount.toString());
+        setEditDueDate(expense.dueDate || '');
     };
 
     const saveEdit = (id) => {
         if (editName && editAmount) {
-            onEdit(id, { name: editName, amount: parseFloat(editAmount) });
+            onEdit(id, { name: editName, amount: parseFloat(editAmount), dueDate: editDueDate || null });
             setEditingId(null);
         }
     };
@@ -126,6 +139,13 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         placeholder="Amount"
                                         style={{ width: '100px' }}
                                     />
+                                    <Input
+                                        type="number" min="1" max="31"
+                                        value={editDueDate}
+                                        onChange={(e) => setEditDueDate(e.target.value)}
+                                        placeholder="Due (1-31)"
+                                        style={{ width: '100px' }}
+                                    />
                                 </div>
                                 <div className="stream-actions">
                                     <Button size="sm" onClick={() => saveEdit(expense.id)}>Save</Button>
@@ -154,7 +174,9 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                     )}
                                     <div className="stream-info">
                                         <p className="stream-name">{expense.name}</p>
-                                        <span className="stream-freq">Monthly</span>
+                                        <span className="stream-freq">
+                                            Monthly {expense.dueDate && `• Due on the ${expense.dueDate}${[11, 12, 13].includes(Number(expense.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(expense.dueDate) % 10) - 1] || 'th')}`}
+                                        </span>
                                     </div>
                                 </div>
 
@@ -348,14 +370,18 @@ const Expenses = () => {
     const handleAddTrackedDebt = (e) => {
         e.preventDefault();
         if (newTrackedDebt.name && newTrackedDebt.balance && newTrackedDebt.rate && newTrackedDebt.minPayment) {
+            const initialBalance = Number(newTrackedDebt.balance);
+            const downPaymentAmount = Number(newTrackedDebt.downPayment) || 0;
+            const startingBalance = Math.max(0, initialBalance - downPaymentAmount);
+
             setTrackedDebts(prev => [...prev, {
                 id: Date.now().toString(),
                 name: newTrackedDebt.name,
                 type: newTrackedDebt.type,
-                balance: Number(newTrackedDebt.balance),
+                balance: startingBalance,
                 interestRate: Number(newTrackedDebt.rate),
                 minimumPayment: Number(newTrackedDebt.minPayment),
-                downPayment: Number(newTrackedDebt.downPayment) || 0,
+                downPayment: downPaymentAmount,
                 dueDate: newTrackedDebt.dueDate,
                 isPaid: false,
                 extraPayment: 0,
@@ -387,7 +413,7 @@ const Expenses = () => {
     ];
     const activeSubscriptions = subscriptions || [];
     const [showAddSub, setShowAddSub] = useState(false);
-    const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '' });
+    const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '', dueDate: '' });
 
     const toggleSubscription = (sub) => {
         playPop();
@@ -407,11 +433,12 @@ const Expenses = () => {
                 id: `custom-${Date.now()}`,
                 name: newSub.name,
                 domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
-                cost: parseFloat(newSub.cost)
+                cost: parseFloat(newSub.cost),
+                dueDate: newSub.dueDate || null
             };
             const prev = subscriptions || [];
             setSubscriptions([...prev, custom]);
-            setNewSub({ name: '', cost: '', domain: '' });
+            setNewSub({ name: '', cost: '', domain: '', dueDate: '' });
             setShowAddSub(false);
         }
     };
@@ -425,17 +452,19 @@ const Expenses = () => {
     const [editingSubId, setEditingSubId] = useState(null);
     const [editSubName, setEditSubName] = useState('');
     const [editSubCost, setEditSubCost] = useState('');
+    const [editSubDueDate, setEditSubDueDate] = useState('');
 
     const startEditingSub = (sub) => {
         setEditingSubId(sub.id);
         setEditSubName(sub.name);
         setEditSubCost(sub.cost.toString());
+        setEditSubDueDate(sub.dueDate || '');
     };
 
     const saveSubEdit = (id) => {
         if (editSubName && editSubCost) {
             const prev = subscriptions || [];
-            setSubscriptions(prev.map(s => String(s.id) === String(id) ? { ...s, name: editSubName, cost: parseFloat(editSubCost) } : s));
+            setSubscriptions(prev.map(s => String(s.id) === String(id) ? { ...s, name: editSubName, cost: parseFloat(editSubCost), dueDate: editSubDueDate || null } : s));
         }
         setEditingSubId(null);
     };
@@ -550,7 +579,7 @@ const Expenses = () => {
     return (
         <div className="page-container animate-fade-in">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
-                <img src="/expenses-header-logo.png" alt="Expenses Header Logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
+                <img src="/expenses-header-logo.png" alt="Expenses Header Logo" style={{ height: '360px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Track and optimize your outflows.</p>
             </div>
 
@@ -562,12 +591,13 @@ const Expenses = () => {
                             <TrendingDown size={20} className="text-danger" />
                         </div>
                         <h2 className="metric-value">
-                            $<AnimatedNumber value={totalMonthlyExpenses + totalSubscriptionCost} />
+                            $<AnimatedNumber value={totalMonthlyExpenses + totalSubscriptionCost + totalTrackedMonthlyPayments} />
                         </h2>
                         <div className="metric-breakdown">
                             <span>Fixed: ${totalFixedExpenses.toLocaleString()}</span>
                             <span>Var: ${totalVariableExpenses.toLocaleString()}</span>
                             <span>Subs: ${totalSubscriptionCost.toFixed(0)}</span>
+                            <span>Debt: ${totalTrackedMonthlyPayments.toLocaleString()}</span>
                         </div>
                     </Card>
                 </AnimateOnScroll>
@@ -578,8 +608,8 @@ const Expenses = () => {
                             <span className="metric-title">Net Cash Flow</span>
                             <Wallet size={20} className="text-success" />
                         </div>
-                        <h2 className={`metric-value ${(netMonthlyCashFlow - totalSubscriptionCost) >= 0 ? 'positive' : 'negative'}`}>
-                            {(netMonthlyCashFlow - totalSubscriptionCost) < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow - totalSubscriptionCost)} />
+                        <h2 className={`metric-value ${(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments) >= 0 ? 'positive' : 'negative'}`}>
+                            {(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments) < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments)} />
                         </h2>
                         <p className="metric-subtext">Remaining for allocation</p>
                     </Card>
@@ -700,14 +730,61 @@ const Expenses = () => {
                         </Button>
                     </div>
 
-                    {showAddSub && (
-                        <form onSubmit={addCustomSubscription} style={{ display: 'flex', gap: '8px', marginBottom: '20px', padding: '12px', background: 'var(--surface-hover)', borderRadius: '12px', alignItems: 'center' }}>
-                            <Input className="light-accent-input" placeholder="Service Name" value={newSub.name} onChange={e => setNewSub({ ...newSub, name: e.target.value })} required style={{ flex: 1 }} />
-                            <Input className="light-accent-input" type="number" step="0.01" placeholder="$/mo" value={newSub.cost} onChange={e => setNewSub({ ...newSub, cost: e.target.value })} required style={{ width: '100px' }} />
-                            <Input className="light-accent-input" placeholder="domain.com (optional)" value={newSub.domain} onChange={e => setNewSub({ ...newSub, domain: e.target.value })} style={{ flex: 1 }} />
-                            <Button type="submit" variant="primary" size="sm">Add</Button>
+                    <Modal
+                        isOpen={showAddSub}
+                        onClose={() => setShowAddSub(false)}
+                        title="Add Custom Subscription"
+                        contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                    >
+                        <form onSubmit={addCustomSubscription} className="debt-form animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Service Name</label>
+                                    <Input 
+                                        placeholder="e.g. Netflix, Spotify" 
+                                        value={newSub.name} 
+                                        onChange={e => setNewSub({ ...newSub, name: e.target.value })} 
+                                        required 
+                                    />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Cost</label>
+                                        <Input 
+                                            type="number" 
+                                            step="0.01" 
+                                            placeholder="0.00" 
+                                            value={newSub.cost} 
+                                            onChange={e => setNewSub({ ...newSub, cost: e.target.value })} 
+                                            required 
+                                            icon={<DollarSign size={16} />}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Domain (Optional)</label>
+                                        <Input 
+                                            placeholder="e.g. netflix.com" 
+                                            value={newSub.domain} 
+                                            onChange={e => setNewSub({ ...newSub, domain: e.target.value })} 
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Day (Optional)</label>
+                                        <Input 
+                                            type="number" min="1" max="31"
+                                            placeholder="1-31" 
+                                            value={newSub.dueDate} 
+                                            onChange={e => setNewSub({ ...newSub, dueDate: e.target.value })} 
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <Button type="submit" variant="primary" style={{ width: '100%', marginTop: '8px', padding: '14px', borderRadius: '12px', background: 'var(--accent-gradient)', border: 'none', color: '#fff', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
+                                <Plus size={20} style={{ marginRight: '8px' }}/> Add Subscription
+                            </Button>
                         </form>
-                    )}
+                    </Modal>
 
                     {/* Common Subscriptions Grid */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: activeSubscriptions.length > 0 ? '24px' : '0' }}>
@@ -766,7 +843,15 @@ const Expenses = () => {
                                             onError={e => { e.target.style.display = 'none'; }}
                                         />
                                         {editingSubId === sub.id ? (
-                                            <>
+                                            <div 
+                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
+                                                onBlur={(e) => {
+                                                    // If the blur event is moving focus OUTSIDE of this container, save it.
+                                                    if (!e.currentTarget.contains(e.relatedTarget)) {
+                                                        saveSubEdit(sub.id);
+                                                    }
+                                                }}
+                                            >
                                                 <input
                                                     autoFocus
                                                     value={editSubName}
@@ -779,14 +864,24 @@ const Expenses = () => {
                                                     value={editSubCost}
                                                     onChange={e => setEditSubCost(e.target.value)}
                                                     onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
-                                                    onBlur={() => saveSubEdit(sub.id)}
                                                     style={{ width: '70px', fontSize: '0.85rem', fontWeight: 700, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--danger)', padding: '4px', outline: 'none', marginTop: '4px' }}
                                                 />
-                                            </>
+                                                <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                                                    <input
+                                                        type="number" min="1" max="31"
+                                                        placeholder="Due Day"
+                                                        value={editSubDueDate}
+                                                        onChange={e => setEditSubDueDate(e.target.value)}
+                                                        onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
+                                                        style={{ width: '60px', fontSize: '0.75rem', fontWeight: 600, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--text-secondary)', padding: '4px', outline: 'none' }}
+                                                    />
+                                                </div>
+                                            </div>
                                         ) : (
                                             <>
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{sub.name}</span>
                                                 <span style={{ fontSize: '0.85rem', color: 'var(--danger)', fontWeight: 700, marginTop: '4px' }}>${sub.cost.toFixed(2)}</span>
+                                                {sub.dueDate && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Due: {sub.dueDate}{[11, 12, 13].includes(Number(sub.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(sub.dueDate) % 10) - 1] || 'th')}</span>}
                                             </>
                                         )}
                                     </div>
@@ -822,81 +917,120 @@ const Expenses = () => {
                                     </p>
                                 )}
                             </div>
-                            <Button size="sm" onClick={() => setShowAddTrackerForm(!showAddTrackerForm)}>
-                                {showAddTrackerForm ? 'Cancel' : <><Plus size={16} /> Add Tracker</>}
+                            <Button size="sm" onClick={() => setShowAddTrackerForm(true)}>
+                                <Plus size={16} /> Add Tracker
                             </Button>
                         </div>
 
-                        {showAddTrackerForm && (
-                            <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px', padding: '16px', background: 'var(--surface-hover)', borderRadius: '12px' }}>
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                    <Input
-                                        className="light-accent-input"
-                                        placeholder="Debt Name (e.g. Visa Card)"
-                                        value={newTrackedDebt.name}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, name: e.target.value })}
-                                        required
-                                        style={{ flex: 1, minWidth: '200px' }}
-                                    />
-                                    <select 
-                                        value={newTrackedDebt.type}
-                                        onChange={e => setNewTrackedDebt({...newTrackedDebt, type: e.target.value})}
-                                        className="dream-input light-accent-input"
-                                        style={{ width: '160px', backgroundColor: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '12px 16px' }}
-                                    >
-                                        <option value="Credit Card">Credit Card</option>
-                                        <option value="Auto Loan">Auto Loan</option>
-                                        <option value="Student Loan">Student Loan</option>
-                                        <option value="Personal Loan">Personal Loan</option>
-                                        <option value="Mortgage">Mortgage</option>
-                                        <option value="Medical">Medical</option>
-                                    </select>
+                        <Modal
+                            isOpen={showAddTrackerForm}
+                            onClose={() => setShowAddTrackerForm(false)}
+                            title="Track New Debt"
+                            contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                        >
+                            <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {/* Name and Type Row */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Debt Name / Creditor</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                placeholder="e.g. Chase Sapphire"
+                                                value={newTrackedDebt.name}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, name: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Category</label>
+                                            <select 
+                                                value={newTrackedDebt.type}
+                                                onChange={e => setNewTrackedDebt({...newTrackedDebt, type: e.target.value})}
+                                                className="dream-input light-accent-input"
+                                                style={{ width: '100%', backgroundColor: 'var(--surface-hover)', color: 'var(--text-primary)', border: '1px solid transparent', borderRadius: '50px', padding: '12px 16px', outline: 'none', appearance: 'none', cursor: 'pointer' }}
+                                            >
+                                                <option value="Credit Card">Credit Card</option>
+                                                <option value="Auto Loan">Auto Loan</option>
+                                                <option value="Student Loan">Student Loan</option>
+                                                <option value="Personal Loan">Personal</option>
+                                                <option value="Mortgage">Mortgage</option>
+                                                <option value="Medical">Medical</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ height: '1px', background: 'var(--surface-border)', opacity: 0.5, margin: '4px 0' }}></div>
+
+                                    {/* Numbers Row 1 */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Total Balance</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                leftIcon={Wallet}
+                                                type="number" step="0.01"
+                                                placeholder="0.00"
+                                                value={newTrackedDebt.balance}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, balance: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Interest Rate</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                leftIcon={Percent}
+                                                type="number" step="0.01"
+                                                placeholder="0.00"
+                                                value={newTrackedDebt.rate}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, rate: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Numbers Row 2 */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Min</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                type="number" step="0.01"
+                                                placeholder="$"
+                                                value={newTrackedDebt.minPayment}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, minPayment: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Down Payment</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                type="number" step="0.01"
+                                                placeholder="$ (Opt)"
+                                                value={newTrackedDebt.downPayment || ''}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, downPayment: e.target.value })}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Date</label>
+                                            <Input
+                                                className="light-accent-input"
+                                                type="number" min="1" max="31"
+                                                placeholder="Day (1-31)"
+                                                value={newTrackedDebt.dueDate}
+                                                onChange={e => setNewTrackedDebt({ ...newTrackedDebt, dueDate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="debt-form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
-                                    <Input
-                                        className="light-accent-input"
-                                        type="number" step="0.01"
-                                        placeholder="Total Bal ($)"
-                                        value={newTrackedDebt.balance}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, balance: e.target.value })}
-                                        required
-                                    />
-                                    <Input
-                                        className="light-accent-input"
-                                        type="number"
-                                        step="0.1"
-                                        placeholder="Rate (%)"
-                                        value={newTrackedDebt.rate}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, rate: e.target.value })}
-                                        required
-                                    />
-                                    <Input
-                                        className="light-accent-input"
-                                        type="number" step="0.01"
-                                        placeholder="Monthly ($)"
-                                        value={newTrackedDebt.minPayment}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, minPayment: e.target.value })}
-                                        required
-                                    />
-                                    <Input
-                                        className="light-accent-input"
-                                        type="number" step="0.01"
-                                        placeholder="Down Payment ($)"
-                                        value={newTrackedDebt.downPayment || ''}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, downPayment: e.target.value })}
-                                    />
-                                    <Input
-                                        className="light-accent-input"
-                                        type="number"
-                                        placeholder="Due Day (1-31)"
-                                        min="1" max="31"
-                                        value={newTrackedDebt.dueDate}
-                                        onChange={e => setNewTrackedDebt({ ...newTrackedDebt, dueDate: e.target.value })}
-                                    />
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
+                                    <Button type="button" variant="secondary" onClick={() => setShowAddTrackerForm(false)} style={{ background: 'transparent', border: '1px solid var(--surface-border)' }}>Cancel</Button>
+                                    <Button type="submit" variant="primary" style={{ padding: '0 24px' }}>Add Debt Pipeline</Button>
                                 </div>
-                                <Button type="submit" variant="primary">Start Tracking</Button>
                             </form>
-                        )}
+                        </Modal>
 
                         <div className="debts-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
                             {(trackedDebts || []).length === 0 ? (
@@ -1272,6 +1406,7 @@ const Expenses = () => {
             <Modal
                 isOpen={isActivityModalOpen}
                 onClose={() => setIsActivityModalOpen(false)}
+                contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Wallet size={20} className="text-primary" /> Recent Bank Activity
@@ -1283,7 +1418,7 @@ const Expenses = () => {
                         These transactions were automatically securely synced from your connected Plaid bank accounts.
                         The Rules Engine uses their categories to automatically deduct from your Variable Expense budgets.
                     </p>
-                    <div className="total-amount-box" style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--surface-border)', textAlign: 'right' }}>
+                    <div className="total-amount-box activity-blur-box" style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--surface-border)', textAlign: 'right' }}>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({activityCategoryFilter})</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 700, color: filteredTotalAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
                             {filteredTotalAmount > 0 ? '-' : ''}${Math.abs(filteredTotalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -1319,7 +1454,7 @@ const Expenses = () => {
                         </div>
                     ) : (
                         paginatedTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
+                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
                                 <div className="tx-merchant" style={{ fontWeight: 600 }}>
                                     {tx.merchant_name || 'Unknown Merchant'}
                                     {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}

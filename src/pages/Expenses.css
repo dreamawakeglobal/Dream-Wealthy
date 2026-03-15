@@ -273,3 +273,12 @@
     font-weight: 600;
     color: #ff9f0a;
 }
+
+/* Activity Modal Box Transparency for Light Mode */
+[data-theme='light'] .activity-blur-box {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}

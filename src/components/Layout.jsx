@@ -5,6 +5,7 @@ import Footer from './Footer';
 import { Button } from './ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, User, Settings, CreditCard } from 'lucide-react';
+import { NotificationBell } from './NotificationBell';
 import './Layout.css';
 
 const Layout = () => {
@@ -38,31 +39,34 @@ const Layout = () => {
             </Link>
             <div className="sign-up-button-container">
                 {user ? (
-                    <div className="profile-menu-container" ref={dropdownRef}>
-                        <button
-                            className="profile-button glass"
-                            onClick={() => setIsProfileOpen(!isProfileOpen)}
-                            aria-label="Profile Menu"
-                            style={user?.user_metadata?.avatar_url ? { backgroundImage: `url(${user.user_metadata.avatar_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-                        >
-                            {!user?.user_metadata?.avatar_url && <User size={20} />}
-                        </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <NotificationBell />
+                        <div className="profile-menu-container" ref={dropdownRef}>
+                            <button
+                                className="profile-button glass"
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                aria-label="Profile Menu"
+                                style={user?.user_metadata?.avatar_url ? { backgroundImage: `url(${user.user_metadata.avatar_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+                            >
+                                {!user?.user_metadata?.avatar_url && <User size={20} />}
+                            </button>
 
-                        {isProfileOpen && (
-                            <div className="profile-dropdown glass">
-                                <div className="profile-dropdown-body">
-                                    <button className="dropdown-item" onClick={() => { navigate('/settings'); setIsProfileOpen(false); }}>
-                                        <Settings size={16} /> Profile Settings
-                                    </button>
-                                    <button className="dropdown-item" onClick={() => { navigate('/pricing'); setIsProfileOpen(false); }}>
-                                        <CreditCard size={16} /> Pricing
-                                    </button>
-                                    <button className="dropdown-item danger" onClick={handleSignOut}>
-                                        <LogOut size={16} /> Sign Out
-                                    </button>
+                            {isProfileOpen && (
+                                <div className="profile-dropdown glass">
+                                    <div className="profile-dropdown-body">
+                                        <button className="dropdown-item" onClick={() => { navigate('/settings'); setIsProfileOpen(false); }}>
+                                            <Settings size={16} /> Profile Settings
+                                        </button>
+                                        <button className="dropdown-item" onClick={() => { navigate('/pricing'); setIsProfileOpen(false); }}>
+                                            <CreditCard size={16} /> Pricing
+                                        </button>
+                                        <button className="dropdown-item danger" onClick={handleSignOut}>
+                                            <LogOut size={16} /> Sign Out
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 ) : (
                     location.pathname !== '/' && (

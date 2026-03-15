@@ -15,7 +15,6 @@ import {
     Tooltip,
     ResponsiveContainer
 } from 'recharts';
-import { GoalsSection } from '../components/dashboard/GoalsSection';
 import { generateInsights } from '../utils/insightsEngine';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Home.css';
@@ -313,10 +312,6 @@ const Home = () => {
                             </div>
                         </Card>
                     </AnimateOnScroll>
-                </div>
-
-                <div style={{ marginTop: '24px' }}>
-                    <GoalsSection />
                 </div>
             </section >
         </div >

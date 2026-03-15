@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import { useFinancialContext } from '../FinancialContext';
 import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
+import { GoalsSection } from '../components/dashboard/GoalsSection';
 import './Income.css';
 
 const IncomeStreamForm = ({ onAdd, title }) => {
@@ -292,6 +293,9 @@ const Income = () => {
     // --- End Allocations Logic ---
 
     const totalYearlyIncome = totalMonthlyIncome * 12;
+    // User requested "bi-monthly" right next to yearly. Most people refer to every two weeks (26 pay periods) as bi-weekly or bi-monthly in this context.
+    const totalBiWeeklyIncome = (totalYearlyIncome / 26);
+    
     const projectedFutureIncome = futureIncome.reduce((acc, curr) => acc + curr.amount, 0);
     const totalProjectedMonthly = totalMonthlyIncome + projectedFutureIncome;
 
@@ -304,7 +308,7 @@ const Income = () => {
     const updateFutureIncome = (updated) => setFutureIncome(futureIncome.map(s => s.id === updated.id ? updated : s));
 
     return (
-        <div className="page-container animate-fade-in">
+        <div className="page-container animate-fade-in" style={{ minHeight: '100vh' }}>
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
                 <img src="/income-header-logo.png" alt="Income Header Logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Design your cash flow architecture.</p>
@@ -317,7 +321,7 @@ const Income = () => {
                         <h2 className="summary-value positive">
                             $<AnimatedNumber value={totalMonthlyIncome} />
                         </h2>
-                        <p className="summary-subtext">Yearly: ${totalYearlyIncome.toLocaleString()}</p>
+                        <p className="summary-subtext">Bi-Monthly: ${totalBiWeeklyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}  |  Yearly: ${totalYearlyIncome.toLocaleString()}</p>
                     </Card>
                 </AnimateOnScroll>
 
@@ -386,6 +390,11 @@ const Income = () => {
                         />
                     </AnimateOnScroll>
                 </div>
+            </div>
+
+            {/* Savings Goals Section */}
+            <div style={{ marginTop: '48px' }}>
+                <GoalsSection />
             </div>
 
             {/* --- Merged Allocations Dashboard --- */}
@@ -556,7 +565,7 @@ const Income = () => {
                                         <p>Allocate funds to see your chart</p>
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height={300}>
                                         <RechartsPieChart>
                                             <Pie
                                                 data={chartData}

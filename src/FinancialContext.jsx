@@ -138,6 +138,7 @@ export const FinancialProvider = ({ children }) => {
 
         // Derived state
         totalMonthlyIncome,
+        totalBiMonthlyIncome: (totalMonthlyIncome * 12) / 26,
         totalFixedExpenses,
         totalVariableExpenses,
         totalMonthlyExpenses,

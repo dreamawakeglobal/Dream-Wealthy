@@ -4,15 +4,11 @@ import { X } from 'lucide-react';
 import { useSound } from '../../SoundContext';
 import './Modal.css';
 
-export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
-    const [scrollY, setScrollY] = useState(0);
-    const [docHeight, setDocHeight] = useState(0);
+export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {} }) => {
     const { playWhoosh } = useSound();
 
     useEffect(() => {
         if (isOpen) {
-            setScrollY(window.scrollY);
-            setDocHeight(Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, window.innerHeight));
             playWhoosh();
         }
     }, [isOpen, playWhoosh]);
@@ -31,23 +27,37 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true }) => {
             className="modal-overlay" 
             onClick={handleOverlayClick}
             style={{ 
-                position: 'absolute', 
+                position: 'fixed', 
                 top: 0, 
-                height: `${docHeight}px`,
-                alignItems: 'flex-start'
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: '100vh',
+                alignItems: 'center'
             }}
         >
             <div 
                 className={`modal-content ${glass ? 'glass' : ''}`}
-                style={{ marginTop: `${scrollY + Math.max(40, window.innerHeight * 0.1)}px` }}
             >
-                <div className="modal-header">
+                {/* Isolated Background Image Layer with User-Defined Content Style */}
+                <div 
+                    className="modal-bg-image" 
+                    style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        zIndex: 0,
+                        pointerEvents: 'none',
+                        ...contentStyle
+                    }} 
+                />
+
+                <div className="modal-header" style={{ position: 'relative', zIndex: 1 }}>
                     <h2>{title}</h2>
                     <button className="modal-close-btn" onClick={onClose}>
                         <X size={20} />
                     </button>
                 </div>
-                <div className="modal-body">
+                <div className="modal-body" style={{ position: 'relative', zIndex: 1 }}>
                     {children}
                 </div>
             </div>

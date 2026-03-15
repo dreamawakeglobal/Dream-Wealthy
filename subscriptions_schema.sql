@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     name TEXT NOT NULL,
     domain TEXT,
     cost NUMERIC DEFAULT 0,
+    due_date TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -27,3 +28,6 @@ CREATE POLICY "Users can update own subscriptions"
 CREATE POLICY "Users can delete own subscriptions" 
     ON public.subscriptions FOR DELETE 
     USING (auth.uid() = user_id);
+
+-- If you are updating an existing table, run this line:
+-- ALTER TABLE public.subscriptions ADD COLUMN IF NOT EXISTS due_date TEXT;
