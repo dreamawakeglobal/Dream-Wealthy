@@ -302,17 +302,13 @@
 }
 
 .full-width-btn {
-    width: 100%;
+    width: 50%;
+    margin: 0 auto;
+    display: flex;
     justify-content: center;
-    background: rgba(79, 163, 247, 0.1) !important;
-    color: #4FA3F7 !important;
-    border: 1px solid rgba(79, 163, 247, 0.2) !important;
     padding: 12px !important;
-    border-radius: 12px !important;
-}
-
-.full-width-btn:hover {
-    background: rgba(79, 163, 247, 0.2) !important;
+    border-radius: 10px !important;
+    font-size: 0.95rem !important;
 }
 
 /* Animations */
@@ -409,11 +405,6 @@
     background: none !important;
     -webkit-text-fill-color: var(--text-primary) !important;
     color: var(--text-primary) !important;
-}
-
-[data-theme='dark'] .glass-panel-card .full-width-btn {
-    color: var(--text-primary) !important;
-    border-color: var(--surface-border) !important;
 }
 
 @media (max-width: 1300px) {

@@ -200,7 +200,7 @@ const Income = () => {
         allocations, setAllocations,
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -608,9 +608,12 @@ const Income = () => {
             <Modal
                 isOpen={isActivityModalOpen}
                 onClose={() => setIsActivityModalOpen(false)}
+                useNeonGlow={true}
+                clearBlur={true}
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Wallet size={20} className="text-primary" /> Recent Income Activity
+                        <Wallet size={20} color={theme === 'dark' ? '#9d4edd' : '#4FA3F7'} /> 
+                        <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Recent Income Activity</span>
                     </div>
                 }
             >

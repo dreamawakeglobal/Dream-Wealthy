@@ -144,9 +144,11 @@ export const GoalsSection = () => {
                     padding: '0 20px',
                     pointerEvents: 'none'
                 }}>
-                    <Card glass className="savings-goal-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', boxShadow: '0 20px 40px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.2)', animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+                    <Card glass className="savings-goal-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', border: `3px solid ${newGoal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${newGoal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{editingGoalId ? 'Edit Goal' : 'Create New Goal'}</h3>
+                            <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>
+                                {editingGoalId ? 'Edit' : 'Create'} <span style={{ color: newGoal.color }}>{editingGoalId ? 'Goal Settings' : 'New Goal'}</span>
+                            </h3>
                             <button onClick={() => setShowForm(false)} className="btn-icon">
                                 <X size={20} />
                             </button>
@@ -188,7 +190,7 @@ export const GoalsSection = () => {
                             
                             {/* Auto-Contribution Settings */}
                             <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
-                                <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem', color: 'var(--text-primary)' }}>Contribution Plan</h4>
+                                <h4 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: newGoal.color }}>Contribution Plan</h4>
                                 <div style={{ display: 'flex', gap: '16px' }}>
                                     <div style={{ flex: 1.5 }}>
                                         <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Amount to Contribute ($)</label>
@@ -282,7 +284,7 @@ export const GoalsSection = () => {
                         padding: '0 20px',
                         pointerEvents: 'none'
                     }}>
-                        <Card glass className="savings-goal-popup details-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', border: `1px solid ${goal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${goal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+                        <Card glass className="savings-goal-popup details-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', border: `3px solid ${goal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${goal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                                 <div>
                                     <h3 style={{ margin: '0 0 4px 0', fontSize: '1.5rem', color: '#fff' }}>

@@ -160,7 +160,7 @@ const Home = () => {
                             zIndex: 10
                         }}>
                             <Card glass className="insight-card insight-success" style={{
-                                margin: '0', display: 'flex', padding: '16px 24px', alignItems: 'center', gap: '16px', maxWidth: '600px', cursor: positiveInsight.actionLink ? 'pointer' : 'default',
+                                margin: '0', display: 'flex', padding: '16px 24px', alignItems: 'center', gap: '16px', maxWidth: '600px', cursor: positiveInsight.actionLink ? 'pointer' : 'default', animation: 'float 6s ease-in-out infinite',
                                 background: 'rgba(255, 255, 255, 0.4)',
                                 backdropFilter: 'blur(20px)',
                                 WebkitBackdropFilter: 'blur(20px)',
@@ -277,7 +277,7 @@ const Home = () => {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="panel-footer" style={{ marginTop: 0 }}>
+                            <div className="panel-footer">
                                 <Button className="full-width-btn" onClick={() => navigate('/income')}>
                                     Manage Entries
                                 </Button>
@@ -312,7 +312,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button variant="secondary" className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
+                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
                             </div>
                         </Card>
                     </AnimateOnScroll>
@@ -346,8 +346,8 @@ const Home = () => {
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
-                            <div className="panel-footer" style={{ marginTop: 0 }}>
-                                <Button className="full-width-btn" variant="secondary" onClick={() => navigate('/projections')}>
+                            <div className="panel-footer">
+                                <Button className="full-width-btn" onClick={() => navigate('/projections')}>
                                     Run Projections
                                 </Button>
                             </div>

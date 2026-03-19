@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useSound } from '../../SoundContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import './Modal.css';
 
-export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {} }) => {
+export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, lessTransparent = false }) => {
     const { playWhoosh } = useSound();
+    const { theme } = useTheme();
 
     useEffect(() => {
         if (isOpen) {
@@ -22,6 +24,8 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
         }
     };
 
+    const glowColor = theme === 'dark' ? '#9d4edd' : '#4FA3F7';
+
     const modalContent = (
         <div 
             className="modal-overlay" 
@@ -33,11 +37,30 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
                 right: 0,
                 bottom: 0,
                 height: '100vh',
-                alignItems: 'center'
+                alignItems: 'center',
+                ...(clearBlur ? { background: 'rgba(0, 0, 0, 0.1)' } : {}),
+                ...(!dimOverlay ? { background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' } : {})
             }}
         >
             <div 
-                className={`modal-content ${glass ? 'glass' : ''}`}
+                className={`modal-content ${glass ? 'glass' : ''} ${invertColors ? 'modal-inverted' : ''}`}
+                style={{
+                    ...(useNeonGlow ? {
+                        border: `3px solid ${glowColor}`,
+                        boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${glowColor}33`,
+                        transition: 'border 0.3s ease, box-shadow 0.3s ease'
+                    } : {}),
+                    ...(clearBlur ? {
+                        background: 'rgba(255, 255, 255, 0.05)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
+                        border: useNeonGlow ? `3px solid ${glowColor}` : '1px solid rgba(255, 255, 255, 0.2)'
+                    } : {}),
+                    ...(lessTransparent ? {
+                        background: theme === 'dark' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)'
+                    } : {})
+                }}
             >
                 {/* Isolated Background Image Layer with User-Defined Content Style */}
                 <div 

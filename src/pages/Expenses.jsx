@@ -26,7 +26,7 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
     const { playReceiptTear } = useSound();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     const handleSubmit = (e) => {
@@ -267,7 +267,7 @@ const Expenses = () => {
         subscriptions, setSubscriptions
     } = useFinancialContext();
     const { playCheck, playPop } = useSound();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     // --- Modal State ---
@@ -779,8 +779,14 @@ const Expenses = () => {
                     <Modal
                         isOpen={showAddSub}
                         onClose={() => setShowAddSub(false)}
-                        title="Add Custom Subscription"
-                        contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                        useNeonGlow={true}
+                        dimOverlay={false}
+                        lessTransparent={true}
+                        title={
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                Add <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Custom Subscription</span>
+                            </div>
+                        }
                     >
                         <form onSubmit={addCustomSubscription} className="debt-form animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
@@ -971,8 +977,14 @@ const Expenses = () => {
                         <Modal
                             isOpen={showAddTrackerForm}
                             onClose={() => setShowAddTrackerForm(false)}
-                            title="Track New Debt"
-                            contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                            useNeonGlow={true}
+                            dimOverlay={false}
+                            lessTransparent={true}
+                            title={
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                    Track <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>New Debt</span>
+                                </div>
+                            }
                         >
                             <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1523,10 +1535,12 @@ const Expenses = () => {
             <Modal
                 isOpen={isActivityModalOpen}
                 onClose={() => setIsActivityModalOpen(false)}
-                contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                useNeonGlow={true}
+                clearBlur={true}
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Wallet size={20} className="text-primary" /> Recent Bank Activity
+                        <Wallet size={20} color={theme === 'dark' ? '#9d4edd' : '#4FA3F7'} /> 
+                        <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Recent Bank Activity</span>
                     </div>
                 }
             >
@@ -1603,8 +1617,14 @@ const Expenses = () => {
             <Modal
                 isOpen={showCustomPaymentModal}
                 onClose={() => setShowCustomPaymentModal(false)}
-                title={`Custom Payment for ${customPaymentData.monthLabel}`}
-                contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+                useNeonGlow={true}
+                dimOverlay={false}
+                lessTransparent={true}
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                        Custom Payment <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>{customPaymentData.monthLabel}</span>
+                    </div>
+                }
             >
                 <div style={{ padding: '8px' }}>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
