@@ -3,14 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight, Target, TrendingUp, Compass } from 'lucide-react';
+import { useStore } from '../store';
+import { injectDemoData } from '../utils/mockDataGenerator';
+import { ArrowRight, Target, TrendingUp, Compass, CheckCircle } from 'lucide-react';
 import './Onboarding.css';
 
 const Onboarding = () => {
     const navigate = useNavigate();
     const { user, completeOnboarding } = useAuth();
+    const store = useStore();
     const [step, setStep] = useState(1);
     const [selectedGoal, setSelectedGoal] = useState(null);
+    const [useDemoData, setUseDemoData] = useState(true);
 
     // Extract first name gracefully
     const firstName = user?.user_metadata?.first_name || 
@@ -22,6 +26,10 @@ const Onboarding = () => {
     };
 
     const handleComplete = async (startTour) => {
+        if (useDemoData) {
+            await injectDemoData(store);
+        }
+
         if (completeOnboarding) {
             await completeOnboarding(startTour);
         } else {
@@ -104,6 +112,24 @@ const Onboarding = () => {
 
                         <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
                            <Compass size={64} color="var(--accent-primary)" style={{ filter: 'drop-shadow(0 0 16px var(--accent-glow))' }}/>
+                        </div>
+
+                        <div 
+                            style={{ 
+                                display: 'flex', alignItems: 'center', gap: '12px', padding: '16px', 
+                                background: 'rgba(255, 255, 255, 0.05)', borderRadius: '12px', border: '1px solid var(--surface-border)',
+                                cursor: 'pointer', marginBottom: '24px', transition: 'all 0.2s',
+                                borderLeft: useDemoData ? '4px solid var(--accent-primary)' : '1px solid var(--surface-border)'
+                            }}
+                            onClick={() => setUseDemoData(!useDemoData)}
+                        >
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: useDemoData ? 'none' : '2px solid var(--text-muted)', background: useDemoData ? 'var(--accent-primary)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {useDemoData && <CheckCircle size={16} color="#fff" />}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <h4 style={{ margin: 0, fontSize: '1rem', color: 'var(--text-primary)' }}>Initialize with Demo Data</h4>
+                                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Pre-populates sample transactions and goals. Recommended for exploring.</p>
+                            </div>
                         </div>
 
                         <div className="onboarding-actions" style={{ flexDirection: 'column' }}>
