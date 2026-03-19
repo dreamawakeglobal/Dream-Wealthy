@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './GoalOrb.css';
 
-export const GoalOrb = ({ goal, onEdit }) => {
-    const { name, targetAmount, currentAmount, color } = goal;
+export const GoalOrb = ({ goal, onDoubleClick }) => {
+    const { name, targetAmount, currentAmount, color, contributionAmount, contributionFrequency } = goal;
     const [progress, setProgress] = useState(0);
 
     // Calculate percentages
@@ -26,7 +26,7 @@ export const GoalOrb = ({ goal, onEdit }) => {
     const strokeDashoffset = circumference - (progress / 100) * circumference;
 
     return (
-        <div className="goal-orb-container" onDoubleClick={() => onEdit && onEdit(goal.id)}>
+        <div className="goal-orb-container" onDoubleClick={() => onDoubleClick && onDoubleClick(goal.id)}>
             <div className="goal-orb-wrapper" style={{ '--glow-color': color }}>
                 <svg className="goal-orb-svg" height={radius * 2} width={radius * 2}>
                     <defs>
@@ -74,6 +74,11 @@ export const GoalOrb = ({ goal, onEdit }) => {
                     <span style={{ color: color }}>${currentAmount.toLocaleString()}</span>
                     <span className="text-muted"> / ${targetAmount.toLocaleString()}</span>
                 </div>
+                {contributionAmount > 0 && (
+                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', display: 'inline-block' }}>
+                        +${contributionAmount.toLocaleString()} <span style={{ textTransform: 'capitalize', opacity: 0.7 }}>{contributionFrequency}</span>
+                    </div>
+                )}
             </div>
         </div>
     );

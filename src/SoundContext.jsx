@@ -38,7 +38,18 @@ export const SoundProvider = ({ children }) => {
     }, [isMuted]);
 
     const playTone = useCallback(async (type, frequency, duration, volume = 0.1, slideFreq = null) => {
-        if (isMuted || !audioCtxRef.current) return;
+        if (isMuted) return;
+        
+        // Ensure initialized on demand
+        if (!audioCtxRef.current) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+                audioCtxRef.current = new AudioContext();
+            }
+        }
+        
+        if (!audioCtxRef.current) return;
+        
         const ctx = audioCtxRef.current;
         
         // Resume if suspended

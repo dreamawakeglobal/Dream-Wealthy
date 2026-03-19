@@ -4,18 +4,6 @@
     width: 100%;
 }
 
-.pointer-glow {
-    position: fixed;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(135, 206, 235, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
-    border-radius: 50%;
-    pointer-events: none;
-    transform: translate(-50%, -50%);
-    z-index: 0;
-    transition: width 0.2s, height 0.2s;
-}
-
 /* Hero Section */
 .hero-section {
     min-height: 100vh;
@@ -488,4 +476,75 @@
     .hero-title {
         font-size: 2rem !important;
     }
+}
+/* Custom Recharts Tooltip Styles */
+.chart-tooltip {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    padding: 16px 20px;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.1), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+    color: var(--text-primary);
+    min-width: 150px;
+}
+
+[data-theme='dark'] .chart-tooltip {
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+    color: #F8FAFC !important;
+}
+
+.tooltip-label {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 6px;
+}
+
+[data-theme='dark'] .tooltip-label {
+    color: #F8FAFC !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tooltip-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 0 10px currentColor; /* Make text glow slightly */
+}
+
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    margin: 6px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.tooltip-name {
+    text-transform: capitalize;
+    opacity: 0.9;
+}
+
+.tooltip-amount {
+    text-shadow: 0 0 10px currentColor;
+}
+
+/* Ensure recharts active cursor line looks sleek */
+.recharts-tooltip-cursor {
+    fill: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme='dark'] .recharts-tooltip-cursor {
+    fill: rgba(0, 0, 0, 0.2);
 }

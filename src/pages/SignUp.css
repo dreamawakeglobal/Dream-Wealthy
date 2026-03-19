@@ -204,7 +204,7 @@
 
 [data-theme='dark'] .auth-pill-btn.gray {
     background: #334155;
-    color: #f8fafc;
+    color: #000000;
 }
 
 [data-theme='dark'] .auth-pill-btn.gray:hover {

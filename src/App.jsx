@@ -21,6 +21,10 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { FinancialProvider } from './FinancialContext';
 import { SoundProvider } from './SoundContext';
 import ThemeToggle from './components/ThemeToggle';
+import { TutorialOverlay } from './components/TutorialOverlay';
+import PointerGlow from './components/PointerGlow';
+
+const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 
 function App() {
   return (
@@ -33,9 +37,12 @@ function App() {
               <AudioPlayer />
               <FloatingNotes />
               <ThemeToggle />
+              <PointerGlow />
+              <TutorialOverlay />
               <Routes>
                 <Route path="/" element={<Layout />}>
                   <Route index element={<Waitlist />} />
+                  <Route path="onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
                   <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                   <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
                   <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     AreaChart,
     Area,
@@ -14,6 +15,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { useFinancialContext } from '../FinancialContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
@@ -24,12 +26,14 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
     const { playReceiptTear } = useSound();
+    const { expenseBorderColor } = useTheme();
+    const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (name && amount) {
             playReceiptTear();
-            onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
+            onAdd({ id: crypto.randomUUID(), name, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
             setName('');
             setAmount('');
             setDueDate('');
@@ -37,7 +41,7 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
     };
 
     return (
-        <Card glass className="expense-form-card">
+        <Card glass className={`expense-form-card ${borderGlowClass}`}>
             <h3 className="form-title">{title}</h3>
             <form onSubmit={handleSubmit} className="expense-form">
                 <Input
@@ -263,6 +267,8 @@ const Expenses = () => {
         subscriptions, setSubscriptions
     } = useFinancialContext();
     const { playCheck, playPop } = useSound();
+    const { expenseBorderColor } = useTheme();
+    const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -296,6 +302,45 @@ const Expenses = () => {
     // Tracker aggregate metrics
     const totalTrackedDebtBalance = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.balance) || 0), 0);
     const totalTrackedMonthlyPayments = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
+
+    const [showCustomPaymentModal, setShowCustomPaymentModal] = useState(false);
+    const [customPaymentData, setCustomPaymentData] = useState({ debtId: null, monthIndex: null, monthLabel: '', currentAmount: '', isBlackedOut: false, amount: '' });
+
+    const handleCustomPaymentSubmit = () => {
+        if (!customPaymentData.amount || isNaN(customPaymentData.amount)) return;
+        const newAmount = Number(customPaymentData.amount);
+        
+        const debt = trackedDebts.find(d => String(d.id) === String(customPaymentData.debtId));
+        if (!debt) return;
+
+        const customPayments = debt.customPayments ? { ...debt.customPayments } : {};
+        customPayments[customPaymentData.monthIndex] = newAmount;
+
+        let newBalance = debt.balance;
+        let newPaidCircles = [...(debt.paidCircles || [])];
+
+        if (!customPaymentData.isBlackedOut) {
+            newBalance = Math.max(0, debt.balance - newAmount);
+            newPaidCircles.push(customPaymentData.monthIndex);
+            playCheck();
+        } else {
+            const oldAmount = debt.customPayments?.[customPaymentData.monthIndex] || customPaymentData.currentAmount;
+            const diff = newAmount - oldAmount;
+            newBalance = Math.max(0, debt.balance - diff);
+        }
+
+        handleEditTrackedDebt(debt.id, {
+            balance: newBalance,
+            paidCircles: newPaidCircles,
+            customPayments: customPayments,
+            ...(newBalance === 0 ? { isPaid: true } : {})
+        });
+        
+        setShowCustomPaymentModal(false);
+    };
+
+    const pressTimerRef = React.useRef(null);
+    const isLongPressActive = React.useRef(false);
 
     const [showAddTrackerForm, setShowAddTrackerForm] = useState(false);
     const [newTrackedDebt, setNewTrackedDebt] = useState({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', downPayment: '', dueDate: '' });
@@ -375,7 +420,7 @@ const Expenses = () => {
             const startingBalance = Math.max(0, initialBalance - downPaymentAmount);
 
             setTrackedDebts(prev => [...prev, {
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 name: newTrackedDebt.name,
                 type: newTrackedDebt.type,
                 balance: startingBalance,
@@ -385,7 +430,8 @@ const Expenses = () => {
                 dueDate: newTrackedDebt.dueDate,
                 isPaid: false,
                 extraPayment: 0,
-                paidCircles: []
+                paidCircles: [],
+                customPayments: {}
             }]);
             setNewTrackedDebt({ name: '', type: 'Credit Card', balance: '', rate: '', minPayment: '', downPayment: '', dueDate: '' });
             setShowAddTrackerForm(false);
@@ -430,7 +476,7 @@ const Expenses = () => {
         e.preventDefault();
         if (newSub.name && newSub.cost) {
             const custom = {
-                id: `custom-${Date.now()}`,
+                id: `custom-${crypto.randomUUID()}`,
                 name: newSub.name,
                 domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
                 cost: parseFloat(newSub.cost),
@@ -579,13 +625,13 @@ const Expenses = () => {
     return (
         <div className="page-container animate-fade-in">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
-                <img src="/expenses-header-logo.png" alt="Expenses Header Logo" style={{ height: '360px', objectFit: 'contain' }} loading="lazy" />
+                <img src="/expenses-header-logo.png" alt="Expenses Header Logo" className="page-header-logo" style={{ height: '336px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Track and optimize your outflows.</p>
             </div>
 
             <div className="expense-metrics-grid">
                 <AnimateOnScroll delay={0.1}>
-                    <Card glass className="metric-box warning-border">
+                    <Card glass className={`metric-box warning-border ${borderGlowClass}`}>
                         <div className="metric-header">
                             <span className="metric-title">Total Monthly Expenses</span>
                             <TrendingDown size={20} className="text-danger" />
@@ -603,7 +649,7 @@ const Expenses = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.2}>
-                    <Card glass className="metric-box success-border">
+                    <Card glass className={`metric-box success-border ${borderGlowClass}`}>
                         <div className="metric-header">
                             <span className="metric-title">Net Cash Flow</span>
                             <Wallet size={20} className="text-success" />
@@ -616,7 +662,7 @@ const Expenses = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.3}>
-                    <Card glass className="metric-box highlight-border">
+                    <Card glass className={`metric-box highlight-border ${borderGlowClass}`}>
                         <div className="metric-header">
                             <span className="metric-title">Savings Rate</span>
                             <Percent size={20} className="text-primary" />
@@ -631,7 +677,7 @@ const Expenses = () => {
 
             <div className="expense-content-grid">
                 {/* Fixed Expenses */}
-                <AnimateOnScroll delay={0.1} className="expense-column">
+                <AnimateOnScroll delay={0.1} className="expense-column fixed-expense-box">
                     <div className="column-header" style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                             <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
@@ -667,7 +713,7 @@ const Expenses = () => {
                 </AnimateOnScroll>
 
                 {/* Variable Expenses */}
-                <AnimateOnScroll delay={0.2} className="expense-column">
+                <AnimateOnScroll delay={0.2} className="expense-column variable-expense-box">
                     <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <h2 style={{ margin: 0 }}>Variable Expenses</h2>
@@ -718,8 +764,8 @@ const Expenses = () => {
             </div>
 
             {/* Subscriptions Section */}
-            <AnimateOnScroll yOffset={40} delay={0.1}>
-                <Card glass style={{ marginTop: '32px' }}>
+            <AnimateOnScroll yOffset={40} delay={0.1} className="subscription-box">
+                <Card glass className={borderGlowClass} style={{ marginTop: '32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                             <h2 style={{ margin: 0 }}>Subscriptions</h2>
@@ -895,10 +941,10 @@ const Expenses = () => {
             {/* Monthly Debt Tracker Section (Standalone) */}
             <div style={{ marginTop: '40px', width: '100vw', marginLeft: 'calc(-50vw + 50%)', padding: '0 24px', boxSizing: 'border-box' }}>
                 <AnimateOnScroll delay={0.1}>
-                    <Card glass className="debt-tracker-card" style={{ height: '100%' }}>
+                    <Card glass className={`debt-tracker-card ${borderGlowClass}`} style={{ height: '100%' }}>
                         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div>
-                                <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                                <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontWeight: 'bold' }}>
                                     Monthly Debt Tracker
                                 </h2>
                                 {(trackedDebts || []).length > 0 ? (
@@ -1125,6 +1171,8 @@ const Expenses = () => {
                                             for (let i = 0; i < displayMonths; i++) {
                                                 const isBlackedOut = paidIndices.includes(i);
                                                 
+                                                const actualPaymentForMonth = debt.customPayments?.[i] || totalPayment;
+
                                                 // Calculate the projected month for this circle
                                                 const circleDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + i, 1);
                                                 const monthLabel = circleDate.toLocaleString('default', { month: 'short' });
@@ -1132,23 +1180,44 @@ const Expenses = () => {
                                                 circles.push(
                                                     <div key={i} className="payment-circle-wrapper">
                                                         <div 
+                                                            onPointerDown={(e) => {
+                                                                isLongPressActive.current = false;
+                                                                pressTimerRef.current = setTimeout(() => {
+                                                                    isLongPressActive.current = true;
+                                                                    setCustomPaymentData({
+                                                                        debtId: debt.id, monthIndex: i, monthLabel, currentAmount: totalPayment, isBlackedOut, amount: actualPaymentForMonth.toString()
+                                                                    });
+                                                                    setShowCustomPaymentModal(true);
+                                                                }, 500);
+                                                            }}
+                                                            onPointerUp={() => {
+                                                                if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+                                                            }}
+                                                            onPointerLeave={() => {
+                                                                if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+                                                                isLongPressActive.current = false;
+                                                            }}
                                                             onClick={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
+                                                                if (isLongPressActive.current) return;
                                                                 
                                                                 if (isBlackedOut) {
                                                                     // Undo operation
-                                                                    const undoBalance = debt.balance + totalPayment;
+                                                                    const undoBalance = debt.balance + actualPaymentForMonth;
                                                                     const newPaidCircles = paidIndices.filter(idx => idx !== i);
+                                                                    const newCustomPayments = debt.customPayments ? { ...debt.customPayments } : {};
+                                                                    delete newCustomPayments[i];
                                                                     
                                                                     handleEditTrackedDebt(debt.id, { 
                                                                         balance: undoBalance,
                                                                         paidCircles: newPaidCircles,
+                                                                        customPayments: newCustomPayments,
                                                                         isPaid: false
                                                                     });
                                                                 } else {
                                                                     playCheck();
-                                                                    const newBalance = Math.max(0, debt.balance - totalPayment);
+                                                                    const newBalance = Math.max(0, debt.balance - actualPaymentForMonth);
                                                                     const newPaidCircles = [...paidIndices, i];
                                                                     
                                                                     handleEditTrackedDebt(debt.id, { 
@@ -1159,7 +1228,7 @@ const Expenses = () => {
                                                                 }
                                                             }}
                                                             className={`payment-circle ${isBlackedOut ? 'blacked-out' : ''}`}
-                                                            title={isBlackedOut ? `Paid in ${monthLabel}` : `Click to mark payment of $${totalPayment.toLocaleString()} for ${monthLabel}`}
+                                                            title={isBlackedOut ? `Paid $${actualPaymentForMonth.toLocaleString()} in ${monthLabel} (Hold to edit amount)` : `Click to pay $${actualPaymentForMonth.toLocaleString()} for ${monthLabel} (Hold to edit amount)`}
                                                         />
                                                         <span className="payment-circle-month">{monthLabel}</span>
                                                     </div>
@@ -1300,108 +1369,156 @@ const Expenses = () => {
             </div>
 
             {/* Debt Destroyer Summary Section */}
-            <div className="debt-destroyer-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '24px', marginTop: '40px' }}>
+            <AnimateOnScroll delay={0.1} yOffset={40} style={{ marginTop: '40px' }}>
+                <Card glass className={`debt-destroyer-unified-card ${borderGlowClass}`} style={{ padding: '32px' }}>
+                    <div className="unified-header" style={{ marginBottom: '32px', borderBottom: '1px solid var(--surface-border)', paddingBottom: '16px' }}>
+                        <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <TrendingDown className="text-danger" /> Projected Debt Payoff
+                        </h2>
+                        <p style={{ color: 'var(--text-secondary)', margin: '8px 0 0 0', fontSize: '0.9rem' }}>
+                            Automatically see how your chosen strategy eliminates your debt over time.
+                        </p>
+                    </div>
 
-                {/* Attack Strategy */}
-                <AnimateOnScroll delay={0.2} style={{ height: '100%' }}>
-                    <Card glass className="strategy-card" style={{ display: 'flex', flexDirection: 'column', color: 'var(--text-primary)', height: '100%' }}>
-                        <h3 style={{ marginBottom: '20px', color: 'var(--text-primary)' }}>Attack Strategy</h3>
-                        <div className="strategy-toggle" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '32px' }}>
-                            <button
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'avalanche' ? '1px solid var(--primary)' : '1px solid var(--surface-border)', background: strategy === 'avalanche' ? 'rgba(79, 70, 229, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('avalanche')}
-                            >
-                                <TrendingDown size={18} style={{ color: strategy === 'avalanche' ? 'var(--primary)' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Avalanche</strong>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Highest Interest</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'snowball' ? '1px solid var(--danger)' : '1px solid var(--surface-border)', background: strategy === 'snowball' ? 'rgba(255, 69, 58, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('snowball')}
-                            >
-                                <Flame size={18} style={{ color: strategy === 'snowball' ? 'var(--danger)' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Snowball</strong>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Lowest Balance</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'snowflake' ? '1px solid #0ea5e9' : '1px solid var(--surface-border)', background: strategy === 'snowflake' ? 'rgba(14, 165, 233, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('snowflake')}
-                            >
-                                <CloudRain size={18} style={{ color: strategy === 'snowflake' ? '#0ea5e9' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Snowflake</strong>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Highest Balance</span>
-                                </div>
-                            </button>
-                            <button
-                                style={{ padding: '12px 16px', borderRadius: '12px', border: strategy === 'blizzard' ? '1px solid #8b5cf6' : '1px solid var(--surface-border)', background: strategy === 'blizzard' ? 'rgba(139, 92, 246, 0.1)' : 'transparent', color: 'var(--text-primary)', textAlign: 'left', display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                onClick={() => setStrategy('blizzard')}
-                            >
-                                <Wind size={18} style={{ color: strategy === 'blizzard' ? '#8b5cf6' : 'var(--text-primary)' }} />
-                                <div style={{ color: 'var(--text-primary)' }}>
-                                    <strong style={{ display: 'block', marginBottom: '2px', fontSize: '0.9rem' }}>Blizzard</strong>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Lowest Interest</span>
-                                </div>
-                            </button>
-                        </div>
-                    </Card>
-                </AnimateOnScroll>
-
-                <AnimateOnScroll yOffset={50} delay={0.1} style={{ height: '100%' }}>
-                    <Card glass className="burn-down-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        {(trackedDebts || []).length > 0 ? (
-                            <>
-                                <div className="burn-down-header">
-                                    <div className="target-metric">
-                                        <span className="label">Debt Free In</span>
-                                        <div className="value glowing-danger">
-                                            {projectionData.monthsToZero === 360 ? '> 30 Years' : `${Math.floor(projectionData.monthsToZero / 12)}y ${projectionData.monthsToZero % 12}m`}
-                                        </div>
-                                    </div>
-                                    <div className="target-metric">
-                                        <span className="label">Total Interest Paid</span>
-                                        <div className="value text-warning">
-                                            $<AnimatedNumber value={projectionData.totalInterest} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="burn-down-chart-wrapper" style={{ flex: 1, width: '100%', marginTop: '32px', minHeight: '400px' }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={projectionData.data} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
-                                            <defs>
-                                                <linearGradient id="colorDebt" x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="5%" stopColor="var(--danger)" stopOpacity={0.8} />
-                                                    <stop offset="95%" stopColor="var(--danger)" stopOpacity={0.05} />
-                                                </linearGradient>
-                                            </defs>
-                                            <XAxis dataKey="month" stroke="var(--text-secondary)" />
-                                            <YAxis stroke="var(--text-secondary)" tickFormatter={val => `$${val}`} />
-                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--danger)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px', boxShadow: '0 0 20px var(--danger-glow)' }}
-                                                itemStyle={{ color: 'var(--danger)', fontWeight: 'bold' }}
-                                                formatter={(value) => `$${value.toLocaleString()}`}
+                    <div className="debt-destroyer-layout" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                        {/* Attack Strategy */}
+                        <div className="strategy-section strategy-card-box" style={{ display: 'flex', flexDirection: 'column', color: 'var(--text-primary)' }}>
+                            <h3 style={{ marginBottom: '16px', color: 'var(--text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1.5px', fontWeight: 600 }}>Attack Strategy</h3>
+                            <div className="strategy-toggle" style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+                                {[
+                                    { id: 'avalanche', label: 'Avalanche', icon: TrendingDown, color: 'var(--primary)', shadow: 'rgba(79, 70, 229, 0.4)' },
+                                    { id: 'snowball', label: 'Snowball', icon: Flame, color: 'var(--danger)', shadow: 'rgba(255, 69, 58, 0.4)' },
+                                    { id: 'snowflake', label: 'Snowflake', icon: CloudRain, color: '#0ea5e9', shadow: 'rgba(14, 165, 233, 0.4)' },
+                                    { id: 'blizzard', label: 'Blizzard', icon: Wind, color: '#8b5cf6', shadow: 'rgba(139, 92, 246, 0.4)' }
+                                ].map((s) => (
+                                    <button
+                                        key={s.id}
+                                        onClick={() => setStrategy(s.id)}
+                                        style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: 'none', background: 'transparent', color: strategy === s.id ? '#fff' : 'var(--text-secondary)', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', zIndex: 1, transition: 'color 0.3s ease' }}
+                                    >
+                                        {strategy === s.id && (
+                                            <motion.div 
+                                                layoutId="strategy-glow"
+                                                initial={false}
+                                                style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${s.shadow.replace('0.4', '0.15')}, ${s.shadow.replace('0.4', '0.02')})`, border: `1px solid ${s.color}`, borderRadius: '12px', boxShadow: `0 4px 20px ${s.shadow.replace('0.4', '0.2')}, inset 0 0 12px ${s.shadow.replace('0.4', '0.1')}`, zIndex: -1 }}
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
                                             />
-                                            <Area type="monotone" dataKey="balance" name="Remaining Balance" stroke="var(--danger)" fillOpacity={1} fill="url(#colorDebt)" strokeWidth={3} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="empty-state" style={{ height: '100%', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                                <AlertTriangle size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
-                                <h3>No active debts</h3>
-                                <p>Add your loans or credit cards to see your burn-down projection.</p>
+                                        )}
+                                        <motion.div animate={{ scale: strategy === s.id ? 1.15 : 1, rotate: strategy === s.id && s.id === 'snowball' ? [0, -10, 10, 0] : 0 }} transition={{ duration: 0.4 }}>
+                                            <s.icon size={16} style={{ color: strategy === s.id ? s.color : 'var(--text-muted)' }} />
+                                        </motion.div>
+                                        <strong style={{ fontSize: '0.85rem', fontWeight: strategy === s.id ? 700 : 500, letterSpacing: '0.5px' }}>{s.label}</strong>
+                                    </button>
+                                ))}
                             </div>
-                        )}
-                    </Card>
-                </AnimateOnScroll>
-            </div>
+                        </div>
+
+                        {/* Burn Down Chart */}
+                        <div className="burn-down-section" style={{ height: '100%', display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--surface-border)', paddingTop: '32px' }}>
+                            {(trackedDebts || []).length > 0 ? (
+                                <>
+                                    <div className="burn-down-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
+                                        <div className="target-metric">
+                                            <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Debt Free In</span>
+                                            <div className="value glowing-danger" style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--danger)' }}>
+                                                {projectionData.monthsToZero === 360 ? '> 30 Years' : `${Math.floor(projectionData.monthsToZero / 12)}y ${projectionData.monthsToZero % 12}m`}
+                                            </div>
+                                        </div>
+                                        <div className="target-metric" style={{ textAlign: 'right' }}>
+                                            <span className="label" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Interest Paid</span>
+                                            <div className="value text-warning" style={{ fontSize: '2rem', fontWeight: 700, color: '#ff9f0a' }}>
+                                                $<AnimatedNumber value={projectionData.totalInterest} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="burn-down-chart-wrapper" style={{ flex: 1, width: '100%', minHeight: '250px', position: 'relative' }}>
+                                        {(() => {
+                                            const chartColor = strategy === 'avalanche' ? 'var(--primary)' : 
+                                                               strategy === 'snowball' ? 'var(--danger)' : 
+                                                               strategy === 'snowflake' ? '#0ea5e9' : '#8b5cf6';
+                                            return (
+                                                <ResponsiveContainer width="100%" height={250}>
+                                                    <AreaChart data={projectionData.data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                                                        <defs>
+                                                            <linearGradient id="colorDebtDynamic" x1="0" y1="0" x2="0" y2="1">
+                                                                <stop offset="5%" stopColor={chartColor} stopOpacity={0.6} />
+                                                                <stop offset="100%" stopColor={chartColor} stopOpacity={0.0} />
+                                                            </linearGradient>
+                                                            <filter id="glowDynamic" x="-20%" y="-20%" width="140%" height="140%">
+                                                                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                                                                <feComponentTransfer in="blur" result="fadedBlur">
+                                                                    <feFuncA type="linear" slope="0.4" />
+                                                                </feComponentTransfer>
+                                                                <feComposite in="SourceGraphic" in2="fadedBlur" operator="over" />
+                                                            </filter>
+                                                        </defs>
+                                                        
+                                                        {/* Extremely minimal stock chart axes */}
+                                                        <XAxis 
+                                                            dataKey="month" 
+                                                            stroke="transparent" 
+                                                            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)', fontWeight: 500 }} 
+                                                            tickMargin={16}
+                                                            minTickGap={30}
+                                                        />
+                                                        {/* Right-aligned Y-axis like Robinhood */}
+                                                        <YAxis 
+                                                            orientation="right"
+                                                            stroke="transparent" 
+                                                            tickFormatter={val => val >= 1000 ? `$${(val/1000).toFixed(1)}k` : `$${val}`} 
+                                                            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)', fontWeight: 500 }} 
+                                                            width={50}
+                                                            tickMargin={8}
+                                                        />
+                                                        
+                                                        {/* Stock-style Tooltip with physical crosshair */}
+                                                        <Tooltip
+                                                            contentStyle={{ 
+                                                                backgroundColor: 'rgba(15,15,20,0.95)', 
+                                                                border: 'none', 
+                                                                backdropFilter: 'blur(16px)', 
+                                                                borderRadius: '16px', 
+                                                                boxShadow: '0 8px 32px rgba(0,0,0,0.6)', 
+                                                                padding: '10px 18px' 
+                                                            }}
+                                                            itemStyle={{ color: '#fff', fontWeight: '700', fontSize: '1.25rem' }}
+                                                            labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                                            formatter={(value) => [`$${value.toLocaleString()}`, 'Balance']}
+                                                            cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }}
+                                                            position={{ y: -20 }}
+                                                        />
+                                                        
+                                                        {/* Linear type for rigid, mechanical stock lines */}
+                                                        <Area 
+                                                            type="linear" 
+                                                            dataKey="balance" 
+                                                            name="Remaining Balance" 
+                                                            stroke={chartColor} 
+                                                            fillOpacity={1} 
+                                                            fill="url(#colorDebtDynamic)" 
+                                                            strokeWidth={2.5} 
+                                                            activeDot={{ r: 5, fill: chartColor, stroke: '#fff', strokeWidth: 2, filter: 'url(#glowDynamic)' }}
+                                                            animationDuration={1500}
+                                                            animationEasing="ease-in-out"
+                                                        />
+                                                    </AreaChart>
+                                                </ResponsiveContainer>
+                                            );
+                                        })()}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="empty-state" style={{ height: '100%', padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
+                                    <AlertTriangle size={48} style={{ marginBottom: '16px', opacity: 0.5 }} />
+                                    <h3>No active debts</h3>
+                                    <p>Add your loans or credit cards to see your burn-down projection.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Card>
+            </AnimateOnScroll>
 
             <Modal
                 isOpen={isActivityModalOpen}
@@ -1481,6 +1598,35 @@ const Expenses = () => {
                         <Button size="sm" variant="secondary" onClick={() => setActivityPage(p => Math.min(p + 1, activityTotalPages))} disabled={activityPage === activityTotalPages}>Next</Button>
                     </div>
                 )}
+            </Modal>
+
+            <Modal
+                isOpen={showCustomPaymentModal}
+                onClose={() => setShowCustomPaymentModal(false)}
+                title={`Custom Payment for ${customPaymentData.monthLabel}`}
+                contentStyle={{ backgroundImage: 'var(--app-bg-image)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.95, border: '1px solid rgba(255,255,255,0.2)' }}
+            >
+                <div style={{ padding: '8px' }}>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                        Enter the exact amount you paid or plan to pay. The default minimum + extra for this month is <strong className="text-primary">${Number(customPaymentData.currentAmount).toLocaleString()}</strong>.
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Payment Amount ($)</label>
+                        <Input 
+                            type="number" step="0.01" 
+                            value={customPaymentData.amount} 
+                            onChange={e => setCustomPaymentData({ ...customPaymentData, amount: e.target.value })} 
+                            autoFocus
+                        />
+                    </div>
+                    <Button 
+                        variant="primary" 
+                        style={{ width: '100%', marginTop: '24px', padding: '12px' }}
+                        onClick={handleCustomPaymentSubmit}
+                    >
+                        Save Custom Payment
+                    </Button>
+                </div>
             </Modal>
         </div>
     );

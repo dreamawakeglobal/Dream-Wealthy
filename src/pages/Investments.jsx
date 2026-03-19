@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
+import { useTheme } from '../contexts/ThemeContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { TrendingUp, Plus, Target, DollarSign, GripVertical, Trash2, Search, X } from 'lucide-react';
@@ -114,6 +115,7 @@ const CustomCandle = (props) => {
 
 const Investments = () => {
     const { portfolio, setPortfolio } = useFinancialContext();
+    const { expenseBorderColor } = useTheme();
     const [selectedClass, setSelectedClass] = useState('Stocks');
     const [assetClasses, setAssetClasses] = useState(INITIAL_ASSET_CLASSES);
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -341,7 +343,7 @@ const Investments = () => {
             }
 
             setPortfolio(prev => [...prev, {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 symbol: assetData.symbol,
                 name: assetData.name,
                 price: assetData.price,
@@ -462,14 +464,14 @@ const Investments = () => {
     return (
         <div className="page-container animate-fade-in investments-page">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '-30px', marginTop: '-60px' }}>
-                <img src={investmentsHeaderImg} alt="Investments Dashboard Header" style={{ height: '540px', objectFit: 'contain', marginBottom: '-40px' }} loading="lazy" />
+                <img src={investmentsHeaderImg} alt="Investments Dashboard Header" className="investments-header-logo" style={{ height: '540px', objectFit: 'contain', marginBottom: '-40px' }} loading="lazy" />
                 <p className="page-subtitle">Drag assets to build and track your custom investment portfolio.</p>
             </div>
 
             {/* Top: Portfolio Performance Tracker */}
             <AnimateOnScroll delay={0.1}>
                 <div className="portfolio-bottom-chart" style={{ marginBottom: '32px' }}>
-                    <Card glass style={{ padding: '32px' }}>
+                    <Card glass style={{ padding: '32px' }} className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                             <h3 className="panel-title" style={{ margin: 0 }}>Portfolio Performance</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -553,7 +555,7 @@ const Investments = () => {
             {/* Bottom: Market Drawer, Holdings & Total Value */}
             <div className="dashboard-panels investments-layout">
                 <AnimateOnScroll delay={0.1} className="asset-sidebar">
-                    <Card glass className="sidebar-card">
+                    <Card glass className={`sidebar-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                         <div className="sidebar-header">
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3>Market Drawer</h3>
@@ -656,7 +658,7 @@ const Investments = () => {
                 <AnimateOnScroll delay={0.2} className="portfolio-dropzone-container">
                     <Card
                         glass
-                        className={`dropzone-card ${portfolio.length === 0 ? 'empty' : ''}`}
+                        className={`dropzone-card ${portfolio.length === 0 ? 'empty' : ''} ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`.trim()}
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
                     >
@@ -740,7 +742,7 @@ const Investments = () => {
 
                 {/* Right: Total Value */}
                 <AnimateOnScroll delay={0.3} className="portfolio-viz-container">
-                    <Card glass className="viz-card">
+                    <Card glass className={`viz-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                         <h3 className="panel-title">Total Value</h3>
                         <h2 className="panel-hero-number text-gradient" style={{ textAlign: 'center', margin: '0 0 24px 0' }}>
                             ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

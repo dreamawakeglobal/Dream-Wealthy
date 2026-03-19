@@ -1,0 +1,14 @@
+/* TutorialOverlay.css */
+/* Cleaned up since all premium styles are now inline handled by Framer Motion & Joyride */
+
+/* Joyride overrides to hide default arrows or buttons if necessary */
+.joyride-tooltip__arrow {
+    display: none !important;
+}
+
+.custom-joyride-tooltip {
+    /* Ensures the glassmorphism backdrop filter renders cleanly */
+    -webkit-backdrop-filter: blur(40px);
+    backdrop-filter: blur(40px);
+}
+

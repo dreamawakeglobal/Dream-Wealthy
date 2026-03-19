@@ -164,7 +164,7 @@
     padding: 12px 20px;
     background: transparent;
     border: none;
-    color: #ffffff;
+    color: #000000;
     text-align: left;
     font-size: 0.95rem;
     font-family: inherit;
@@ -177,7 +177,7 @@
 
 .dropdown-item:hover {
     background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+    color: #000000;
 }
 
 .dropdown-item.danger {

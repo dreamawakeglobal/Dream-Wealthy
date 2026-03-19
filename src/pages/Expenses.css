@@ -115,6 +115,7 @@
     gap: 12px;
 }
 
+
 [data-theme='dark'] .expense-form .dream-input {
     color: #000000 !important;
 }

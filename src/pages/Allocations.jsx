@@ -55,7 +55,7 @@ const Allocations = () => {
     const handleAddCategory = () => {
         const newColor = COLOR_PALETTE[allocations.length % COLOR_PALETTE.length];
         const newCategory = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             name: `Category ${allocations.length + 1}`,
             percentage: 0,
             color: newColor

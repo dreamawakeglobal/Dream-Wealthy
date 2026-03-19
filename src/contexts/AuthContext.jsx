@@ -8,6 +8,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isTutorialActive, setTutorialActive] = useState(false);
 
     useEffect(() => {
         // Check for active session
@@ -32,6 +33,24 @@ export const AuthProvider = ({ children }) => {
         signInWithOAuth: (provider) => supabase.auth.signInWithOAuth({ provider }),
         signOut: () => supabase.auth.signOut(),
         user,
+        hasCompletedOnboarding: user?.user_metadata?.has_completed_onboarding,
+        isTutorialActive,
+        setTutorialActive,
+        completeOnboarding: async (startTutorial) => {
+             // 1. Update Supabase
+             await supabase.auth.updateUser({
+                  data: { has_completed_onboarding: true }
+             });
+             // 2. Local state update
+             setUser(prevUser => ({
+                 ...prevUser, 
+                 user_metadata: { ...prevUser?.user_metadata, has_completed_onboarding: true }
+             }));
+             // 3. Trigger tutorial if requested
+             if (startTutorial) {
+                 setTutorialActive(true);
+             }
+        }
     };
 
     return (

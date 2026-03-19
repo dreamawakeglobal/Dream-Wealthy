@@ -248,6 +248,10 @@ a {
   background: transparent;
 }
 
+.page-header-logo {
+  animation: float 6s ease-in-out infinite;
+}
+
 ::-webkit-scrollbar-thumb {
   background: var(--surface-border);
   border-radius: var(--border-radius-sm);
@@ -488,4 +492,59 @@ a {
 [data-theme='light'] .light-accent-input:focus {
     border: none !important;
     box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Global Customizable Glowing Borders (Synced from ThemeContext Settings) */
+.glow-color-blue, html[data-theme] .glow-color-blue {
+    border: 3px solid var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 28px var(--accent-primary) !important;
+}
+.glow-color-white, html[data-theme] .glow-color-white {
+    border: 3px solid rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+    box-shadow: 0 0 28px rgba(255, 255, 255, 0.5) !important;
+}
+.glow-color-black, html[data-theme] .glow-color-black {
+    border: 3px solid #000000 !important;
+    border-color: #000000 !important;
+    box-shadow: 0 0 28px rgba(0, 0, 0, 0.8) !important;
+}
+.glow-color-red, html[data-theme] .glow-color-red {
+    border: 3px solid var(--danger) !important;
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 28px var(--danger-glow) !important;
+}
+.glow-color-green, html[data-theme] .glow-color-green {
+    border: 3px solid var(--success) !important;
+    border-color: var(--success) !important;
+    box-shadow: 0 0 28px var(--success-glow, rgba(46, 204, 113, 0.4)) !important;
+}
+.glow-color-purple, html[data-theme] .glow-color-purple {
+    border: 3px solid #8b5cf6 !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 28px rgba(139, 92, 246, 0.5) !important;
+}
+.glow-color-yellow, html[data-theme] .glow-color-yellow {
+    border: 3px solid #eab308 !important;
+    border-color: #eab308 !important;
+    box-shadow: 0 0 28px rgba(234, 179, 8, 0.5) !important;
+}
+.glow-color-orange, html[data-theme] .glow-color-orange {
+    border: 3px solid #f97316 !important;
+    border-color: #f97316 !important;
+    box-shadow: 0 0 28px rgba(249, 115, 22, 0.5) !important;
+}
+
+/* Global Pointer Glow Effect */
+.pointer-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(135, 206, 235, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    transition: width 0.2s, height 0.2s;
 }

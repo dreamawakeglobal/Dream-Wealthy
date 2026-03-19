@@ -30,7 +30,7 @@ const DebtDestroyer = () => {
         e.preventDefault();
         if (newDebt.name && newDebt.balance && newDebt.rate && newDebt.minPayment) {
             setDebts([...debts, {
-                id: Date.now().toString(),
+                id: crypto.randomUUID(),
                 name: newDebt.name,
                 balance: Number(newDebt.balance),
                 interestRate: Number(newDebt.rate),

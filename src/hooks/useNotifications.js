@@ -26,23 +26,25 @@ export const useNotifications = () => {
         const currentMonth = todayDate.getMonth();
         const currentYear = todayDate.getFullYear();
 
-        // Helper to check days until a monthly due date
-        const getDaysUntil = (dueDateStr) => {
+        // Helper to check days until a monthly due date AND return the target month to prevent ID shifting
+        const getDueInfo = (dueDateStr) => {
             if (!dueDateStr) return null;
             const dueDay = Number(dueDateStr);
             if (isNaN(dueDay) || dueDay < 1 || dueDay > 31) return null;
 
+            let targetMonth = currentMonth;
             let targetDate = new Date(currentYear, currentMonth, dueDay);
 
             // If target date's day is in the past by more than 15 days, we assume it's meant for next month
             if (todayDay - dueDay > 15) {
-                targetDate = new Date(currentYear, currentMonth + 1, dueDay);
+                targetMonth = currentMonth + 1;
+                targetDate = new Date(currentYear, targetMonth, dueDay);
             }
 
             const diffTime = targetDate.getTime() - todayDate.getTime();
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            return diffDays;
+            return { diffDays, targetMonth: targetMonth % 12 };
         };
 
         // 1. Budget Warning
@@ -70,22 +72,23 @@ export const useNotifications = () => {
                 return;
             }
 
-            const daysUntil = getDaysUntil(debt.dueDate);
-            if (daysUntil !== null) {
-                if (daysUntil < 0 && daysUntil >= -15 && !debt.isPaid) {
+            const dueInfo = getDueInfo(debt.dueDate);
+            if (dueInfo !== null) {
+                const { diffDays, targetMonth } = dueInfo;
+                if (diffDays < 0 && diffDays >= -15 && !debt.isPaid) {
                     alerts.push({
-                        id: `debt_overdue_${debt.id}_${currentMonth}`,
+                        id: `debt_alert_${debt.id}_${targetMonth}`,
                         type: 'danger',
                         title: 'Payment Overdue',
-                        message: `Your payment for ${debt.name} was due ${Math.abs(daysUntil)} day(s) ago.`,
+                        message: `Your payment for ${debt.name} was due ${Math.abs(diffDays)} day(s) ago.`,
                         icon: 'AlertCircle'
                     });
-                } else if (daysUntil >= 0 && daysUntil <= 5 && !debt.isPaid) {
+                } else if (diffDays >= 0 && diffDays <= 5 && !debt.isPaid) {
                     alerts.push({
-                        id: `debt_upcoming_${debt.id}_${currentMonth}`,
+                        id: `debt_alert_${debt.id}_${targetMonth}`,
                         type: 'info',
                         title: 'Upcoming Payment',
-                        message: `Your payment for ${debt.name} is due ${daysUntil === 0 ? 'today' : `in ${daysUntil} day(s)`}.`,
+                        message: `Your payment for ${debt.name} is due ${diffDays === 0 ? 'today' : `in ${diffDays} day(s)`}.`,
                         icon: 'Calendar'
                     });
                 }
@@ -94,22 +97,23 @@ export const useNotifications = () => {
 
         // 3. Fixed Expenses
         store.fixedExpenses?.forEach(exp => {
-            const daysUntil = getDaysUntil(exp.dueDate);
-            if (daysUntil !== null) {
-                if (daysUntil < 0 && daysUntil >= -15 && !exp.isPaid) {
+            const dueInfo = getDueInfo(exp.dueDate);
+            if (dueInfo !== null) {
+                const { diffDays, targetMonth } = dueInfo;
+                if (diffDays < 0 && diffDays >= -15 && !exp.isPaid) {
                     alerts.push({
-                        id: `exp_overdue_${exp.id}_${currentMonth}`,
+                        id: `exp_alert_${exp.id}_${targetMonth}`,
                         type: 'danger',
                         title: 'Bill Overdue',
-                        message: `Your ${exp.name} bill was due ${Math.abs(daysUntil)} day(s) ago.`,
+                        message: `Your ${exp.name} bill was due ${Math.abs(diffDays)} day(s) ago.`,
                         icon: 'AlertCircle'
                     });
-                } else if (daysUntil >= 0 && daysUntil <= 5 && !exp.isPaid) {
+                } else if (diffDays >= 0 && diffDays <= 5 && !exp.isPaid) {
                     alerts.push({
-                        id: `exp_upcoming_${exp.id}_${currentMonth}`,
+                        id: `exp_alert_${exp.id}_${targetMonth}`,
                         type: 'info',
                         title: 'Upcoming Bill',
-                        message: `Your ${exp.name} bill is due ${daysUntil === 0 ? 'today' : `in ${daysUntil} day(s)`}.`,
+                        message: `Your ${exp.name} bill is due ${diffDays === 0 ? 'today' : `in ${diffDays} day(s)`}.`,
                         icon: 'Calendar'
                     });
                 }
@@ -118,22 +122,23 @@ export const useNotifications = () => {
 
         // 4. Subscriptions
         store.subscriptions?.forEach(sub => {
-            const daysUntil = getDaysUntil(sub.dueDate);
-            if (daysUntil !== null) {
-                if (daysUntil < 0 && daysUntil >= -15) {
+            const dueInfo = getDueInfo(sub.dueDate);
+            if (dueInfo !== null) {
+                const { diffDays, targetMonth } = dueInfo;
+                if (diffDays < 0 && diffDays >= -15) {
                     alerts.push({
-                        id: `sub_overdue_${sub.id}_${currentMonth}`,
+                        id: `sub_alert_${sub.id}_${targetMonth}`,
                         type: 'danger',
                         title: 'Subscription Overdue',
-                        message: `Your ${sub.name} subscription (${sub.cost}) was due ${Math.abs(daysUntil)} day(s) ago.`,
+                        message: `Your ${sub.name} subscription (${sub.cost}) was due ${Math.abs(diffDays)} day(s) ago.`,
                         icon: 'AlertCircle'
                     });
-                } else if (daysUntil >= 0 && daysUntil <= 5) {
+                } else if (diffDays >= 0 && diffDays <= 5) {
                     alerts.push({
-                        id: `sub_upcoming_${sub.id}_${currentMonth}`,
+                        id: `sub_alert_${sub.id}_${targetMonth}`,
                         type: 'info',
                         title: 'Upcoming Subscription',
-                        message: `Your ${sub.name} subscription (${sub.cost}) is renewing ${daysUntil === 0 ? 'today' : `in ${daysUntil} day(s)`}.`,
+                        message: `Your ${sub.name} subscription (${sub.cost}) is renewing ${diffDays === 0 ? 'today' : `in ${diffDays} day(s)`}.`,
                         icon: 'Calendar'
                     });
                 }

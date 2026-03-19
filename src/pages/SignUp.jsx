@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useSound } from '../SoundContext';
 import { Sparkles, ArrowRight, Mail } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -11,6 +12,7 @@ import './SignUp.css';
 const SignUp = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { playPop } = useSound();
     const [isLogin, setIsLogin] = useState(false);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
@@ -29,6 +31,7 @@ const SignUp = () => {
     }, [user, navigate]);
 
     const handleGoogleLogin = async () => {
+        playPop();
         setErrorMsg(null);
         setLoading(true);
         try {
@@ -44,6 +47,7 @@ const SignUp = () => {
     };
 
     const handleMagicLink = async () => {
+        playPop();
         if (!email) {
             setErrorMsg("Please enter your email above for a Magic Link");
             return;
@@ -63,6 +67,7 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        playPop();
         setErrorMsg(null);
         setLoading(true);
 
@@ -135,6 +140,7 @@ const SignUp = () => {
                         </button>
                         
                         <button disabled={loading} className="auth-pill-btn white" onClick={() => {
+                            playPop();
                             setErrorMsg(null);
                             setLoading(true);
                             supabase.auth.signInWithOAuth({ provider: 'apple' }).catch(err => setErrorMsg(err.message)).finally(() => setLoading(false));
@@ -151,7 +157,7 @@ const SignUp = () => {
                             <div className="auth-divider-line"></div>
                         </div>
 
-                        <button onClick={() => setShowEmailForm(true)} className="auth-pill-btn gray">
+                        <button onClick={() => { playPop(); setShowEmailForm(true); }} className="auth-pill-btn gray">
                             {isLogin ? 'Log in with email' : 'Create account'}
                         </button>
                     </div>
@@ -234,7 +240,7 @@ const SignUp = () => {
                         <div style={{ textAlign: 'center', marginTop: '24px' }}>
                             <button
                                 className="toggle-auth-mode"
-                                onClick={() => setShowEmailForm(false)}
+                                onClick={() => { playPop(); setShowEmailForm(false); }}
                                 style={{ color: 'var(--text-secondary)' }}
                             >
                                 ← Back to options
@@ -247,7 +253,7 @@ const SignUp = () => {
                     <div className="signup-footer" style={{ marginTop: '24px' }}>
                         <button
                             className="toggle-auth-mode"
-                            onClick={() => setIsLogin(!isLogin)}
+                            onClick={() => { playPop(); setIsLogin(!isLogin); }}
                         >
                             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
                         </button>

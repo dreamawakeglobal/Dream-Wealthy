@@ -7,6 +7,7 @@ import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { useFinancialContext } from '../FinancialContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Projections.css';
 
@@ -79,6 +80,7 @@ const Projections = () => {
         cellOverrides, setCellOverrides,
         getProjectionData
     } = useFinancialContext();
+    const { expenseBorderColor } = useTheme();
 
     const [localIncome, setLocalIncome] = useState(totalMonthlyIncome);
     const [localExpenses, setLocalExpenses] = useState(totalMonthlyExpenses);
@@ -126,14 +128,14 @@ const Projections = () => {
     return (
         <div className="page-container animate-fade-in">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
-                <img src="/projections-header-logo.png" alt="Projections Header Logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
+                <img src="/projections-header-logo.png" alt="Projections Header Logo" className="page-header-logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Map your journey to wealth.</p>
             </div>
             <div className="projection-dashboard">
                 {/* Controls Sidebar */}
                 <div className="projection-controls">
                     <AnimateOnScroll delay={0.1}>
-                        <Card glass className="controls-card">
+                        <Card glass className={`controls-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <div className="controls-header">
                                 <Settings size={20} />
                                 <h2>Projection Engine</h2>
@@ -172,7 +174,7 @@ const Projections = () => {
                             <div className="controls-header" style={{ justifyContent: 'space-between', display: 'flex', width: '100%', alignItems: 'center', marginBottom: '8px' }}>
                                 <label style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Extra Monthly Flows</label>
                                 <button className="add-tab-btn" onClick={() => {
-                                    setExtraColumns([...extraColumns, { id: Date.now().toString(), name: 'New Flow', amount: 0 }]);
+                                    setExtraColumns([...extraColumns, { id: crypto.randomUUID(), name: 'New Flow', amount: 0 }]);
                                 }} style={{ padding: '4px 8px', fontSize: '0.8rem' }}><Plus size={14} /> Add</button>
                             </div>
 
@@ -303,7 +305,7 @@ const Projections = () => {
                     </AnimateOnScroll>
 
                     <AnimateOnScroll delay={0.2}>
-                        <Card glass className="projection-summary-card">
+                        <Card glass className={`projection-summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <div className="summary-header">
                                 <span>{projectionYears} Year Savings</span>
                                 <TrendingUp size={24} className="text-success" />
@@ -318,7 +320,7 @@ const Projections = () => {
                 {/* Charts and Tables */}
                 <div className="projection-visuals">
                     <AnimateOnScroll delay={0.1}>
-                        <Card glass className="chart-container">
+                        <Card glass className={`chart-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <h3>Net Wealth Curve ({projectionYears * 12} Months)</h3>
                             <div className="area-chart-wrapper">
                                 <ResponsiveContainer width="100%" height="100%">
@@ -345,7 +347,7 @@ const Projections = () => {
                     </AnimateOnScroll>
 
                     <AnimateOnScroll delay={0.2} yOffset={40}>
-                        <Card glass className="table-container">
+                        <Card glass className={`table-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3 style={{ margin: 0 }}>Month-by-Month Breakdown</h3>
                                 {projectionData.length > 12 && (

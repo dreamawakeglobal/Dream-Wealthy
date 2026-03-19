@@ -46,15 +46,13 @@ const AudioPlayer = () => {
                 preload="auto"
                 autoPlay
             />
-            {user && (
-                <button
-                    className="audio-toggle-btn"
-                    onClick={togglePlay}
-                    title={isPlaying ? "Mute Background Music" : "Play Background Music"}
-                >
-                    {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-                </button>
-            )}
+            <button
+                className="audio-toggle-btn"
+                onClick={togglePlay}
+                title={isPlaying ? "Mute Background Music" : "Play Background Music"}
+            >
+                {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
+            </button>
         </div>
     );
 };

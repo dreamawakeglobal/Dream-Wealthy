@@ -7,12 +7,13 @@ import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
 import { useFinancialContext } from '../FinancialContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GoalsSection } from '../components/dashboard/GoalsSection';
 import './Income.css';
 
-const IncomeStreamForm = ({ onAdd, title }) => {
+const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const { playKaChing } = useSound();
@@ -21,14 +22,14 @@ const IncomeStreamForm = ({ onAdd, title }) => {
         e.preventDefault();
         if (name && amount) {
             playKaChing();
-            onAdd({ id: Date.now(), name, amount: parseFloat(amount), frequency: 'monthly' });
+            onAdd({ id: crypto.randomUUID(), name, amount: parseFloat(amount), frequency: 'monthly' });
             setName('');
             setAmount('');
         }
     };
 
     return (
-        <Card glass className="income-form-card">
+        <Card glass className={`income-form-card ${className}`.trim()}>
             <h3 className="form-title">{title}</h3>
             <form onSubmit={handleSubmit} className="income-form">
                 <Input
@@ -199,6 +200,7 @@ const Income = () => {
         allocations, setAllocations,
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
+    const { expenseBorderColor } = useTheme();
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -269,7 +271,7 @@ const Income = () => {
     const handleAddCategory = () => {
         const newColor = COLOR_PALETTE[allocations.length % COLOR_PALETTE.length];
         const newCategory = {
-            id: Date.now().toString(),
+            id: crypto.randomUUID(),
             name: `Category ${allocations.length + 1}`,
             percentage: 0,
             color: newColor
@@ -310,13 +312,13 @@ const Income = () => {
     return (
         <div className="page-container animate-fade-in" style={{ minHeight: '100vh' }}>
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
-                <img src="/income-header-logo.png" alt="Income Header Logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
+                <img src="/income-header-logo.png" alt="Income Header Logo" className="page-header-logo" style={{ height: '400px', objectFit: 'contain', marginLeft: '3%' }} loading="lazy" />
                 <p className="page-subtitle">Design your cash flow architecture.</p>
             </div>
 
             <div className="income-summary-grid">
                 <AnimateOnScroll delay={0.1}>
-                    <Card glass className="summary-card">
+                    <Card glass className={`summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                         <p className="summary-label">Current Monthly</p>
                         <h2 className="summary-value positive">
                             $<AnimatedNumber value={totalMonthlyIncome} />
@@ -326,7 +328,7 @@ const Income = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.2}>
-                    <Card glass className="summary-card gold-glow" style={{ height: '100%' }}>
+                    <Card glass className={`summary-card gold-glow ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ height: '100%' }}>
                         <div className="summary-label with-icon">
                             <Sparkles size={16} className="gold-text" />
                             <span>Projected Growth (Current + Future)</span>
@@ -363,7 +365,7 @@ const Income = () => {
                             </Button>
                         </div>
 
-                        <IncomeStreamForm onAdd={addCurrentIncome} title="Add Stream" />
+                        <IncomeStreamForm onAdd={addCurrentIncome} title="Add Stream" className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''} />
                         <IncomeStreamList
                             streams={currentIncome}
                             onRemove={removeCurrentIncome}
@@ -381,7 +383,7 @@ const Income = () => {
                             <span className="badge gold">${projectedFutureIncome.toLocaleString()}</span>
                         </div>
 
-                        <IncomeStreamForm onAdd={addFutureIncome} title="Add Future Stream" />
+                        <IncomeStreamForm onAdd={addFutureIncome} title="Add Future Stream" className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''} />
                         <IncomeStreamList
                             streams={futureIncome}
                             onRemove={removeFutureIncome}
@@ -393,16 +395,15 @@ const Income = () => {
             </div>
 
             {/* Savings Goals Section */}
-            <div style={{ marginTop: '48px' }}>
+            <div className="goals-section" style={{ marginTop: '48px' }}>
                 <GoalsSection />
             </div>
 
             {/* --- Merged Allocations Dashboard --- */}
             <AnimateOnScroll delay={0.1} yOffset={40}>
                 <div className="allocation-dashboard" style={{ marginTop: '48px' }}>
-                    {/* Sliders Container */}
                     <div className="allocation-controls">
-                        <Card glass className="sliders-card">
+                        <Card glass className={`sliders-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <div className="sliders-header" style={{ marginBottom: '16px' }}>
                                 <div className="header-info">
                                     <h2>Allocation Strategy</h2>
@@ -556,7 +557,7 @@ const Income = () => {
 
                     {/* Visualizer Container */}
                     <div className="allocation-visuals">
-                        <Card glass className="chart-card text-center">
+                        <Card glass className={`chart-card text-center ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <h3 className="panel-title">Wealth Distribution</h3>
                             <div className="pie-wrapper">
                                 {totalPercentage === 0 ? (

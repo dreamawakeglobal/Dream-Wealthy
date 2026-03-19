@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useSound } from '../SoundContext';
 import { ArrowRight, CheckCircle2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
@@ -11,6 +12,7 @@ import './Waitlist.css';
 
 const Waitlist = () => {
     const { user } = useAuth();
+    const { playPop } = useSound();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const videoRef = useRef(null);
 
@@ -55,11 +57,13 @@ const Waitlist = () => {
     }, []);
 
     const handleJoinClick = () => {
+        playPop();
         setShowForm(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        playPop();
         setErrorMsg('');
 
         if (!email) {
