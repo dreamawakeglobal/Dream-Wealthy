@@ -4,6 +4,7 @@ import { ArrowRight, TrendingUp, DollarSign, Wallet } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { UserLevelBadge } from '../components/dashboard/UserLevelBadge';
 import { useFinancialContext } from '../FinancialContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -61,7 +62,7 @@ const Home = () => {
 
     // Panel 2: Portfolio Net Worth from Actual Investments Data
     const totalPortfolioValue = useMemo(() => {
-        return (portfolio || []).reduce((acc, p) => acc + ((p.price || 0) * (p.quantity || 0)), 0);
+        return (portfolio || []).reduce((acc, p) => acc + ((p.price || p.avgPrice || 0) * (p.quantity || 0)), 0);
     }, [portfolio]);
 
     const portfolioChartData = useMemo(() => {
@@ -197,43 +198,11 @@ const Home = () => {
             <section id="dashboard" className="dashboard-section">
                 <h2 className="section-title">Financial Overview</h2>
 
-                <div className="metrics-grid">
-                    <AnimateOnScroll delay={0.1}>
-                        <Card glass className={`metric-card ${borderGlowClass}`}>
-                            <div className="metric-icon-wrapper success">
-                                <DollarSign size={24} />
-                            </div>
-                            <p className="metric-label">Total Monthly Income</p>
-                            <h3 className="metric-value positive">
-                                $<AnimatedNumber value={totalMonthlyIncome} />
-                            </h3>
-                        </Card>
-                    </AnimateOnScroll>
 
-                    <AnimateOnScroll delay={0.2}>
-                        <Card glass className={`metric-card ${borderGlowClass}`}>
-                            <div className="metric-icon-wrapper danger">
-                                <Wallet size={24} />
-                            </div>
-                            <p className="metric-label">Total Monthly Expenses</p>
-                            <h3 className="metric-value">
-                                $<AnimatedNumber value={totalMonthlyExpenses} />
-                            </h3>
-                        </Card>
-                    </AnimateOnScroll>
-
-                    <AnimateOnScroll delay={0.3}>
-                        <Card glass className={`metric-card ${borderGlowClass}`}>
-                            <div className={`metric-icon-wrapper ${netMonthlyCashFlow >= 0 ? 'success' : 'danger'}`}>
-                                <TrendingUp size={24} />
-                            </div>
-                            <p className="metric-label">Net Monthly Cash Flow</p>
-                            <h3 className={`metric-value ${netMonthlyCashFlow >= 0 ? 'positive' : 'negative'}`}>
-                                {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} />
-                            </h3>
-                        </Card>
-                    </AnimateOnScroll>
-                </div>
+                {/* Ultra Premium Profile Badge Engine */}
+                <AnimateOnScroll delay={0.4}>
+                    <UserLevelBadge />
+                </AnimateOnScroll>
 
                 <div className="dashboard-panels">
                     {/* Panel 1: Income & Expenses Line Chart */}
@@ -278,7 +247,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" onClick={() => navigate('/income')}>
+                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/income'); }}>
                                     Manage Entries
                                 </Button>
                             </div>
@@ -347,7 +316,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" onClick={() => navigate('/projections')}>
+                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/projections'); }}>
                                     Run Projections
                                 </Button>
                             </div>

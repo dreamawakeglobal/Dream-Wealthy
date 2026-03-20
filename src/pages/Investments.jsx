@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { useTheme } from '../contexts/ThemeContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { Modal } from '../components/ui/Modal';
 import { TrendingUp, Plus, Target, DollarSign, GripVertical, Trash2, Search, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useFinancialContext } from '../FinancialContext';
@@ -13,16 +14,16 @@ import './Investments.css';
 // Base Initial State structure
 const INITIAL_ASSET_CLASSES = {
     Stocks: [
-        { id: 's1', symbol: 'AAPL', name: 'Apple Inc.', price: 0, change: 0 },
-        { id: 's2', symbol: 'MSFT', name: 'Microsoft Corp.', price: 0, change: 0 },
-        { id: 's3', symbol: 'NVDA', name: 'NVIDIA Corp.', price: 0, change: 0 },
-        { id: 's4', symbol: 'AMZN', name: 'Amazon.com Inc.', price: 0, change: 0 },
-        { id: 's5', symbol: 'META', name: 'Meta Platforms Inc.', price: 0, change: 0 },
-        { id: 's6', symbol: 'GOOGL', name: 'Alphabet Inc.', price: 0, change: 0 },
-        { id: 's7', symbol: 'TSLA', name: 'Tesla Inc.', price: 0, change: 0 },
-        { id: 's8', symbol: 'BRK.B', name: 'Berkshire Hathaway', price: 0, change: 0 },
-        { id: 's9', symbol: 'LLY', name: 'Eli Lilly and Co.', price: 0, change: 0 },
-        { id: 's10', symbol: 'AVGO', name: 'Broadcom Inc.', price: 0, change: 0 },
+        { id: 's1', symbol: 'AAPL', name: 'Apple Inc.', logo: 'https://logo.clearbit.com/apple.com', price: 0, change: 0 },
+        { id: 's2', symbol: 'MSFT', name: 'Microsoft Corp.', logo: 'https://logo.clearbit.com/microsoft.com', price: 0, change: 0 },
+        { id: 's3', symbol: 'NVDA', name: 'NVIDIA Corp.', logo: 'https://logo.clearbit.com/nvidia.com', price: 0, change: 0 },
+        { id: 's4', symbol: 'AMZN', name: 'Amazon.com Inc.', logo: 'https://logo.clearbit.com/amazon.com', price: 0, change: 0 },
+        { id: 's5', symbol: 'META', name: 'Meta Platforms Inc.', logo: 'https://logo.clearbit.com/meta.com', price: 0, change: 0 },
+        { id: 's6', symbol: 'GOOGL', name: 'Alphabet Inc.', logo: 'https://logo.clearbit.com/abc.xyz', price: 0, change: 0 },
+        { id: 's7', symbol: 'TSLA', name: 'Tesla Inc.', logo: 'https://logo.clearbit.com/tesla.com', price: 0, change: 0 },
+        { id: 's8', symbol: 'BRK.B', name: 'Berkshire Hathaway', logo: 'https://logo.clearbit.com/berkshirehathaway.com', price: 0, change: 0 },
+        { id: 's9', symbol: 'LLY', name: 'Eli Lilly and Co.', logo: 'https://logo.clearbit.com/lilly.com', price: 0, change: 0 },
+        { id: 's10', symbol: 'AVGO', name: 'Broadcom Inc.', logo: 'https://logo.clearbit.com/broadcom.com', price: 0, change: 0 },
     ],
     Crypto: [
         { id: 'c1', symbol: 'BTC', name: 'Bitcoin', apiId: 'bitcoin', price: 0, change: 0 },
@@ -115,7 +116,7 @@ const CustomCandle = (props) => {
 
 const Investments = () => {
     const { portfolio, setPortfolio } = useFinancialContext();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
     const [selectedClass, setSelectedClass] = useState('Stocks');
     const [assetClasses, setAssetClasses] = useState(INITIAL_ASSET_CLASSES);
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -126,6 +127,27 @@ const Investments = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [showSearchPopup, setShowSearchPopup] = useState(false);
     const [chartTimeframe, setChartTimeframe] = useState('24H');
+
+    // Custom Asset State
+    const [isAddingCustom, setIsAddingCustom] = useState(false);
+    const [customAsset, setCustomAsset] = useState({ name: '', price: '', quantity: '' });
+
+    const handleAddCustom = () => {
+        if (!customAsset.name || !customAsset.price || !customAsset.quantity) return;
+        setPortfolio(prev => [...prev, {
+            id: crypto.randomUUID(),
+            symbol: customAsset.name.toUpperCase().slice(0, 10),
+            name: customAsset.name,
+            price: Number(customAsset.price), // Volatile, deleted on save by store.js
+            change: 0,
+            quantity: Number(customAsset.quantity),
+            avgPrice: Number(customAsset.price), // Persisted indefinitely 
+            assetClass: 'Custom',
+            apiId: null
+        }]);
+        setIsAddingCustom(false);
+        setCustomAsset({ name: '', price: '', quantity: '' });
+    };
 
     // --- API Data Fetching ---
     React.useEffect(() => {
@@ -379,7 +401,7 @@ const Investments = () => {
             let liveAsset = assetClasses.Stocks.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Crypto.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Commodities.find(a => a.symbol === holding.symbol);
-            const currentPrice = liveAsset ? liveAsset.price : holding.price;
+            const currentPrice = liveAsset ? liveAsset.price : (holding.price !== undefined ? holding.price : (holding.avgPrice || 0));
             return total + (currentPrice * holding.quantity);
         }, 0);
     }, [portfolio, assetClasses]);
@@ -389,7 +411,7 @@ const Investments = () => {
             let liveAsset = assetClasses.Stocks.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Crypto.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Commodities.find(a => a.symbol === holding.symbol);
-            const currentPrice = liveAsset ? liveAsset.price : holding.price;
+            const currentPrice = liveAsset ? liveAsset.price : (holding.price !== undefined ? holding.price : (holding.avgPrice || 0));
             return {
                 name: holding.symbol,
                 value: Number((currentPrice * holding.quantity).toFixed(2))
@@ -409,8 +431,9 @@ const Investments = () => {
             let liveAsset = assetClasses.Stocks.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Crypto.find(a => a.symbol === holding.symbol) ||
                 assetClasses.Commodities.find(a => a.symbol === holding.symbol);
-            const chg = liveAsset ? liveAsset.change : holding.change;
-            const val = liveAsset ? liveAsset.price * holding.quantity : holding.price * holding.quantity;
+            const chg = liveAsset ? liveAsset.change : (holding.change !== undefined ? holding.change : 0);
+            const hPrice = holding.price !== undefined ? holding.price : (holding.avgPrice || 0);
+            const val = (liveAsset ? liveAsset.price : hPrice) * holding.quantity;
             totalChangeWeighted += (chg * val);
         });
         const dailyChangePercent = currentTotal > 0 ? totalChangeWeighted / currentTotal : 0;
@@ -664,8 +687,66 @@ const Investments = () => {
                     >
                         <div className="dropzone-header">
                             <h3 className="panel-title">Your Holdings</h3>
-                            <span className="badge glass-badge">{portfolio.length} Assets</span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <button 
+                                    onClick={() => setIsAddingCustom(true)} 
+                                    style={{ background: 'var(--accent-primary)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                                >
+                                    + Add Custom Asset
+                                </button>
+                                <span className="badge glass-badge">{portfolio.length} Assets</span>
+                            </div>
                         </div>
+
+                        <Modal
+                            isOpen={isAddingCustom}
+                            onClose={() => setIsAddingCustom(false)}
+                            useNeonGlow={true}
+                            dimOverlay={false}
+                            lessTransparent={true}
+                            title={
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                    Add <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Custom Asset</span>
+                                </div>
+                            }
+                        >
+                            <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Asset Name</label>
+                                        <Input 
+                                            placeholder="e.g. Real Estate, Startup Equity..." 
+                                            value={customAsset.name} 
+                                            onChange={e => setCustomAsset({...customAsset, name: e.target.value})}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Current Price / Value</label>
+                                            <Input 
+                                                type="number" step="any" min="0"
+                                                placeholder="0.00" 
+                                                value={customAsset.price} 
+                                                onChange={e => setCustomAsset({...customAsset, price: e.target.value})}
+                                                icon={<DollarSign size={16} />}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Quantity Owned</label>
+                                            <Input 
+                                                type="number" step="any" min="0"
+                                                placeholder="0" 
+                                                value={customAsset.quantity} 
+                                                onChange={e => setCustomAsset({...customAsset, quantity: e.target.value})}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <Button onClick={handleAddCustom} variant="primary" style={{ width: '100%', marginTop: '8px', padding: '14px', borderRadius: '12px', background: 'var(--accent-gradient)', border: 'none', color: '#fff', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
+                                    <Plus size={20} style={{ marginRight: '8px' }}/> Add To Portfolio
+                                </Button>
+                            </div>
+                        </Modal>
 
                         {portfolio.length === 0 ? (
                             <div className="empty-dropzone-state">
@@ -680,15 +761,43 @@ const Investments = () => {
                                         assetClasses.Crypto.find(a => a.symbol === holding.symbol) ||
                                         assetClasses.Commodities.find(a => a.symbol === holding.symbol);
 
-                                    const displayPrice = liveAsset ? liveAsset.price : holding.price;
+                                    const displayPrice = liveAsset ? liveAsset.price : (holding.price !== undefined ? holding.price : (holding.avgPrice || 0));
                                     const totalValue = displayPrice * holding.quantity;
                                     const costBasis = (holding.avgPrice || 0) * holding.quantity;
                                     const pnl = costBasis > 0 ? totalValue - costBasis : 0;
                                     const pnlPercent = costBasis > 0 ? ((pnl / costBasis) * 100).toFixed(2) : 0;
 
+                                    // Safely detect logos (Explicit Stock Clearbit URL, or Coincap icon resolution)
+                                    let logoUrl = null;
+                                    let isCrypto = !!assetClasses.Crypto.find(a => a.symbol === holding.symbol);
+                                    if (liveAsset && liveAsset.logo) {
+                                        logoUrl = liveAsset.logo;
+                                    } else if (isCrypto) {
+                                        logoUrl = `https://assets.coincap.io/assets/icons/${holding.symbol.toLowerCase()}@2x.png`;
+                                    }
+
                                     return (
                                         <div key={holding.id} className="holding-item animate-fade-in">
-                                            <div className="holding-identity">
+                                            <button onClick={() => removeFromPortfolio(holding.id)} className="btn-icon danger remove-btn" title="Remove Asset">
+                                                <Trash2 size={14} />
+                                            </button>
+                                            
+                                            <div className="holding-identity" style={{ alignItems: 'center' }}>
+                                                <div style={{ position: 'relative', width: '44px', height: '44px', marginBottom: '8px' }}>
+                                                    {/* Fallback Letter Avatar */}
+                                                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '50%', background: 'var(--accent-primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1.2rem', zIndex: 1 }}>
+                                                        {holding.symbol.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    {/* Primary Hotlink Image (Overlays on top, fades out safely if 404 block arises) */}
+                                                    {logoUrl && (
+                                                        <img 
+                                                            src={logoUrl} 
+                                                            alt={holding.symbol} 
+                                                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '50%', objectFit: 'contain', background: 'white', border: '1px solid rgba(0,0,0,0.1)', padding: '4px', zIndex: 2, transition: 'opacity 0.2s ease' }}
+                                                            onError={e => { e.target.style.opacity = 0; }}
+                                                        />
+                                                    )}
+                                                </div>
                                                 <div className="holding-symbol">{holding.symbol}</div>
                                                 <div className="holding-price text-muted">${displayPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                             </div>
@@ -697,40 +806,29 @@ const Investments = () => {
                                                 <div className="qty-input-wrapper">
                                                     <label>Qty:</label>
                                                     <input
-                                                        type="number"
-                                                        step="any"
-                                                        min="0"
-                                                        value={holding.quantity}
+                                                        type="number" step="any" min="0" value={holding.quantity}
                                                         onChange={(e) => updateQuantity(holding.id, e.target.value)}
                                                         className="qty-input"
                                                     />
                                                 </div>
 
                                                 <div className="qty-input-wrapper">
-                                                    <label>Avg $:</label>
+                                                    <label>Avg Cost:</label>
                                                     <input
-                                                        type="number"
-                                                        step="any"
-                                                        min="0"
-                                                        value={holding.avgPrice || ''}
+                                                        type="number" step="any" min="0" value={holding.avgPrice || ''}
                                                         onChange={(e) => updateAvgPrice(holding.id, e.target.value)}
-                                                        className="qty-input"
-                                                        placeholder="0.00"
+                                                        className="qty-input" placeholder="0.00"
                                                     />
                                                 </div>
+                                            </div>
 
-                                                <div className="holding-value" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                                    <span>${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                                    {costBasis > 0 && (
-                                                        <span style={{ fontSize: '0.75rem', color: pnl >= 0 ? 'var(--success)' : 'var(--danger)', fontWeight: 600 }}>
-                                                            {pnl >= 0 ? '+' : ''}{pnlPercent}%
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <button onClick={() => removeFromPortfolio(holding.id)} className="btn-icon danger remove-btn">
-                                                    <Trash2 size={16} />
-                                                </button>
+                                            <div className="holding-value">
+                                                <span className="holding-total-worth">${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                                {costBasis > 0 && (
+                                                    <span className="holding-pnl" style={{ color: pnl >= 0 ? 'var(--success)' : 'var(--danger)' }}>
+                                                        {pnl >= 0 ? '+' : ''}{pnlPercent}%
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     );

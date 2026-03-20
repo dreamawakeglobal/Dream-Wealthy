@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile } from 'lucide-react';
+import EmojiPicker from 'emoji-picker-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     AreaChart,
@@ -21,10 +22,11 @@ import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Expenses.css';
 
-const ExpenseForm = ({ onAdd, title, placeholder }) => {
+const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const { playReceiptTear } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
@@ -41,16 +43,48 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
     };
 
     return (
-        <Card glass className={`expense-form-card ${borderGlowClass}`}>
+        <Card glass className={`expense-form-card ${borderGlowClass}`} style={{ position: 'relative', zIndex: 99 }}>
             <h3 className="form-title">{title}</h3>
             <form onSubmit={handleSubmit} className="expense-form">
-                <Input
-                    placeholder={placeholder}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    style={{ color: 'black' }}
-                />
+                <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        style={{ padding: '0 12px', height: '42px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        title="Add Emoji"
+                    >
+                        <Smile size={20} color="var(--text-secondary)" />
+                    </Button>
+                    <div style={{ flex: 1 }}>
+                        <Input
+                            placeholder={placeholder}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            style={{ color: 'black', marginBottom: 0 }}
+                        />
+                    </div>
+                    {showEmojiPicker && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 100 }}>
+                            <div 
+                                style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                                onClick={() => setShowEmojiPicker(false)} 
+                            />
+                            <div style={{ position: 'relative', zIndex: 100, boxShadow: '0 16px 32px rgba(0,0,0,0.5)', borderRadius: '8px' }}>
+                                <EmojiPicker 
+                                    onEmojiClick={(emojiData) => {
+                                        setName(prev => (prev ? prev + ' ' : '') + emojiData.emoji);
+                                        setShowEmojiPicker(false);
+                                    }}
+                                    theme={theme === 'dark' ? 'dark' : 'light'}
+                                    searchPosition="none"
+                                    skinTonesDisabled
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="amount-input-group">
                     <Input
                         type="number" step="0.01"
@@ -62,15 +96,17 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
                         min="0"
                         style={{ color: 'black', flex: 1.5 }}
                     />
-                    <Input
-                        type="number"
-                        min="1"
-                        max="31"
-                        placeholder="Day (1-31)"
-                        value={dueDate}
-                        onChange={(e) => setDueDate(e.target.value)}
-                        style={{ color: 'black', flex: 1 }}
-                    />
+                    {showDueDate && (
+                        <Input
+                            type="number"
+                            min="1"
+                            max="31"
+                            placeholder="Day (1-31)"
+                            value={dueDate}
+                            onChange={(e) => setDueDate(e.target.value)}
+                            style={{ color: 'black', flex: 1 }}
+                        />
+                    )}
                     <Button type="submit" variant="secondary">
                         <Plus size={18} /> Add
                     </Button>
@@ -80,7 +116,7 @@ const ExpenseForm = ({ onAdd, title, placeholder }) => {
     );
 };
 
-const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {} }) => {
+const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, showDueDate = true }) => {
     const { playCheck } = useSound();
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
@@ -143,13 +179,15 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         placeholder="Amount"
                                         style={{ width: '100px' }}
                                     />
-                                    <Input
-                                        type="number" min="1" max="31"
-                                        value={editDueDate}
-                                        onChange={(e) => setEditDueDate(e.target.value)}
-                                        placeholder="Due (1-31)"
-                                        style={{ width: '100px' }}
-                                    />
+                                    {showDueDate && (
+                                        <Input
+                                            type="number" min="1" max="31"
+                                            value={editDueDate}
+                                            onChange={(e) => setEditDueDate(e.target.value)}
+                                            placeholder="Due (1-31)"
+                                            style={{ width: '100px' }}
+                                        />
+                                    )}
                                 </div>
                                 <div className="stream-actions">
                                     <Button size="sm" onClick={() => saveEdit(expense.id)}>Save</Button>
@@ -179,7 +217,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                     <div className="stream-info">
                                         <p className="stream-name">{expense.name}</p>
                                         <span className="stream-freq">
-                                            Monthly {expense.dueDate && `• Due on the ${expense.dueDate}${[11, 12, 13].includes(Number(expense.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(expense.dueDate) % 10) - 1] || 'th')}`}
+                                            Monthly {showDueDate && expense.dueDate && `• Due on the ${expense.dueDate}${[11, 12, 13].includes(Number(expense.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(expense.dueDate) % 10) - 1] || 'th')}`}
                                         </span>
                                     </div>
                                 </div>
@@ -680,7 +718,7 @@ const Expenses = () => {
                 <AnimateOnScroll delay={0.1} className="expense-column fixed-expense-box">
                     <div className="column-header" style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                            <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
+                            <h2 style={{ margin: 0 }}>🏠 Fixed Expenses</h2>
                             <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
                             {(() => {
                                 const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
@@ -716,7 +754,7 @@ const Expenses = () => {
                 <AnimateOnScroll delay={0.2} className="expense-column variable-expense-box">
                     <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <h2 style={{ margin: 0 }}>Variable Expenses</h2>
+                            <h2 style={{ margin: 0 }}>🛒 Variable Expenses</h2>
                             <span className="badge warning-badge" style={{ marginLeft: '12px' }}>
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
@@ -751,6 +789,7 @@ const Expenses = () => {
                         onAdd={addVariable}
                         title="Add Variable Expense"
                         placeholder="e.g. Groceries, Dining, Entertainment"
+                        showDueDate={false}
                     />
                     <ExpenseList
                         expenses={variableExpenses}
@@ -759,6 +798,7 @@ const Expenses = () => {
                         emptyMessage="No variable expenses added."
                         showTracking={true}
                         transactionsByCategory={transactionsByCategory}
+                        showDueDate={false}
                     />
                 </AnimateOnScroll>
             </div>
@@ -1405,7 +1445,7 @@ const Expenses = () => {
                                 ].map((s) => (
                                     <button
                                         key={s.id}
-                                        onClick={() => setStrategy(s.id)}
+                                        onClick={() => { playPop && playPop(); setStrategy(s.id); }}
                                         style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: 'none', background: 'transparent', color: strategy === s.id ? '#fff' : 'var(--text-secondary)', display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', zIndex: 1, transition: 'color 0.3s ease' }}
                                     >
                                         {strategy === s.id && (

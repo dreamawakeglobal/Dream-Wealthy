@@ -31,6 +31,11 @@ const mapToCamel = (item) => {
 // Helper to format frontend camelCase to DB snake_case
 const mapToSnake = (item) => {
     const snakeItem = { ...item };
+
+    // Discard volatile/locally fetched API attributes so they aren't incorrectly pushed to the Postgres schema
+    if (snakeItem.price !== undefined) delete snakeItem.price;
+    if (snakeItem.change !== undefined) delete snakeItem.change;
+
     if (snakeItem.targetAmount !== undefined) { snakeItem.target_amount = snakeItem.targetAmount; delete snakeItem.targetAmount; }
     if (snakeItem.currentAmount !== undefined) { snakeItem.current_amount = snakeItem.currentAmount; delete snakeItem.currentAmount; }
     if (snakeItem.monthlyContribution !== undefined) { snakeItem.monthly_contribution = snakeItem.monthlyContribution; delete snakeItem.monthlyContribution; }
