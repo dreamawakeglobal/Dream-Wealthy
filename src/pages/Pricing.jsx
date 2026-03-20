@@ -5,6 +5,7 @@ import { Check, X, Zap, Shield, TrendingUp, Sparkles, CreditCard } from 'lucide-
 import { useFinancialContext } from '../FinancialContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
+import { useSound } from '../SoundContext';
 import './Pricing.css';
 
 const PLANS = [
@@ -52,6 +53,7 @@ const PLANS = [
 const Pricing = () => {
     const { profileData } = useFinancialContext();
     const { user } = useAuth();
+    const { playPop } = useSound();
     const [isLoading, setIsLoading] = useState(null);
     const currentTier = profileData?.subscriptionTier || 'none';
 
@@ -144,7 +146,7 @@ const Pricing = () => {
 
                             <button
                                 className={`plan-cta ${plan.popular ? 'primary' : 'secondary'}`}
-                                onClick={() => handleCheckout(plan.id)}
+                                onClick={() => { if(playPop) playPop(); handleCheckout(plan.id); }}
                                 disabled={isActive || isLoading !== null}
                             >
                                 {isLoading === plan.id ? (

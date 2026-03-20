@@ -4,6 +4,7 @@ import Navigation from './Navigation';
 import Footer from './Footer';
 import { Button } from './ui/Button';
 import { useAuth } from '../contexts/AuthContext';
+import { useSound } from '../SoundContext';
 import { LogOut, User, Settings, CreditCard } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import './Layout.css';
@@ -11,6 +12,7 @@ import './Layout.css';
 const Layout = () => {
     const navigate = useNavigate();
     const { user, signOut } = useAuth();
+    const { playPop } = useSound();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef(null);
     const location = useLocation();
@@ -44,7 +46,7 @@ const Layout = () => {
                         <div className="profile-menu-container" ref={dropdownRef}>
                             <button
                                 className="profile-button glass"
-                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                onClick={() => { if(playPop) playPop(); setIsProfileOpen(!isProfileOpen); }}
                                 aria-label="Profile Menu"
                                 style={user?.user_metadata?.avatar_url ? { backgroundImage: `url(${user.user_metadata.avatar_url})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
                             >
@@ -54,13 +56,13 @@ const Layout = () => {
                             {isProfileOpen && (
                                 <div className="profile-dropdown glass">
                                     <div className="profile-dropdown-body">
-                                        <button className="dropdown-item" onClick={() => { navigate('/settings'); setIsProfileOpen(false); }}>
+                                        <button className="dropdown-item" onClick={() => { if(playPop) playPop(); navigate('/settings'); setIsProfileOpen(false); }}>
                                             <Settings size={16} /> Profile Settings
                                         </button>
-                                        <button className="dropdown-item" onClick={() => { navigate('/pricing'); setIsProfileOpen(false); }}>
+                                        <button className="dropdown-item" onClick={() => { if(playPop) playPop(); navigate('/pricing'); setIsProfileOpen(false); }}>
                                             <CreditCard size={16} /> Pricing
                                         </button>
-                                        <button className="dropdown-item danger" onClick={handleSignOut}>
+                                        <button className="dropdown-item danger" onClick={() => { if(playPop) playPop(); handleSignOut(); }}>
                                             <LogOut size={16} /> Sign Out
                                         </button>
                                     </div>
@@ -70,7 +72,7 @@ const Layout = () => {
                     </div>
                 ) : (
                     location.pathname !== '/' && (
-                        <Button onClick={() => navigate('/signup')} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '1rem' }}>
+                        <Button onClick={() => { if(playPop) playPop(); navigate('/signup'); }} style={{ padding: '12px 24px', borderRadius: '12px', fontSize: '1rem' }}>
                             Build Wealth
                         </Button>
                     )

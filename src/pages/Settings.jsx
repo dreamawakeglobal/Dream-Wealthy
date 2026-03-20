@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSound } from '../SoundContext';
 import { supabase } from '../supabaseClient';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
@@ -13,6 +14,7 @@ import './Settings.css';
 
 const Settings = () => {
     const { user, setTutorialActive } = useAuth();
+    const { playPop } = useSound();
     const { expenseBorderColor, setExpenseBorderColor } = useTheme();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('profile');
@@ -35,6 +37,7 @@ const Settings = () => {
     const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
 
     const handleAvatarUpload = async (event) => {
+        if(playPop) playPop();
         try {
             setUploadingAvatar(true);
             setProfileMessage({ type: '', text: '' });
@@ -81,6 +84,7 @@ const Settings = () => {
 
     const handleUpdateProfile = async (e) => {
         e.preventDefault();
+        if(playPop) playPop();
         setProfileUpdating(true);
         setProfileMessage({ type: '', text: '' });
 
@@ -100,6 +104,7 @@ const Settings = () => {
 
     const handleUpdatePassword = async (e) => {
         e.preventDefault();
+        if(playPop) playPop();
         setPasswordUpdating(true);
         setPasswordMessage({ type: '', text: '' });
 
@@ -126,6 +131,7 @@ const Settings = () => {
     };
 
     const handleRestartTutorial = () => {
+        if(playPop) playPop();
         setTutorialActive(true);
         navigate('/dashboard');
     };
@@ -142,25 +148,25 @@ const Settings = () => {
                 <div className="settings-sidebar">
                     <button 
                         className={`settings-tab ${activeTab === 'profile' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('profile')}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('profile'); }}
                     >
                         <User size={18} /> Profile
                     </button>
                     <button 
                         className={`settings-tab ${activeTab === 'security' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('security')}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('security'); }}
                     >
                         <Shield size={18} /> Security
                     </button>
                     <button 
                         className={`settings-tab ${activeTab === 'integrations' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('integrations')}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('integrations'); }}
                     >
                         <Link2 size={18} /> Integrations
                     </button>
                     <button 
                         className={`settings-tab ${activeTab === 'preferences' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('preferences')}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('preferences'); }}
                     >
                         <Bell size={18} /> Preferences
                     </button>
@@ -345,7 +351,7 @@ const Settings = () => {
                                         {/* None Swatch */}
                                         <button 
                                             type="button"
-                                            onClick={() => setExpenseBorderColor('none')}
+                                            onClick={() => { if(playPop) playPop(); setExpenseBorderColor('none'); }}
                                             style={{
                                                 width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
                                                 border: expenseBorderColor === 'none' ? '2px solid var(--text-primary)' : '2px dashed var(--text-muted)',
@@ -371,7 +377,7 @@ const Settings = () => {
                                             <button
                                                 key={swatch.id}
                                                 type="button"
-                                                onClick={() => setExpenseBorderColor(swatch.id)}
+                                                onClick={() => { if(playPop) playPop(); setExpenseBorderColor(swatch.id); }}
                                                 style={{
                                                     width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
                                                     background: swatch.color,

@@ -9,6 +9,7 @@ import {
     ArrowRight, Target, TrendingUp, Compass, CheckCircle, 
     Flag, Clock, AlertTriangle, DollarSign, Shield, Heart, Zap, Globe 
 } from 'lucide-react';
+import { useSound } from '../SoundContext';
 import './Onboarding.css';
 
 const ONBOARDING_QUESTIONS = [
@@ -105,6 +106,7 @@ const TOTAL_STEPS = ONBOARDING_QUESTIONS.length + 2;
 const Onboarding = () => {
     const navigate = useNavigate();
     const { user, completeOnboarding } = useAuth();
+    const { playPop } = useSound();
     const store = useStore();
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
@@ -115,10 +117,12 @@ const Onboarding = () => {
                      'there';
 
     const handleNext = () => {
+        if (playPop) playPop();
         if (step < TOTAL_STEPS) setStep(step + 1);
     };
 
     const handleBack = () => {
+        if (playPop) playPop();
         if (step > 1) setStep(step - 1);
     };
 
@@ -127,6 +131,7 @@ const Onboarding = () => {
     };
 
     const handleComplete = async (startTour) => {
+        if (playPop) playPop();
         if (useDemoData) {
             await injectDemoData(store);
         }

@@ -3,6 +3,7 @@ import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import { useSound } from '../SoundContext';
 import './TutorialOverlay.css';
 
 // Premium Custom Tooltip built with Framer Motion
@@ -16,6 +17,8 @@ const CustomTooltip = ({
     tooltipProps,
     size
 }) => {
+    const { playPop } = useSound();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
@@ -56,13 +59,13 @@ const CustomTooltip = ({
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     {index > 0 && (
-                        <button {...backProps} style={{
+                        <button {...backProps} onClick={(e) => { if(playPop) playPop(); if(backProps.onClick) backProps.onClick(e); }} style={{
                             background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: '0.9rem', padding: '8px 12px', fontWeight: 500, transition: 'color 0.2s'
                         }} onMouseEnter={(e) => e.target.style.color = '#fff'} onMouseLeave={(e) => e.target.style.color = 'rgba(255,255,255,0.6)'}>
                             Back
                         </button>
                     )}
-                    <button {...primaryProps} style={{
+                    <button {...primaryProps} onClick={(e) => { if (primaryProps.onClick) primaryProps.onClick(e); }} style={{
                         background: 'var(--accent-gradient, linear-gradient(135deg, var(--accent-primary) 0%, #00d4ff 100%))',
                         color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600, padding: '10px 18px',
                         boxShadow: '0 4px 14px rgba(0, 150, 255, 0.3)', transition: 'transform 0.1s, filter 0.2s'
@@ -74,7 +77,7 @@ const CustomTooltip = ({
             
             {/* Minimal Skip Button in corner */}
             {index < size - 1 && (
-                <button {...closeProps} style={{
+                <button {...closeProps} onClick={(e) => { if(playPop) playPop(); if(closeProps.onClick) closeProps.onClick(e); }} style={{
                     position: 'absolute', top: '16px', right: '16px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '0.8rem', padding: '4px'
                 }} onMouseEnter={(e) => e.target.style.color = 'rgba(255,255,255,0.8)'} onMouseLeave={(e) => e.target.style.color = 'rgba(255,255,255,0.4)'}>
                     Skip
