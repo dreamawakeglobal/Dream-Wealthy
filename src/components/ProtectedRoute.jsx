@@ -11,7 +11,8 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
         'jay.bonier@gmail.com'.toLowerCase(),
         'adrianna.turner2005@gmail.com'.toLowerCase(),
         'riqlondon@gmail.com'.toLowerCase(),
-        'west.terrion@yahoo.com'.trim().toLowerCase()
+        'west.terrion@yahoo.com'.trim().toLowerCase(),
+        'kamvaughn1@gmail.com'.toLowerCase()
     ]; // We can add more here if needed later
 
     // If no user is logged in, OR the user is logged in but is NOT the allowed email
