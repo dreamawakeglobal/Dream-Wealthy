@@ -323,18 +323,6 @@ export const TutorialOverlay = () => {
             spotlightClicks: true,
         },
         {
-            target: '.configure-projections-btn', // Projection Engine Controls
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Projection Engine</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Fine-tune your simulation. Adjust your starting balances, add hypothetical extra flows, and tweak inflation and income growth rates to stress-test your wealth strategy.
-                    </p>
-                </div>
-            ),
-            placement: 'right',
-        },
-        {
             target: '.chart-container', // Net Wealth Curve Area Chart
             content: (
                 <div style={{ textAlign: 'left' }}>
@@ -357,6 +345,18 @@ export const TutorialOverlay = () => {
                 </div>
             ),
             placement: 'top',
+        },
+        {
+            target: '.configure-projections-btn', // Projection Engine Controls
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Projection Engine</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Fine-tune your simulation. Adjust your starting balances, add hypothetical extra flows, and tweak inflation and income growth rates to stress-test your wealth strategy.
+                    </p>
+                </div>
+            ),
+            placement: 'right',
         },
         {
             target: '.nav-link[href="/investments"]', // The Investments nav link
