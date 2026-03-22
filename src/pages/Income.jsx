@@ -402,7 +402,7 @@ const Income = () => {
                     <AnimateOnScroll delay={0.1} className="income-column">
                         <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ margin: 0 }}>Current Streams</h2>
+                                <h2 style={{ margin: 0 }}>💼 Current Streams</h2>
                                 <span className="badge" style={{ marginLeft: '12px' }}>
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
@@ -434,7 +434,7 @@ const Income = () => {
                     {/* Future Income Column */}
                     <AnimateOnScroll delay={0.2} className="income-column">
                         <div className="column-header">
-                            <h2>Manifesting / Future</h2>
+                            <h2>📈 Manifesting / Future</h2>
                             <span className="badge gold">${projectedFutureIncome.toLocaleString()}</span>
                         </div>
 
