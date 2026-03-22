@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import EmojiPicker from 'emoji-picker-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircle, Wallet } from 'lucide-react';
+import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircle, Wallet, Smile } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -16,6 +17,7 @@ import './Income.css';
 const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const { playKaChing } = useSound();
     const { expenseBorderColor, theme } = useTheme();
 
@@ -36,16 +38,48 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
     };
 
     return (
-        <Card glass className={`income-form-card ${className}`.trim()}>
+        <Card glass className={`income-form-card ${className}`.trim()} style={{ position: 'relative', zIndex: 99 }}>
             <h3 className="form-title">{title}</h3>
             <form onSubmit={handleSubmit} className="income-form">
-                <Input
-                    placeholder="e.g. Salary, Side Hustle"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    style={{ color: 'black' }}
-                />
+                <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+                    <Button 
+                        type="button" 
+                        variant="secondary" 
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        style={{ padding: '0 12px', height: '42px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                        title="Add Emoji"
+                    >
+                        <Smile size={20} color="var(--text-secondary)" />
+                    </Button>
+                    <div style={{ flex: 1 }}>
+                        <Input
+                            placeholder="e.g. Salary, Side Hustle"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            style={{ color: 'black', marginBottom: 0 }}
+                        />
+                    </div>
+                    {showEmojiPicker && (
+                        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 100 }}>
+                            <div 
+                                style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                                onClick={() => setShowEmojiPicker(false)} 
+                            />
+                            <div style={{ position: 'relative', zIndex: 100, boxShadow: '0 16px 32px rgba(0,0,0,0.5)', borderRadius: '8px' }}>
+                                <EmojiPicker 
+                                    onEmojiClick={(emojiData) => {
+                                        setName(prev => (prev ? prev + ' ' : '') + emojiData.emoji);
+                                        setShowEmojiPicker(false);
+                                    }}
+                                    theme={theme === 'dark' ? 'dark' : 'light'}
+                                    searchPosition="none"
+                                    skinTonesDisabled
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
                 <div className="amount-input-group">
                     <Input
                         type="number"
