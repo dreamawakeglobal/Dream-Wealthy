@@ -77,8 +77,7 @@ export const injectDemoData = async (store) => {
             id: crypto.randomUUID(),
             name: "Chase Sapphire Reserve",
             type: "Credit Card",
-            targetAmount: 0,
-            currentAmount: 4250,
+            balance: 4250,
             interestRate: 22.9,
             minimumPayment: 150,
             extraPayment: 300,
@@ -94,8 +93,9 @@ export const injectDemoData = async (store) => {
             name: "House Down Payment",
             targetAmount: 80000,
             currentAmount: 14500,
-            monthlyContribution: 1200,
-            annualReturnRate: 5.0,
+            contributionAmount: 1200,
+            contributionFrequency: "Monthly",
+            trackAuto: false,
             color: "#4FA3F7"
         },
         {
@@ -103,8 +103,9 @@ export const injectDemoData = async (store) => {
             name: "Summer Vacation (Japan)",
             targetAmount: 4500,
             currentAmount: 2100,
-            monthlyContribution: 400,
-            annualReturnRate: 0, // Flat savings
+            contributionAmount: 400,
+            contributionFrequency: "Monthly",
+            trackAuto: false,
             color: "#10B981"
         }
     ]);
@@ -211,13 +212,13 @@ export const injectDemoData = async (store) => {
             id: crypto.randomUUID(),
             name: "Netflix Premium",
             cost: 22.99,
-            type: "monthly"
+            dueDate: "01"
         },
         {
             id: crypto.randomUUID(),
             name: "Spotify Duo",
             cost: 14.99,
-            type: "monthly"
+            dueDate: "15"
         }
     ]);
 
