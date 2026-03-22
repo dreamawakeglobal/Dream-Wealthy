@@ -102,29 +102,7 @@ export const injectDemoData = async (store) => {
         }
     ]);
 
-    // 6. Set Future Savings Goals
-    await store.setGoals([
-        {
-            id: crypto.randomUUID(),
-            name: "House Down Payment",
-            targetAmount: 80000,
-            currentAmount: 14500,
-            contributionAmount: 1200,
-            contributionFrequency: "Monthly",
-            trackAuto: false,
-            color: "#4FA3F7"
-        },
-        {
-            id: crypto.randomUUID(),
-            name: "Summer Vacation (Japan)",
-            targetAmount: 4500,
-            currentAmount: 2100,
-            contributionAmount: 400,
-            contributionFrequency: "Monthly",
-            trackAuto: false,
-            color: "#10B981"
-        }
-    ]);
+
 
     // 7. Inject a highly robust Investment Portfolio
     await store.setPortfolio([
@@ -222,21 +200,7 @@ export const injectDemoData = async (store) => {
         }
     ]);
 
-    // 9. Sync Custom Subscriptions
-    await store.setSubscriptions([
-        {
-            id: crypto.randomUUID(),
-            name: "Netflix Premium",
-            cost: 22.99,
-            dueDate: "01"
-        },
-        {
-            id: crypto.randomUUID(),
-            name: "Spotify Duo",
-            cost: 14.99,
-            dueDate: "15"
-        }
-    ]);
+
 
     // 10. Instantiate 3 explicit custom Categories 
     await store.setAllocations([
