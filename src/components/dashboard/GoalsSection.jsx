@@ -132,7 +132,7 @@ export const GoalsSection = () => {
         <section className="goals-section" style={{ position: 'relative', marginBottom: '60px' }}>
             <Card glass className={`goals-card ${borderGlowClass}`} style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: theme === 'light' ? 'black' : 'white' }}>
                     <Target size={24} className="text-secondary" />
                     Savings Goals
                 </h2>
