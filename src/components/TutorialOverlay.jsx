@@ -356,7 +356,7 @@ export const TutorialOverlay = () => {
                     </p>
                 </div>
             ),
-            placement: 'right',
+            placement: 'bottom',
         },
         {
             target: '.nav-link[href="/investments"]', // The Investments nav link
