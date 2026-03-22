@@ -15,14 +15,30 @@ export const injectDemoData = async (store) => {
     await store.setCurrentIncome([
         {
             id: crypto.randomUUID(),
-            name: "Senior Role Salary (Tech)",
+            name: "💻 Senior Role Salary (Tech)",
             amount: 5400,
             frequency: "Monthly"
         },
         {
             id: crypto.randomUUID(),
-            name: "Freelance Side Hustle",
+            name: "🎨 Freelance Side Hustle",
             amount: 850,
+            frequency: "Monthly"
+        }
+    ]);
+
+    // 2.5 Set Manifesting Future Streams
+    await store.setFutureIncome([
+        {
+            id: crypto.randomUUID(),
+            name: "📈 Passive Dividend Yields",
+            amount: 1200,
+            frequency: "Monthly"
+        },
+        {
+            id: crypto.randomUUID(),
+            name: "📱 App Store Royalties",
+            amount: 3000,
             frequency: "Monthly"
         }
     ]);
