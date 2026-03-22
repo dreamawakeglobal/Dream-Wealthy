@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useSpring, useTransform } from 'framer-motion';
 
 export const AnimatedNumber = ({
     value,
@@ -32,6 +31,7 @@ export const AnimatedNumber = ({
         };
 
         window.requestAnimationFrame(step);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value, duration]);
 
     return (

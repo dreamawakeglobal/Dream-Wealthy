@@ -11,6 +11,7 @@ export const useNotifications = () => {
         try {
             return JSON.parse(localStorage.getItem('dw_dismissed_notifications')) || [];
         } catch (e) {
+            const _ignore = e;
             return [];
         }
     });

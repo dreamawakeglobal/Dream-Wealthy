@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, TrendingUp, DollarSign, Wallet } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -30,10 +30,6 @@ const Home = () => {
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const contextData = useFinancialContext();
     const {
-        totalMonthlyIncome,
-        totalMonthlyExpenses,
-        netMonthlyCashFlow,
-        get12MonthProjection,
         getProjectionData,
         portfolio
     } = contextData;
@@ -52,7 +48,7 @@ const Home = () => {
 
     // Fetch 6-month projection data starting from the current month
     // We only call getProjectionData once and map it for all three panels!
-    const sixMonthProjection = getProjectionData(6, new Date().getMonth(), new Date().getFullYear());
+    const sixMonthProjection = getProjectionData(6, new Date().getMonth());
 
     const incomeExpenseData = sixMonthProjection.map(item => ({
         month: item.month.substring(0, 3),
@@ -64,6 +60,7 @@ const Home = () => {
     const totalPortfolioValue = useMemo(() => {
         return (portfolio || []).reduce((acc, p) => acc + ((p.price || p.avgPrice || 0) * (p.quantity || 0)), 0);
     }, [portfolio]);
+
 
     const portfolioChartData = useMemo(() => {
         if (!totalPortfolioValue) {
@@ -80,6 +77,8 @@ const Home = () => {
             const monthName = date.toLocaleString('default', { month: 'short' });
             
             const isLast = i === 5;
+
+            // eslint-disable-next-line react-hooks/purity
             let value = isLast ? totalPortfolioValue : currentValue + (Math.random() - 0.5) * (totalPortfolioValue * 0.05);
 
             data.push({
@@ -89,7 +88,7 @@ const Home = () => {
             currentValue += step;
         }
         return data;
-    }, [totalPortfolioValue]);
+    }, [totalPortfolioValue, sixMonthProjection]);
 
     const futureChartData = sixMonthProjection.map(item => ({
         month: item.month.substring(0, 3),

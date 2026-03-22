@@ -16,10 +16,7 @@ const Waitlist = () => {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const videoRef = useRef(null);
 
-    // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
-    if (user) {
-        return <Navigate to="/dashboard" replace />;
-    }
+
 
     // Waitlist Form State
     const [showForm, setShowForm] = useState(false);
@@ -55,6 +52,11 @@ const Waitlist = () => {
             document.body.classList.remove('waitlist-body-lock');
         };
     }, []);
+
+    // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
+    if (user) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     const handleJoinClick = () => {
         playPop();

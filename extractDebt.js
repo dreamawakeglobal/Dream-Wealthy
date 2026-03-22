@@ -1,3 +1,4 @@
+/* global require */
 const fs = require('fs');
 
 const path = './src/pages/Expenses.jsx';

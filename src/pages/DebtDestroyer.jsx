@@ -24,7 +24,6 @@ const DebtDestroyer = () => {
     // Debt Form State
     const [showAddForm, setShowAddForm] = useState(false);
     const [newDebt, setNewDebt] = useState({ name: '', balance: '', rate: '', minPayment: '' });
-    const [editingId, setEditingId] = useState(null);
 
     const handleAddDebt = (e) => {
         e.preventDefault();
@@ -118,8 +117,6 @@ const DebtDestroyer = () => {
         return { data, totalInterest: totalInterestPaid, monthsToZero: currentMonth };
     }, [debts, strategy, extraPayment]);
 
-    const totalMinimums = debts.reduce((acc, d) => acc + d.minimumPayment, 0);
-    const totalCurrentBalance = debts.reduce((acc, d) => acc + d.balance, 0);
 
     return (
         <div className="page-container animate-fade-in debt-destroyer-page">

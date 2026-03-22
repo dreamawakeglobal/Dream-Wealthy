@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
@@ -18,6 +19,7 @@ export const FinancialProvider = ({ children }) => {
         if (user) {
             store.fetchAllData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, store.setUser, store.fetchAllData]);
 
     // Derived Calculations preserved for legacy support
@@ -72,7 +74,7 @@ export const FinancialProvider = ({ children }) => {
         return netMonthlyCashFlow * 12;
     };
 
-    const getProjectionData = (totalMonths = 12, startMonthIndex = new Date().getMonth(), startYear = new Date().getFullYear()) => {
+    const getProjectionData = (totalMonths = 12, startMonthIndex = new Date().getMonth()) => {
         let income = Number(totalMonthlyIncome);
         let expenses = Number(totalMonthlyExpenses);
         let cumulative = Number(store.profileData.startingSavings) || 0;
@@ -82,7 +84,7 @@ export const FinancialProvider = ({ children }) => {
         const monthlyExpenseInflation = Number(store.profileData.expenseInflationRate) / 100 / 12;
 
         let currentMonthIndex = startMonthIndex;
-        let currentYear = startYear;
+
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         for (let month = 1; month <= totalMonths; month++) {
@@ -120,7 +122,6 @@ export const FinancialProvider = ({ children }) => {
             currentMonthIndex++;
             if (currentMonthIndex > 11) {
                 currentMonthIndex = 0;
-                currentYear++;
             }
         }
 

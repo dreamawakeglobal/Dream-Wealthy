@@ -2,14 +2,9 @@ export const generateInsights = (contextData) => {
     const {
         totalMonthlyIncome,
         totalMonthlyExpenses,
-        totalFixedExpenses,
-        totalVariableExpenses,
-        netMonthlyCashFlow,
         savingsRate,
         allocations,
-        debts,
-        variableExpenses // We need the actual list or just the total? Total is fine for some, list is better.
-        // Assuming we need access to spentAmounts (not currently in context, but we can pass it or infer)
+        debts
     } = contextData;
 
     const insights = [];
@@ -45,8 +40,6 @@ export const generateInsights = (contextData) => {
     const unallocatedCashflow = (unallocatedPercentage / 100) * totalMonthlyIncome;
 
     if (debts && debts.length > 0) {
-        const totalDebtBalance = debts.reduce((acc, d) => acc + d.balance, 0);
-
         if (unallocatedCashflow > 50) {
             insights.push({
                 id: 'debt-optimization',

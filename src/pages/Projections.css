@@ -1,8 +1,8 @@
 .projection-dashboard {
-    display: grid;
-    grid-template-columns: 320px 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 32px;
-    min-width: 1100px;
+    width: 100%;
 }
 
 .projection-controls {

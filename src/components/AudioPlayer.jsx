@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+
 import './AudioPlayer.css';
 
 const AudioPlayer = () => {
-    const { user } = useAuth();
     const [isPlaying, setIsPlaying] = useState(true);
     const audioRef = useRef(null);
 
@@ -19,7 +18,7 @@ const AudioPlayer = () => {
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     setIsPlaying(true);
-                }).catch(error => {
+                }).catch(() => {
                     console.log("Autoplay prevented by browser. User interaction required.");
                     setIsPlaying(false);
                 });

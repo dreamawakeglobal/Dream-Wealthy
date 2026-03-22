@@ -6,6 +6,8 @@ import { TrendingUp, Settings, Plus, Trash2, Edit2, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { Modal } from '../components/ui/Modal';
+import { Button } from '../components/ui/Button';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
@@ -75,18 +77,24 @@ const Projections = () => {
         incomeGrowthRate, setIncomeGrowthRate,
         expenseInflationRate, setExpenseInflationRate,
         startingSavings, setStartingSavings,
-        customProjections, setCustomProjections,
         extraColumns, setExtraColumns,
-        cellOverrides, setCellOverrides,
+        setCellOverrides,
         getProjectionData
     } = useFinancialContext();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
 
     const [localIncome, setLocalIncome] = useState(totalMonthlyIncome);
     const [localExpenses, setLocalExpenses] = useState(totalMonthlyExpenses);
     const [editingFlowId, setEditingFlowId] = useState(null); // Added flow edit state
     const [projectionYears, setProjectionYears] = useState(1); // Added projection span
     const [currentPage, setCurrentPage] = useState(0); // For 12-month pagination
+    const [showEngineModal, setShowEngineModal] = useState(false); // Modal toggle
 
     const handleCellEdit = (monthIndex, column, value) => {
         setCellOverrides(prev => ({
@@ -99,8 +107,8 @@ const Projections = () => {
     };
     const projectionData = useMemo(() => {
         // The old internal logic always started at index 0 (January) and the current year.
-        return getProjectionData(projectionYears * 12, 0, new Date().getFullYear());
-    }, [getProjectionData, projectionYears, localIncome, localExpenses, startingSavings, incomeGrowthRate, expenseInflationRate, extraColumns, cellOverrides]);
+        return getProjectionData(projectionYears * 12, 0);
+    }, [getProjectionData, projectionYears]);
 
     // Handle pagination (12 months per page)
     const paginatedData = useMemo(() => {
@@ -131,15 +139,29 @@ const Projections = () => {
                 <img src="/projections-header-logo.png" alt="Projections Header Logo" className="page-header-logo" style={{ height: '400px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Map your journey to wealth.</p>
             </div>
-            <div className="projection-dashboard">
-                {/* Controls Sidebar */}
-                <div className="projection-controls">
-                    <AnimateOnScroll delay={0.1}>
-                        <Card glass className={`controls-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                            <div className="controls-header">
-                                <Settings size={20} />
-                                <h2>Projection Engine</h2>
-                            </div>
+
+            <Modal
+                isOpen={showEngineModal}
+                onClose={() => setShowEngineModal(false)}
+                useNeonGlow={true}
+                transparentOverlay={true}
+                lessTransparent={true}
+                customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                containerStyle={{ maxWidth: '450px', borderRadius: '24px' }}
+                title={(() => {
+                    const activeColor = {
+                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                        yellow: '#eab308', orange: '#f97316'
+                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
+                            <Settings size={20} color={activeColor} /> Projection <span style={{ color: activeColor }}>Engine</span>
+                        </div>
+                    );
+                })()}
+            >
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '55vh', overflowY: 'auto' }}>
 
                             <div className="controls-group">
                                 <label>Starting Savings (Cumulative)</label>
@@ -301,22 +323,10 @@ const Projections = () => {
                                     </button>
                                 </Card>
                             </div>
-                        </Card>
-                    </AnimateOnScroll>
-
-                    <AnimateOnScroll delay={0.2}>
-                        <Card glass className={`projection-summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                            <div className="summary-header">
-                                <span>{projectionYears} Year Savings</span>
-                                <TrendingUp size={24} className="text-success" />
-                            </div>
-                            <div className="summary-total positive">
-                                $<AnimatedNumber value={finalTotal} />
-                            </div>
-                        </Card>
-                    </AnimateOnScroll>
                 </div>
+            </Modal>
 
+            <div className="projection-dashboard">
                 {/* Charts and Tables */}
                 <div className="projection-visuals">
                     <AnimateOnScroll delay={0.1}>
@@ -350,9 +360,20 @@ const Projections = () => {
                         <Card glass className={`table-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3 style={{ margin: 0 }}>Month-by-Month Breakdown</h3>
-                                {projectionData.length > 12 && (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <Button 
+                                        onClick={() => setShowEngineModal(true)} 
+                                        variant="primary" 
+                                        style={{ 
+                                            padding: '8px 16px', fontSize: '0.9rem',
+                                            ...(activeColor ? { background: activeColor, borderColor: activeColor, color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' } : {})
+                                        }}
+                                    >
+                                        <Settings size={16} style={{ marginRight: '6px' }} /> Configure Projections
+                                    </Button>
+                                    {projectionData.length > 12 && (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
                                             onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                                             disabled={currentPage === 0}
                                             style={{
@@ -384,6 +405,7 @@ const Projections = () => {
                                         </button>
                                     </div>
                                 )}
+                                </div>
                             </div>
                             <div className="table-wrapper">
                                 <table className="projection-table">
@@ -444,6 +466,17 @@ const Projections = () => {
                                                 {pageTotals.Net >= 0 ? '+' : '-'}${Math.abs(pageTotals.Net).toLocaleString()}
                                             </td>
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-muted)', fontStyle: 'italic' }}>-</td>
+                                        </tr>
+                                        {/* Grand Total Savings Row */}
+                                        <tr style={{ fontWeight: 'bold' }}>
+                                            <td colSpan={4 + extraColumns.length} style={{ borderTop: '2px solid transparent', textAlign: 'right', color: 'var(--text-primary)', paddingRight: '24px', fontSize: '1.2rem', paddingTop: '24px' }}>
+                                                Total {projectionYears} Year Savings:
+                                            </td>
+                                            <td style={{ borderTop: '2px solid transparent', color: 'var(--accent-primary)', fontSize: '1.5rem', paddingTop: '24px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    $<AnimatedNumber value={finalTotal} /> <TrendingUp size={24} className="text-success" />
+                                                </div>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>

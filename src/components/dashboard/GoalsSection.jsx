@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Target, Plus, X } from 'lucide-react';
 import { useFinancialContext } from '../../FinancialContext';
 import { useSound } from '../../SoundContext';
@@ -6,6 +7,8 @@ import { GoalOrb } from './GoalOrb';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
+import { useTheme } from '../../contexts/ThemeContext';
+import '../ui/Modal.css';
 
 const getGoalStats = (goal) => {
     const { targetAmount, currentAmount, contributionAmount, contributionFrequency } = goal;
@@ -36,6 +39,14 @@ const getGoalStats = (goal) => {
 export const GoalsSection = () => {
     const { goals, setGoals } = useFinancialContext();
     const { playPop, playChime, playCrunch } = useSound();
+    const { expenseBorderColor, theme } = useTheme();
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const [showForm, setShowForm] = useState(false);
     const [editingGoalId, setEditingGoalId] = useState(null);
     const [detailsGoalId, setDetailsGoalId] = useState(null);
@@ -119,32 +130,43 @@ export const GoalsSection = () => {
 
     return (
         <section className="goals-section" style={{ position: 'relative', marginBottom: '60px' }}>
+            <Card glass className={`goals-card ${borderGlowClass}`} style={{ padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                     <Target size={24} className="text-secondary" />
                     Savings Goals
                 </h2>
                 {!showForm && (
-                    <Button variant="secondary" size="sm" onClick={() => handleOpenForm()}>
+                    <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        onClick={() => handleOpenForm()}
+                        style={activeColor ? { 
+                            background: activeColor, 
+                            borderColor: activeColor, 
+                            color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                        } : {}}
+                    >
                         <Plus size={16} /> Add Goal
                     </Button>
                 )}
             </div>
 
-            {showForm && (
-                <div style={{
-                    position: 'absolute',
-                    top: '60px',
+            {showForm && typeof window !== 'undefined' && createPortal(
+                <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowForm(false) }} style={{
+                    position: 'fixed',
+                    top: 0,
+                    bottom: 0,
                     left: 0,
                     right: 0,
                     zIndex: 1000,
                     display: 'flex',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '0 20px',
-                    pointerEvents: 'none'
+                    padding: '20px',
+                    background: 'transparent'
                 }}>
-                    <Card glass className="savings-goal-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', border: `3px solid ${newGoal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${newGoal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+                    <Card glass className="savings-goal-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: `3px solid ${newGoal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${newGoal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
                             <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>
                                 {editingGoalId ? 'Edit' : 'Create'} <span style={{ color: newGoal.color }}>{editingGoalId ? 'Goal Settings' : 'New Goal'}</span>
@@ -263,7 +285,7 @@ export const GoalsSection = () => {
                         </form>
                     </Card>
                 </div>
-            )}
+            , document.body)}
 
             {detailsGoalId && (() => {
                 const goal = goals.find(g => g.id === detailsGoalId);
@@ -271,20 +293,21 @@ export const GoalsSection = () => {
                 const stats = getGoalStats(goal);
                 const percentage = Math.min(100, Math.max(0, (goal.currentAmount / goal.targetAmount) * 100));
                 
-                return (
-                    <div style={{
-                        position: 'absolute',
-                        top: '60px',
+                return typeof window !== 'undefined' ? createPortal(
+                    <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setDetailsGoalId(null) }} style={{
+                        position: 'fixed',
+                        top: 0,
+                        bottom: 0,
                         left: 0,
                         right: 0,
                         zIndex: 1000,
                         display: 'flex',
-                        alignItems: 'flex-start',
+                        alignItems: 'center',
                         justifyContent: 'center',
-                        padding: '0 20px',
-                        pointerEvents: 'none'
+                        padding: '20px',
+                        background: 'transparent'
                     }}>
-                        <Card glass className="savings-goal-popup details-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', border: `3px solid ${goal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${goal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
+                        <Card glass className="savings-goal-popup details-popup" style={{ pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: `3px solid ${goal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${goal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                                 <div>
                                     <h3 style={{ margin: '0 0 4px 0', fontSize: '1.5rem', color: '#fff' }}>
@@ -352,7 +375,7 @@ export const GoalsSection = () => {
                             </div>
                         </Card>
                     </div>
-                );
+                , document.body) : null;
             })()}
 
             {/* Orbs List */}
@@ -390,6 +413,7 @@ export const GoalsSection = () => {
                     ))
                 )}
             </div>
+            </Card>
         </section>
     );
 };

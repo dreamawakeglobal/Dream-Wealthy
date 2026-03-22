@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     AreaChart,
@@ -30,6 +31,12 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
     const { playReceiptTear } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -107,7 +114,15 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
                             style={{ color: 'black', flex: 1 }}
                         />
                     )}
-                    <Button type="submit" variant="secondary">
+                    <Button 
+                        type="submit" 
+                        variant="secondary"
+                        style={activeColor ? { 
+                            background: activeColor, 
+                            borderColor: activeColor, 
+                            color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                        } : {}}
+                    >
                         <Plus size={18} /> Add
                     </Button>
                 </div>
@@ -129,12 +144,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentExpenses = expenses.slice(startIndex, startIndex + itemsPerPage);
 
-    const handleSpentChange = (id, value) => {
-        setSpentAmounts(prev => ({
-            ...prev,
-            [id]: value
-        }));
-    };
+
 
     const startEditing = (expense) => {
         setEditingId(expense.id);
@@ -307,6 +317,12 @@ const Expenses = () => {
     const { playCheck, playPop } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -811,7 +827,15 @@ const Expenses = () => {
                             <h2 style={{ margin: 0 }}>Subscriptions</h2>
                             <span className="badge danger-badge">${totalSubscriptionCost.toFixed(2)}/mo</span>
                         </div>
-                        <Button size="sm" onClick={() => setShowAddSub(!showAddSub)}>
+                        <Button 
+                            size="sm" 
+                            onClick={() => setShowAddSub(!showAddSub)}
+                            style={activeColor ? { 
+                                background: activeColor, 
+                                borderColor: activeColor, 
+                                color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                            } : {}}
+                        >
                             {showAddSub ? 'Cancel' : <><Plus size={16} /> Custom</>}
                         </Button>
                     </div>
@@ -820,13 +844,22 @@ const Expenses = () => {
                         isOpen={showAddSub}
                         onClose={() => setShowAddSub(false)}
                         useNeonGlow={true}
-                        dimOverlay={false}
+                        transparentOverlay={true}
                         lessTransparent={true}
-                        title={
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                                Add <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Custom Subscription</span>
-                            </div>
-                        }
+                        customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                        containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                        title={(() => {
+                            const activeColor = {
+                                blue: '#007aff', white: '#ffffff', black: '#000000',
+                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                yellow: '#eab308', orange: '#f97316'
+                            }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                            return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                    Add <span style={{ color: activeColor }}>Custom Subscription</span>
+                                </div>
+                            );
+                        })()}
                     >
                         <form onSubmit={addCustomSubscription} className="debt-form animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
@@ -1009,7 +1042,15 @@ const Expenses = () => {
                                     </p>
                                 )}
                             </div>
-                            <Button size="sm" onClick={() => setShowAddTrackerForm(true)}>
+                            <Button 
+                                size="sm" 
+                                onClick={() => setShowAddTrackerForm(true)}
+                                style={activeColor ? { 
+                                    background: activeColor, 
+                                    borderColor: activeColor, 
+                                    color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                                } : {}}
+                            >
                                 <Plus size={16} /> Add Tracker
                             </Button>
                         </div>
@@ -1018,13 +1059,22 @@ const Expenses = () => {
                             isOpen={showAddTrackerForm}
                             onClose={() => setShowAddTrackerForm(false)}
                             useNeonGlow={true}
-                            dimOverlay={false}
+                            transparentOverlay={true}
                             lessTransparent={true}
-                            title={
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                                    Track <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>New Debt</span>
-                                </div>
-                            }
+                            customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                            containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                            title={(() => {
+                                const activeColor = {
+                                    blue: '#007aff', white: '#ffffff', black: '#000000',
+                                    red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                    yellow: '#eab308', orange: '#f97316'
+                                }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                        Track <span style={{ color: activeColor }}>New Debt</span>
+                                    </div>
+                                );
+                            })()}
                         >
                             <form className="debt-form animate-fade-in" onSubmit={handleAddTrackedDebt} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -1232,7 +1282,7 @@ const Expenses = () => {
                                                 circles.push(
                                                     <div key={i} className="payment-circle-wrapper">
                                                         <div 
-                                                            onPointerDown={(e) => {
+                                                            onPointerDown={() => {
                                                                 isLongPressActive.current = false;
                                                                 pressTimerRef.current = setTimeout(() => {
                                                                     isLongPressActive.current = true;
@@ -1398,14 +1448,16 @@ const Expenses = () => {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                        <Button size="sm" variant="secondary" style={{ padding: '4px 12px', fontSize: '0.75rem', height: '28px' }} onClick={() => startEditingDebt(debt)}>Edit</Button>
-                                                        <button 
-                                                            onClick={() => handleRemoveTrackedDebt(debt.id)} 
-                                                            className="btn-icon danger"
-                                                            style={{ opacity: debt.isPaid ? 0.6 : 1 }}
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                                                            <Button size="sm" variant="secondary" style={{ padding: '4px 12px', fontSize: '0.75rem', height: '28px', minWidth: '55px' }} onClick={() => startEditingDebt(debt)}>Edit</Button>
+                                                            <button 
+                                                                onClick={() => handleRemoveTrackedDebt(debt.id)} 
+                                                                className="btn-icon danger"
+                                                                style={{ opacity: debt.isPaid ? 0.6 : 1, padding: '4px' }}
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 </>
@@ -1577,12 +1629,20 @@ const Expenses = () => {
                 onClose={() => setIsActivityModalOpen(false)}
                 useNeonGlow={true}
                 clearBlur={true}
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Wallet size={20} color={theme === 'dark' ? '#9d4edd' : '#4FA3F7'} /> 
-                        <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Recent Bank Activity</span>
-                    </div>
-                }
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                title={(() => {
+                    const activeColor = {
+                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                        yellow: '#eab308', orange: '#f97316'
+                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Wallet size={20} color={activeColor} /> 
+                            <span style={{ color: activeColor }}>Recent Bank Activity</span>
+                        </div>
+                    );
+                })()}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                     <p className="text-muted" style={{ fontSize: '0.9rem', maxWidth: '60%', margin: 0 }}>
@@ -1647,9 +1707,33 @@ const Expenses = () => {
                 </div>
                 {activityTotalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
-                        <Button size="sm" variant="secondary" onClick={() => setActivityPage(p => Math.max(p - 1, 1))} disabled={activityPage === 1}>Previous</Button>
+                        <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            onClick={() => setActivityPage(p => Math.max(p - 1, 1))} 
+                            disabled={activityPage === 1}
+                            style={activeColor ? { 
+                                background: activeColor, 
+                                borderColor: activeColor, 
+                                color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                            } : {}}
+                        >
+                            Previous
+                        </Button>
                         <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Page {activityPage} of {activityTotalPages}</span>
-                        <Button size="sm" variant="secondary" onClick={() => setActivityPage(p => Math.min(p + 1, activityTotalPages))} disabled={activityPage === activityTotalPages}>Next</Button>
+                        <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            onClick={() => setActivityPage(p => Math.min(p + 1, activityTotalPages))} 
+                            disabled={activityPage === activityTotalPages}
+                            style={activeColor ? { 
+                                background: activeColor, 
+                                borderColor: activeColor, 
+                                color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                            } : {}}
+                        >
+                            Next
+                        </Button>
                     </div>
                 )}
             </Modal>
@@ -1660,14 +1744,23 @@ const Expenses = () => {
                 useNeonGlow={true}
                 dimOverlay={false}
                 lessTransparent={true}
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                        Custom Payment <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>{customPaymentData.monthLabel}</span>
-                    </div>
-                }
+                customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                containerStyle={{ width: '100%', maxWidth: '500px', padding: '32px', borderRadius: '24px' }}
+                title={(() => {
+                    const activeColor = {
+                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                        yellow: '#eab308', orange: '#f97316'
+                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                            Custom Payment <span style={{ color: activeColor }}>{customPaymentData.monthLabel}</span>
+                        </div>
+                    );
+                })()}
             >
-                <div style={{ padding: '8px' }}>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <p style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '20px' }}>
                         Enter the exact amount you paid or plan to pay. The default minimum + extra for this month is <strong className="text-primary">${Number(customPaymentData.currentAmount).toLocaleString()}</strong>.
                     </p>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>

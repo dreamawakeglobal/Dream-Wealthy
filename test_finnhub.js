@@ -1,3 +1,4 @@
+/* global require, process */
 require('dotenv').config();
 const FINNHUB_KEY = process.env.VITE_FINNHUB_API_KEY;
 

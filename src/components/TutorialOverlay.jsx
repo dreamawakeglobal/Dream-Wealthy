@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Joyride, { STATUS, ACTIONS, EVENTS } from 'react-joyride';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
 import './TutorialOverlay.css';
@@ -533,10 +534,11 @@ export const TutorialOverlay = () => {
         // Add to capture phase so it fires reliably
         document.addEventListener('click', handleDocumentClick, true);
         return () => document.removeEventListener('click', handleDocumentClick, true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isTutorialActive, stepIndex, navigate]);
 
     const handleJoyrideCallback = (data) => {
-        const { status, action, index, type, step } = data;
+        const { status, action, index, type } = data;
         const finishedStatuses = [STATUS.FINISHED, STATUS.SKIPPED];
 
         if (finishedStatuses.includes(status)) {

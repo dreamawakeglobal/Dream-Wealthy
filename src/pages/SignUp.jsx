@@ -20,7 +20,7 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
-    const [successMsg, setSuccessMsg] = useState(null);
+    const [successMsg] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
 
@@ -83,7 +83,7 @@ const SignUp = () => {
                 if (password !== confirmPassword) {
                     throw new Error("Passwords do not match");
                 }
-                const { data, error } = await supabase.auth.signUp({
+                const { error } = await supabase.auth.signUp({
                     email,
                     password,
                     options: {

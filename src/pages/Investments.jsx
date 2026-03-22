@@ -117,6 +117,12 @@ const CustomCandle = (props) => {
 const Investments = () => {
     const { portfolio, setPortfolio } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
     const [selectedClass, setSelectedClass] = useState('Stocks');
     const [assetClasses, setAssetClasses] = useState(INITIAL_ASSET_CLASSES);
     const [isLoadingData, setIsLoadingData] = useState(false);
@@ -307,7 +313,7 @@ const Investments = () => {
                                         price: quoteData.c || 0,
                                         change: Number((quoteData.dp || 0).toFixed(2))
                                     };
-                                } catch (err) {
+                                } catch {
                                     return null;
                                 }
                             });
@@ -690,7 +696,11 @@ const Investments = () => {
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <button 
                                     onClick={() => setIsAddingCustom(true)} 
-                                    style={{ background: 'var(--accent-primary)', color: 'white', padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                                    style={{
+                                        background: activeColor || 'var(--accent-primary)',
+                                        color: activeColor ? ((expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white') : 'white',
+                                        padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', border: 'none', cursor: 'pointer', fontWeight: 600
+                                    }}
                                 >
                                     + Add Custom Asset
                                 </button>
@@ -702,13 +712,22 @@ const Investments = () => {
                             isOpen={isAddingCustom}
                             onClose={() => setIsAddingCustom(false)}
                             useNeonGlow={true}
-                            dimOverlay={false}
+                            transparentOverlay={true}
                             lessTransparent={true}
-                            title={
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                                    Add <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Custom Asset</span>
-                                </div>
-                            }
+                            customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                            containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                            title={(() => {
+                                const activeColor = {
+                                    blue: '#007aff', white: '#ffffff', black: '#000000',
+                                    red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                    yellow: '#eab308', orange: '#f97316'
+                                }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                        Add <span style={{ color: activeColor }}>Custom Asset</span>
+                                    </div>
+                                );
+                            })()}
                         >
                             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>

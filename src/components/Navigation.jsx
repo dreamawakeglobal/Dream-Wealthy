@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { DollarSign, CreditCard, TrendingUp, PieChart, Flame, Menu, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useSound } from '../SoundContext';
 import './Navigation.css';
 
@@ -11,7 +11,7 @@ const Navigation = () => {
 
     // Close menu when route changes
     useEffect(() => {
-        setIsMobileMenuOpen(false);
+        setTimeout(() => setIsMobileMenuOpen(false), 0);
     }, [location]);
 
 
@@ -35,7 +35,7 @@ const Navigation = () => {
             </button>
 
             <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`}>
-                {navItems.map(({ path, label, icon: Icon, customIcon, customSize, customStyle }) => (
+                {navItems.map(({ path, label, customIcon, customSize, customStyle }) => (
                     <NavLink
                         key={path}
                         to={path}
@@ -50,7 +50,7 @@ const Navigation = () => {
                             }
                         }}
                     >
-                        {customIcon ? (
+                        {customIcon && (
                             <>
                                 <img
                                     src={customIcon}
@@ -59,11 +59,6 @@ const Navigation = () => {
                                     style={customSize ? { width: customSize, height: customSize } : {}}
                                 />
                                 <span className="nav-tooltip">{label}</span>
-                            </>
-                        ) : (
-                            <>
-                                <Icon size={18} className="nav-icon" />
-                                <span className="nav-label">{label}</span>
                             </>
                         )}
                     </NavLink>

@@ -200,7 +200,7 @@ export const useStore = create((set, get) => ({
         if (updatedItems.length > 0) {
             updatedItems.forEach(item => {
                 if (String(item.id).length > 20) {
-                    const { id, created_at, user_id, ...rest } = mapToSnake(item);
+                    const { id, created_at: _c, user_id: _u, ...rest } = mapToSnake(item);
                     supabase.from(tableName).update(rest).eq('id', id).then();
                 }
             });

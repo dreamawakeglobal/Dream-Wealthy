@@ -37,6 +37,7 @@
     margin: 0;
     background: var(--text-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -219,4 +220,15 @@
 
 [data-theme='dark'] .auth-divider-line {
     background: rgba(148, 163, 184, 0.2);
+}
+
+/* Force dark mode font colors inside the signup card to maintain contrast over white glass */
+[data-theme='dark'] .signup-card .dream-input,
+[data-theme='dark'] .signup-card .form-group label,
+[data-theme='dark'] .signup-card .signup-header p {
+    color: #000000 !important;
+}
+
+[data-theme='dark'] .signup-card .auth-divider span {
+    color: #000000 !important;
 }

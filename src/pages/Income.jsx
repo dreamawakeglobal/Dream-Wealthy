@@ -17,6 +17,13 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const { playKaChing } = useSound();
+    const { expenseBorderColor, theme } = useTheme();
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -51,7 +58,15 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
                         min="0"
                         style={{ color: 'black' }}
                     />
-                    <Button type="submit" variant="primary">
+                    <Button 
+                        type="submit" 
+                        variant="primary"
+                        style={activeColor ? { 
+                            background: activeColor, 
+                            borderColor: activeColor, 
+                            color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                        } : {}}
+                    >
                         <Plus size={18} /> Add
                     </Button>
                 </div>
@@ -201,6 +216,12 @@ const Income = () => {
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#007aff', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -413,6 +434,11 @@ const Income = () => {
                                     <Button
                                         onClick={handleAddCategory}
                                         variant="primary"
+                                        style={activeColor ? { 
+                                            background: activeColor, 
+                                            borderColor: activeColor, 
+                                            color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                                        } : {}}
                                     >
                                         <Plus size={16} style={{ marginRight: '8px' }} /> Add Category
                                     </Button>
@@ -610,12 +636,20 @@ const Income = () => {
                 onClose={() => setIsActivityModalOpen(false)}
                 useNeonGlow={true}
                 clearBlur={true}
-                title={
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Wallet size={20} color={theme === 'dark' ? '#9d4edd' : '#4FA3F7'} /> 
-                        <span style={{ color: theme === 'dark' ? '#9d4edd' : '#4FA3F7' }}>Recent Income Activity</span>
-                    </div>
-                }
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                title={(() => {
+                    const activeColor = {
+                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                        yellow: '#eab308', orange: '#f97316'
+                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Wallet size={20} color={activeColor} /> 
+                            <span style={{ color: activeColor }}>Recent Income Activity</span>
+                        </div>
+                    );
+                })()}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                     <p className="text-muted" style={{ fontSize: '0.9rem', maxWidth: '60%', margin: 0 }}>

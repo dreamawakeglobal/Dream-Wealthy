@@ -283,3 +283,8 @@
     border: 1px solid rgba(255, 255, 255, 0.4) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
 }
+
+/* Force dark mode font colors for inputs inside specific popups to maintain contrast over white glass */
+[data-theme='dark'] .dark-mode-black-text .dream-input {
+    color: #000000 !important;
+}

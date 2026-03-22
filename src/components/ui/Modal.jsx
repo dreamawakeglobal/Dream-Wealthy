@@ -5,7 +5,7 @@ import { useSound } from '../../SoundContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Modal.css';
 
-export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, lessTransparent = false }) => {
+export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false }) => {
     const { playWhoosh } = useSound();
     const { theme } = useTheme();
 
@@ -39,11 +39,12 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
                 height: '100vh',
                 alignItems: 'center',
                 ...(clearBlur ? { background: 'rgba(0, 0, 0, 0.1)' } : {}),
+                ...(transparentOverlay ? { background: 'transparent' } : {}),
                 ...(!dimOverlay ? { background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' } : {})
             }}
         >
             <div 
-                className={`modal-content ${glass ? 'glass' : ''} ${invertColors ? 'modal-inverted' : ''}`}
+                className={`modal-content ${glass ? 'glass' : ''} ${invertColors ? 'modal-inverted' : ''} ${customClass}`}
                 style={{
                     ...(useNeonGlow ? {
                         border: `3px solid ${glowColor}`,
@@ -59,7 +60,8 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
                     } : {}),
                     ...(lessTransparent ? {
                         background: theme === 'dark' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)'
-                    } : {})
+                    } : {}),
+                    ...containerStyle
                 }}
             >
                 {/* Isolated Background Image Layer with User-Defined Content Style */}
