@@ -323,7 +323,7 @@ export const TutorialOverlay = () => {
             spotlightClicks: true,
         },
         {
-            target: '.controls-card', // Projection Engine Controls
+            target: '.configure-projections-btn', // Projection Engine Controls
             content: (
                 <div style={{ textAlign: 'left' }}>
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Projection Engine</h3>
@@ -333,18 +333,6 @@ export const TutorialOverlay = () => {
                 </div>
             ),
             placement: 'right',
-        },
-        {
-            target: '.projection-summary-card', // Summary Card
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Future Net Worth</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        This is your projected cumulative savings at the end of the selected timeline. Watch this number compound as you optimize your income and expenses!
-                    </p>
-                </div>
-            ),
-            placement: 'bottom',
         },
         {
             target: '.chart-container', // Net Wealth Curve Area Chart

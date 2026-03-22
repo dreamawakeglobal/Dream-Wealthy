@@ -364,6 +364,7 @@ const Projections = () => {
                                     <Button 
                                         onClick={() => setShowEngineModal(true)} 
                                         variant="primary" 
+                                        className="configure-projections-btn"
                                         style={{ 
                                             padding: '8px 16px', fontSize: '0.9rem',
                                             ...(activeColor ? { background: activeColor, borderColor: activeColor, color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' } : {})
