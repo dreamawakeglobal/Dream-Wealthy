@@ -529,9 +529,10 @@ export const TutorialOverlay = () => {
         const { status, action, index, type } = data;
         const finishedStatuses = [STATUS.FINISHED, STATUS.SKIPPED];
 
-        if (finishedStatuses.includes(status)) {
+        if (finishedStatuses.includes(status) || action === ACTIONS.SKIP || action === ACTIONS.CLOSE) {
             setTutorialActive(false);
             setStepIndex(0);
+            return;
         }
 
         // Handle Next/Prev button clicks
