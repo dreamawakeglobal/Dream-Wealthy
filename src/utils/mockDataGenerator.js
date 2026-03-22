@@ -31,19 +31,19 @@ export const injectDemoData = async (store) => {
     await store.setFixedExpenses([
         {
             id: crypto.randomUUID(),
-            name: "Downtown Apartment Rent",
+            name: "🏢 Downtown Apartment Rent",
             amount: 2100,
             frequency: "Monthly"
         },
         {
             id: crypto.randomUUID(),
-            name: "Car Payment (Tesla Model 3)",
+            name: "🚗 Car Payment (Tesla Model 3)",
             amount: 565,
             frequency: "Monthly"
         },
         {
             id: crypto.randomUUID(),
-            name: "Health Insurance",
+            name: "🩺 Health Insurance",
             amount: 320,
             frequency: "Monthly"
         }
@@ -53,19 +53,19 @@ export const injectDemoData = async (store) => {
     await store.setVariableExpenses([
         {
             id: crypto.randomUUID(),
-            name: "Groceries & Dining Out",
+            name: "🛒 Groceries & Dining Out",
             amount: 800,
             frequency: "Monthly"
         },
         {
             id: crypto.randomUUID(),
-            name: "Fuel & Transportation",
+            name: "⛽ Fuel & Transportation",
             amount: 150,
             frequency: "Monthly"
         },
         {
             id: crypto.randomUUID(),
-            name: "Entertainment & Leisure",
+            name: "🍿 Entertainment & Leisure",
             amount: 400,
             frequency: "Monthly"
         }
@@ -83,18 +83,6 @@ export const injectDemoData = async (store) => {
             minimumPayment: 150,
             extraPayment: 300,
             dueDate: "15",
-            isPaid: false
-        },
-        {
-            id: crypto.randomUUID(),
-            name: "Federal Student Loan",
-            type: "Student Loan",
-            targetAmount: 0,
-            currentAmount: 18500,
-            interestRate: 4.5,
-            minimumPayment: 210,
-            extraPayment: 0,
-            dueDate: "03",
             isPaid: false
         }
     ]);
@@ -230,12 +218,28 @@ export const injectDemoData = async (store) => {
             name: "Spotify Duo",
             cost: 14.99,
             type: "monthly"
+        }
+    ]);
+
+    // 10. Instantiate 3 explicit custom Categories 
+    await store.setAllocations([
+        {
+            id: crypto.randomUUID(),
+            name: "Needs",
+            percentage: 50,
+            color: "#4FA3F7"
         },
         {
             id: crypto.randomUUID(),
-            name: "Amazon Prime",
-            cost: 139.00,
-            type: "yearly"
+            name: "Wants",
+            percentage: 30,
+            color: "#10B981"
+        },
+        {
+            id: crypto.randomUUID(),
+            name: "Savings",
+            percentage: 20,
+            color: "#9d4edd"
         }
     ]);
 
