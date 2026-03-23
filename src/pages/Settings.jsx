@@ -344,8 +344,8 @@ const Settings = () => {
                                 </div>
                                 <div className="preference-item" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px', marginTop: '16px' }}>
                                     <div className="preference-info" style={{ width: '100%' }}>
-                                        <h4>Expenses Box Border Glow</h4>
-                                        <p className="text-muted">Personalize the styling of your Expense dashboard containers.</p>
+                                        <h4>Border Glow</h4>
+                                        <p className="text-muted">Personalize the neon styling of your dashboard containers.</p>
                                     </div>
                                     <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                         {/* None Swatch */}
