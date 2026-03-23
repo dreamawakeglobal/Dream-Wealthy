@@ -289,41 +289,31 @@ const Projections = () => {
 
                             <div className="controls-group">
                                 <label>Projection Timeline</label>
-                                <Card glass style={{ display: 'flex', marginTop: '8px', padding: '4px', borderRadius: '12px', gap: '4px' }}>
-                                    <button
-                                        onClick={() => setProjectionYears(1)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '8px 16px',
-                                            fontSize: '0.9rem',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            fontWeight: 600,
-                                            background: projectionYears === 1 ? 'var(--accent-primary)' : 'transparent',
-                                            color: projectionYears === 1 ? '#fff' : 'var(--text-secondary)',
-                                            transition: 'all 0.2s ease',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        1 Year
-                                    </button>
-                                    <button
-                                        onClick={() => setProjectionYears(2)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '8px 16px',
-                                            fontSize: '0.9rem',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            fontWeight: 600,
-                                            background: projectionYears === 2 ? 'var(--accent-primary)' : 'transparent',
-                                            color: projectionYears === 2 ? '#fff' : 'var(--text-secondary)',
-                                            transition: 'all 0.2s ease',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        2 Years
-                                    </button>
+                                <Card glass style={{ display: 'flex', marginTop: '8px', padding: '4px', borderRadius: '12px', gap: '4px', flexWrap: 'wrap' }}>
+                                    {[1, 2, 3, 4, 5].map(year => (
+                                        <button
+                                            key={year}
+                                            onClick={() => {
+                                                setProjectionYears(year);
+                                                setCurrentPage(0);
+                                            }}
+                                            style={{
+                                                flex: 1,
+                                                minWidth: '70px',
+                                                padding: '8px 12px',
+                                                fontSize: '0.9rem',
+                                                borderRadius: '8px',
+                                                border: 'none',
+                                                fontWeight: 600,
+                                                background: projectionYears === year ? 'var(--accent-primary)' : 'transparent',
+                                                color: projectionYears === year ? '#fff' : 'var(--text-secondary)',
+                                                transition: 'all 0.2s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            {year} {year === 1 ? 'Year' : 'Years'}
+                                        </button>
+                                    ))}
                                 </Card>
                             </div>
                 </div>
