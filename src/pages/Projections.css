@@ -5,6 +5,48 @@
     width: 100%;
 }
 
+/* Editable Cell Geometries */
+.editable-cell-input {
+    width: 100%;
+    padding: 4px;
+    margin: -5px -5px;
+    background: var(--surface-hover);
+    border: 1px solid var(--accent-primary);
+    color: var(--text-primary);
+    outline: none;
+    border-radius: 4px;
+    text-align: right;
+    font-family: inherit;
+    font-size: inherit;
+    box-sizing: border-box;
+}
+
+/* Hide number input spin buttons naturally */
+.editable-cell-input::-webkit-outer-spin-button,
+.editable-cell-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+}
+.editable-cell-input[type=number] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.editable-cell-display {
+    cursor: pointer;
+    border-bottom: 1px dashed transparent;
+    display: block;
+    width: 100%;
+    text-align: right;
+    box-sizing: border-box;
+    transition: border-bottom-color 0.2s ease;
+}
+
+.editable-cell-display:hover {
+    border-bottom-color: var(--text-muted);
+}
+
 .projection-controls {
     display: flex;
     flex-direction: column;
@@ -173,6 +215,12 @@
     min-width: 700px;
     border-collapse: collapse;
     text-align: right;
+    table-layout: fixed;
+}
+.projection-table th:first-child,
+.projection-table td:first-child {
+    text-align: left;
+    width: 12%;
 }
 
 .projection-table th {

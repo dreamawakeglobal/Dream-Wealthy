@@ -46,15 +46,7 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
-                style={{
-                    width: '80px',
-                    padding: '4px',
-                    background: 'var(--surface-hover)',
-                    border: '1px solid var(--accent-primary)',
-                    color: 'var(--text-primary)',
-                    outline: 'none',
-                    borderRadius: '4px'
-                }}
+                className="editable-cell-input"
             />
         );
     }
@@ -62,12 +54,10 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
     return (
         <div
             onClick={() => setIsEditing(true)}
-            style={{ cursor: 'pointer', padding: '4px', borderBottom: '1px dashed transparent', display: 'inline-block' }}
+            className="editable-cell-display"
             title="Click to edit value"
-            onMouseEnter={(e) => e.currentTarget.style.borderBottom = '1px dashed var(--text-muted)'}
-            onMouseLeave={(e) => e.currentTarget.style.borderBottom = '1px dashed transparent'}
         >
-            {isCurrency ? `${sign}$${Number(value).toLocaleString()}` : `${sign}${value.toLocaleString()}`}
+            {isCurrency ? `${sign}$${Number(editValue).toLocaleString()}` : `${sign}${Number(editValue).toLocaleString()}`}
         </div>
     );
 };
