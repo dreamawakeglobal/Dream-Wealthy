@@ -5,15 +5,15 @@ import { useSound } from '../../SoundContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Modal.css';
 
-export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false }) => {
+export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false, silent = false }) => {
     const { playWhoosh } = useSound();
     const { theme } = useTheme();
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && !silent) {
             playWhoosh();
         }
-    }, [isOpen, playWhoosh]);
+    }, [isOpen, playWhoosh, silent]);
 
     if (!isOpen) return null;
 

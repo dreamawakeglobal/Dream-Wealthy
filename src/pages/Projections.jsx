@@ -10,6 +10,7 @@ import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Projections.css';
 
@@ -82,6 +83,7 @@ const Projections = () => {
         getProjectionData
     } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
+    const { playPop } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#007aff', white: '#ffffff', black: '#000000',
@@ -143,6 +145,7 @@ const Projections = () => {
             <Modal
                 isOpen={showEngineModal}
                 onClose={() => setShowEngineModal(false)}
+                silent={true}
                 useNeonGlow={true}
                 transparentOverlay={true}
                 lessTransparent={true}
@@ -362,7 +365,7 @@ const Projections = () => {
                                 <h3 style={{ margin: 0 }}>Month-by-Month Breakdown</h3>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <Button 
-                                        onClick={() => setShowEngineModal(true)} 
+                                        onClick={() => { playPop(); setShowEngineModal(true); }} 
                                         variant="primary" 
                                         className="configure-projections-btn"
                                         style={{ 
