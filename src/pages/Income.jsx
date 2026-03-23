@@ -250,6 +250,7 @@ const Income = () => {
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
+    const { playPop } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#007aff', white: '#ffffff', black: '#000000',
@@ -466,7 +467,7 @@ const Income = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                     <Button
-                                        onClick={handleAddCategory}
+                                        onClick={() => { playPop(); handleAddCategory(); }}
                                         variant="primary"
                                         style={activeColor ? { 
                                             background: activeColor, 

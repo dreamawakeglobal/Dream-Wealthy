@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
 import { useTheme } from '../contexts/ThemeContext';
+import { useSound } from '../SoundContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
@@ -117,6 +118,7 @@ const CustomCandle = (props) => {
 const Investments = () => {
     const { portfolio, setPortfolio } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
+    const { playPop } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#007aff', white: '#ffffff', black: '#000000',
@@ -695,7 +697,7 @@ const Investments = () => {
                             <h3 className="panel-title">Your Holdings</h3>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <button 
-                                    onClick={() => setIsAddingCustom(true)} 
+                                    onClick={() => { playPop(); setIsAddingCustom(true); }} 
                                     style={{
                                         background: activeColor || 'var(--accent-primary)',
                                         color: activeColor ? ((expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white') : 'white',
@@ -711,6 +713,7 @@ const Investments = () => {
                         <Modal
                             isOpen={isAddingCustom}
                             onClose={() => setIsAddingCustom(false)}
+                            silent={true}
                             useNeonGlow={true}
                             transparentOverlay={true}
                             lessTransparent={true}
