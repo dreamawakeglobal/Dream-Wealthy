@@ -829,7 +829,7 @@ const Expenses = () => {
                         </div>
                         <Button 
                             size="sm" 
-                            onClick={() => setShowAddSub(!showAddSub)}
+                            onClick={() => { playPop(); setShowAddSub(!showAddSub); }}
                             style={activeColor ? { 
                                 background: activeColor, 
                                 borderColor: activeColor, 
@@ -843,6 +843,7 @@ const Expenses = () => {
                     <Modal
                         isOpen={showAddSub}
                         onClose={() => setShowAddSub(false)}
+                        silent={true}
                         useNeonGlow={true}
                         transparentOverlay={true}
                         lessTransparent={true}
@@ -1044,7 +1045,7 @@ const Expenses = () => {
                             </div>
                             <Button 
                                 size="sm" 
-                                onClick={() => setShowAddTrackerForm(true)}
+                                onClick={() => { playPop(); setShowAddTrackerForm(true); }}
                                 style={activeColor ? { 
                                     background: activeColor, 
                                     borderColor: activeColor, 
@@ -1058,6 +1059,7 @@ const Expenses = () => {
                         <Modal
                             isOpen={showAddTrackerForm}
                             onClose={() => setShowAddTrackerForm(false)}
+                            silent={true}
                             useNeonGlow={true}
                             transparentOverlay={true}
                             lessTransparent={true}
