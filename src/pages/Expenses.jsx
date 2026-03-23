@@ -308,7 +308,7 @@ const Expenses = () => {
     const {
         fixedExpenses, setFixedExpenses,
         variableExpenses, setVariableExpenses,
-        totalFixedExpenses, totalVariableExpenses, totalMonthlyExpenses,
+        totalFixedExpenses, totalVariableExpenses, totalSubscriptionCost, totalTrackedMonthlyPayments, totalMonthlyExpenses,
         netMonthlyCashFlow, savingsRate,
         transactionsByCategory, transactions,
         trackedDebts, setTrackedDebts,
@@ -355,7 +355,6 @@ const Expenses = () => {
 
     // Tracker aggregate metrics
     const totalTrackedDebtBalance = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.balance) || 0), 0);
-    const totalTrackedMonthlyPayments = (trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
 
     const [showCustomPaymentModal, setShowCustomPaymentModal] = useState(false);
     const [customPaymentData, setCustomPaymentData] = useState({ debtId: null, monthIndex: null, monthLabel: '', currentAmount: '', isBlackedOut: false, amount: '' });
@@ -569,8 +568,6 @@ const Expenses = () => {
         setEditingSubId(null);
     };
 
-    const totalSubscriptionCost = activeSubscriptions.reduce((sum, s) => sum + s.cost, 0);
-
 
     // Projection Engine
     const projectionData = useMemo(() => {
@@ -691,7 +688,7 @@ const Expenses = () => {
                             <TrendingDown size={20} className="text-danger" />
                         </div>
                         <h2 className="metric-value">
-                            $<AnimatedNumber value={totalMonthlyExpenses + totalSubscriptionCost + totalTrackedMonthlyPayments} />
+                            $<AnimatedNumber value={totalMonthlyExpenses} />
                         </h2>
                         <div className="metric-breakdown">
                             <span>Fixed: ${totalFixedExpenses.toLocaleString()}</span>
@@ -708,8 +705,8 @@ const Expenses = () => {
                             <span className="metric-title">Net Cash Flow</span>
                             <Wallet size={20} className="text-success" />
                         </div>
-                        <h2 className={`metric-value ${(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments) >= 0 ? 'positive' : 'negative'}`}>
-                            {(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments) < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow - totalSubscriptionCost - totalTrackedMonthlyPayments)} />
+                        <h2 className={`metric-value ${netMonthlyCashFlow >= 0 ? 'positive' : 'negative'}`}>
+                            {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} />
                         </h2>
                         <p className="metric-subtext">Remaining for allocation</p>
                     </Card>

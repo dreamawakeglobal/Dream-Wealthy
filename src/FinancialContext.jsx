@@ -63,7 +63,10 @@ export const FinancialProvider = ({ children }) => {
         }, {});
     }, [store.transactions]);
 
-    const totalMonthlyExpenses = totalFixedExpenses + totalVariableExpenses;
+    const totalSubscriptionCost = (store.subscriptions || []).reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+    const totalTrackedMonthlyPayments = (store.trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
+
+    const totalMonthlyExpenses = totalFixedExpenses + totalVariableExpenses + totalSubscriptionCost + totalTrackedMonthlyPayments;
     const netMonthlyCashFlow = totalMonthlyIncome - totalMonthlyExpenses;
 
     const savingsRate = totalMonthlyIncome > 0
@@ -142,6 +145,8 @@ export const FinancialProvider = ({ children }) => {
         totalBiMonthlyIncome: (totalMonthlyIncome * 12) / 26,
         totalFixedExpenses,
         totalVariableExpenses,
+        totalSubscriptionCost,
+        totalTrackedMonthlyPayments,
         totalMonthlyExpenses,
         netMonthlyCashFlow,
         savingsRate,
