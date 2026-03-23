@@ -70,6 +70,13 @@
     transition: color 0.2s ease;
 }
 
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+}
+
 .footer-column a:hover {
     color: var(--accent-primary);
 }
