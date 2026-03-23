@@ -128,6 +128,7 @@ export const useStore = create((set, get) => ({
                 expenseInflationRate: profileRes.data.expense_inflation_rate ?? 0,
                 cellOverrides: profileRes.data.cell_overrides?.overrides || {},
                 extraColumns: profileRes.data.cell_overrides?.extraColumns || [],
+                dismissedNotifications: profileRes.data.cell_overrides?.dismissedNotifications || [],
                 subscriptionTier: profileRes.data.subscription_tier || 'none'
             } : get().profileData;
 
@@ -235,11 +236,12 @@ export const useStore = create((set, get) => ({
             if (key === 'startingSavings') column = 'starting_savings';
             if (key === 'incomeGrowthRate') column = 'income_growth_rate';
             if (key === 'expenseInflationRate') column = 'expense_inflation_rate';
-            if (key === 'cellOverrides' || key === 'extraColumns') {
+            if (key === 'cellOverrides' || key === 'extraColumns' || key === 'dismissedNotifications') {
                 column = 'cell_overrides';
                 valToSave = {
                     overrides: key === 'cellOverrides' ? newValue : profileData.cellOverrides,
-                    extraColumns: key === 'extraColumns' ? newValue : profileData.extraColumns
+                    extraColumns: key === 'extraColumns' ? newValue : profileData.extraColumns,
+                    dismissedNotifications: key === 'dismissedNotifications' ? newValue : profileData.dismissedNotifications
                 };
             }
             if (column) {

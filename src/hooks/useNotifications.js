@@ -7,7 +7,7 @@ export const useNotifications = () => {
     const { totalMonthlyIncome, netMonthlyCashFlow } = useFinancialContext();
 
     // Persist dismissed notifications in localStorage
-    const [dismissedIds, setDismissedIds] = useState(() => {
+    const [localDismissed, setLocalDismissed] = useState(() => {
         try {
             return JSON.parse(localStorage.getItem('dw_dismissed_notifications')) || [];
         } catch (e) {
@@ -15,6 +15,9 @@ export const useNotifications = () => {
             return [];
         }
     });
+
+    const cloudDismissed = store.profileData?.dismissedNotifications || [];
+    const dismissedIds = [...new Set([...localDismissed, ...cloudDismissed])];
 
     useEffect(() => {
         localStorage.setItem('dw_dismissed_notifications', JSON.stringify(dismissedIds));
@@ -151,18 +154,25 @@ export const useNotifications = () => {
         alerts.sort((a, b) => severityOrder[a.type] - severityOrder[b.type]);
 
         // Filter out dismissed notifications
+        console.log("NATIVE DEBUG - generated alerts:", alerts.map(a => a.id), "cached dismissedIds:", dismissedIds);
         return alerts.filter(alert => !dismissedIds.includes(alert.id));
     }, [store.trackedDebts, store.fixedExpenses, store.subscriptions, totalMonthlyIncome, netMonthlyCashFlow, dismissedIds]);
 
     const dismiss = (id) => {
-        setDismissedIds(prev => [...prev, id]);
+        const newDismissed = [...new Set([...dismissedIds, id])];
+        setLocalDismissed(newDismissed);
+        if (store.user) {
+            store.updateProfileField('dismissedNotifications', newDismissed);
+        }
     };
 
     const clearAll = () => {
-        setDismissedIds(prev => {
-            const activeIds = notifications.map(n => n.id);
-            return [...new Set([...prev, ...activeIds])];
-        });
+        const activeIds = notifications.map(n => n.id);
+        const newDismissed = [...new Set([...dismissedIds, ...activeIds])];
+        setLocalDismissed(newDismissed);
+        if (store.user) {
+            store.updateProfileField('dismissedNotifications', newDismissed);
+        }
     };
 
     return { notifications, dismiss, clearAll, unreadCount: notifications.length };
