@@ -501,39 +501,44 @@ a {
     box-shadow: 0 0 28px var(--accent-primary) !important;
 }
 .glow-color-white, html[data-theme] .glow-color-white {
-    border: 3px solid rgba(255, 255, 255, 0.8) !important;
-    border-color: rgba(255, 255, 255, 0.8) !important;
-    box-shadow: 0 0 28px rgba(255, 255, 255, 0.5) !important;
+    border: 3px solid #ffffff !important;
+    border-color: #ffffff !important;
+    box-shadow: 0 0 28px #ffffff !important;
 }
 .glow-color-black, html[data-theme] .glow-color-black {
     border: 3px solid #000000 !important;
     border-color: #000000 !important;
-    box-shadow: 0 0 28px rgba(0, 0, 0, 0.8) !important;
+    box-shadow: 0 0 28px #000000 !important;
 }
 .glow-color-red, html[data-theme] .glow-color-red {
     border: 3px solid var(--danger) !important;
     border-color: var(--danger) !important;
-    box-shadow: 0 0 28px var(--danger-glow) !important;
+    box-shadow: 0 0 28px var(--danger) !important;
 }
 .glow-color-green, html[data-theme] .glow-color-green {
     border: 3px solid var(--success) !important;
     border-color: var(--success) !important;
-    box-shadow: 0 0 28px var(--success-glow, rgba(46, 204, 113, 0.4)) !important;
+    box-shadow: 0 0 28px var(--success) !important;
 }
 .glow-color-purple, html[data-theme] .glow-color-purple {
-    border: 3px solid #8b5cf6 !important;
-    border-color: #8b5cf6 !important;
-    box-shadow: 0 0 28px rgba(139, 92, 246, 0.5) !important;
+    border: 3px solid #818CF8 !important;
+    border-color: #818CF8 !important;
+    box-shadow: 0 0 28px #818CF8 !important;
+}
+.glow-color-pink, html[data-theme] .glow-color-pink {
+    border: 3px solid #ec4899 !important;
+    border-color: #ec4899 !important;
+    box-shadow: 0 0 28px #ec4899 !important;
 }
 .glow-color-yellow, html[data-theme] .glow-color-yellow {
     border: 3px solid #eab308 !important;
     border-color: #eab308 !important;
-    box-shadow: 0 0 28px rgba(234, 179, 8, 0.5) !important;
+    box-shadow: 0 0 28px #eab308 !important;
 }
 .glow-color-orange, html[data-theme] .glow-color-orange {
     border: 3px solid #f97316 !important;
     border-color: #f97316 !important;
-    box-shadow: 0 0 28px rgba(249, 115, 22, 0.5) !important;
+    box-shadow: 0 0 28px #f97316 !important;
 }
 
 /* Global Pointer Glow Effect */

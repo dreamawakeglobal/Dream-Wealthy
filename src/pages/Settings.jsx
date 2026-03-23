@@ -371,6 +371,7 @@ const Settings = () => {
                                             { id: 'red', color: '#ff3b30' },
                                             { id: 'green', color: '#2ecc71' },
                                             { id: 'purple', color: '#8b5cf6' },
+                                            { id: 'pink', color: '#ec4899' },
                                             { id: 'yellow', color: '#eab308' },
                                             { id: 'orange', color: '#f97316' }
                                         ].map(swatch => (

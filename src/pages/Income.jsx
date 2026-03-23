@@ -414,7 +414,10 @@ const Income = () => {
                             <Button
                                 variant="secondary"
                                 size="sm"
-                                onClick={() => setIsActivityModalOpen(true)}
+                                onClick={() => {
+                                    if (playPop) playPop();
+                                    setIsActivityModalOpen(true);
+                                }}
                                 style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
                             >
                                 <Wallet size={16} /> Activity
