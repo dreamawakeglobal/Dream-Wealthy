@@ -76,10 +76,16 @@ const Projections = () => {
     const { playPop } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: '#007aff', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-        yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+        blue: theme === 'dark' ? '#818CF8' : '#4FA3F7',
+        white: '#ffffff',
+        black: '#000000',
+        red: '#F43F5E',
+        green: '#10B981',
+        purple: '#818CF8',
+        pink: '#ec4899',
+        yellow: '#eab308',
+        orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
     const [localIncome, setLocalIncome] = useState(totalMonthlyIncome);
     const [localExpenses, setLocalExpenses] = useState(totalMonthlyExpenses);
@@ -141,18 +147,11 @@ const Projections = () => {
                 lessTransparent={true}
                 customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
                 containerStyle={{ maxWidth: '450px', borderRadius: '24px' }}
-                title={(() => {
-                    const activeColor = {
-                        blue: '#007aff', white: '#ffffff', black: '#000000',
-                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                        yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
-                    return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-                            <Settings size={20} color={activeColor} /> Projection <span style={{ color: activeColor }}>Engine</span>
-                        </div>
-                    );
-                })()}
+                title={(
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
+                        <Settings size={20} color={activeColor} /> Projection <span style={{ color: activeColor }}>Engine</span>
+                    </div>
+                )}
             >
                 <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '55vh', overflowY: 'auto' }}>
 
@@ -320,19 +319,28 @@ const Projections = () => {
                                     <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
                                         <defs>
                                             <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0.05} />
+                                                <stop offset="5%" stopColor={activeColor} stopOpacity={0.8} />
+                                                <stop offset="95%" stopColor={activeColor} stopOpacity={0.05} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" stroke="var(--text-secondary)" />
-                                        <YAxis stroke="var(--text-secondary)" tickFormatter={val => `$${val}`} />
+                                        <XAxis 
+                                            dataKey="month" 
+                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                            tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                            tickFormatter={(val) => typeof val === 'string' ? val.substring(0, 3) : val} 
+                                        />
+                                        <YAxis 
+                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                            tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                            tickFormatter={(val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 }).format(val)} 
+                                        />
                                         <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
                                         <Tooltip
                                             contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--surface-border)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px' }}
                                             itemStyle={{ color: 'var(--text-primary)' }}
                                             formatter={(value) => `$${value.toLocaleString()}`}
                                         />
-                                        <Area type="monotone" dataKey="Cumulative" stroke="var(--accent-primary)" fillOpacity={1} fill="url(#colorCumulative)" strokeWidth={3} />
+                                        <Area type="monotone" dataKey="Cumulative" stroke={activeColor} fillOpacity={1} fill="url(#colorCumulative)" strokeWidth={3} />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>

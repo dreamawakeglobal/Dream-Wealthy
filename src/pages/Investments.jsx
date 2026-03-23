@@ -535,15 +535,15 @@ const Investments = () => {
                                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={true} />
                                         <XAxis
                                             dataKey="time"
-                                            stroke="var(--text-muted)"
-                                            tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'}
+                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 11, fontWeight: 'bold' }}
                                             minTickGap={30}
                                         />
                                         <YAxis
                                             orientation="right"
                                             domain={['auto', 'auto']}
-                                            stroke="var(--text-muted)"
-                                            tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'}
+                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 11, fontWeight: 'bold' }}
                                             tickFormatter={(val) => val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : `$${val.toFixed(0)}`}
                                         />
                                         <RechartsTooltip

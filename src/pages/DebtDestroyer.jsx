@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Flame, TrendingDown, Plus, Trash2, Edit2, X, AlertTriangle, Wind, CloudRain } from 'lucide-react';
 import { useFinancialContext } from '../FinancialContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -18,6 +19,7 @@ import './DebtDestroyer.css';
 
 const DebtDestroyer = () => {
     const { debts, setDebts } = useFinancialContext();
+    const { theme } = useTheme();
     const [strategy, setStrategy] = useState('avalanche'); // avalanche | snowball
     const [extraPayment, setExtraPayment] = useState(0);
 
@@ -294,8 +296,16 @@ const DebtDestroyer = () => {
                                                     <stop offset="95%" stopColor="var(--danger)" stopOpacity={0.05} />
                                                 </linearGradient>
                                             </defs>
-                                            <XAxis dataKey="month" stroke="var(--text-secondary)" />
-                                            <YAxis stroke="var(--text-secondary)" tickFormatter={val => `$${val}`} />
+                                            <XAxis 
+                                                dataKey="month" 
+                                                stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                                tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                            />
+                                            <YAxis 
+                                                stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                                tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                                tickFormatter={val => `$${val}`} 
+                                            />
                                             <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
                                             <Tooltip
                                                 contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--danger)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px', boxShadow: '0 0 20px var(--danger-glow)' }}
