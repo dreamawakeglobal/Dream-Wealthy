@@ -17,7 +17,9 @@ export const useNotifications = () => {
     });
 
     const cloudDismissed = store.profileData?.dismissedNotifications || [];
-    const dismissedIds = [...new Set([...localDismissed, ...cloudDismissed])];
+    const dismissedIds = useMemo(() => {
+        return [...new Set([...localDismissed, ...cloudDismissed])];
+    }, [localDismissed, cloudDismissed]);
 
     useEffect(() => {
         localStorage.setItem('dw_dismissed_notifications', JSON.stringify(dismissedIds));
