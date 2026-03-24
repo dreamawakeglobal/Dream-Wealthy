@@ -42,7 +42,7 @@ export const GoalsSection = () => {
     const { expenseBorderColor, theme } = useTheme();
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: '#007aff', white: '#ffffff', black: '#000000',
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;

@@ -496,9 +496,9 @@ a {
 
 /* Global Customizable Glowing Borders (Synced from ThemeContext Settings) */
 .glow-color-blue, html[data-theme] .glow-color-blue {
-    border: 3px solid var(--accent-primary) !important;
-    border-color: var(--accent-primary) !important;
-    box-shadow: 0 0 28px var(--accent-primary) !important;
+    border: 3px solid #4FA3F7 !important;
+    border-color: #4FA3F7 !important;
+    box-shadow: 0 0 28px #4FA3F7 !important;
 }
 .glow-color-white, html[data-theme] .glow-color-white {
     border: 3px solid #ffffff !important;

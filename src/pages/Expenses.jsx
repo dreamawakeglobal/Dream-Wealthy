@@ -33,7 +33,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: '#007aff', white: '#ffffff', black: '#000000',
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
@@ -319,7 +319,7 @@ const Expenses = () => {
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: '#007aff', white: '#ffffff', black: '#000000',
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
@@ -851,7 +851,7 @@ const Expenses = () => {
                         containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                         title={(() => {
                             const activeColor = {
-                                blue: '#007aff', white: '#ffffff', black: '#000000',
+                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                                 red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                                 yellow: '#eab308', orange: '#f97316'
                             }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
@@ -1067,7 +1067,7 @@ const Expenses = () => {
                             containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                             title={(() => {
                                 const activeColor = {
-                                    blue: '#007aff', white: '#ffffff', black: '#000000',
+                                    blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                                     red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                                     yellow: '#eab308', orange: '#f97316'
                                 }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
@@ -1634,7 +1634,7 @@ const Expenses = () => {
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
                     const activeColor = {
-                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
@@ -1750,7 +1750,7 @@ const Expenses = () => {
                 containerStyle={{ width: '100%', maxWidth: '500px', padding: '32px', borderRadius: '24px' }}
                 title={(() => {
                     const activeColor = {
-                        blue: '#007aff', white: '#ffffff', black: '#000000',
+                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');

@@ -31,17 +31,19 @@ const AiAdvisorWidget = () => {
         scrollToBottom();
     }, [messages]);
 
+    // Dynamically calculate the Persona string for both the Header and Greeting
+    const personaId = user?.user_metadata?.advisor_persona || 'wealth_manager';
+    const personaName = {
+        'accountability_coach': 'Accountability Coach',
+        'visionary_guide': 'Visionary Guide',
+        'cfo': 'Agentic C.F.O.',
+        'wealth_manager': 'Wealth Manager'
+    }[personaId] || 'AI Advisor';
+
     // Dynamically build the Initial Greeting based on their Persona mapping
     useEffect(() => {
         if (user) {
             const firstName = user.user_metadata?.first_name || '';
-            const personaId = user.user_metadata?.advisor_persona || 'wealth_manager';
-            const personaName = {
-                'accountability_coach': 'Accountability Coach',
-                'visionary_guide': 'Visionary Guide',
-                'cfo': 'Agentic C.F.O.',
-                'wealth_manager': 'Wealth Manager'
-            }[personaId];
 
             const greeting = firstName 
                 ? `Hello ${firstName}! I'm your dedicated ${personaName}. How can I help you maximize your wealth today?`
@@ -58,7 +60,7 @@ const AiAdvisorWidget = () => {
     }, [user, user?.user_metadata?.advisor_persona]);
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: theme === 'dark' ? '#818CF8' : '#4FA3F7',
+        blue: '#4FA3F7',
         white: '#ffffff',
         black: '#000000',
         red: '#F43F5E',
@@ -169,7 +171,7 @@ const AiAdvisorWidget = () => {
                     <div className="ai-chat-header" style={{ borderBottomColor: `${activeColor}33` }}>
                         <div className="ai-chat-title">
                             <Sparkles size={18} color={activeColor} />
-                            <span>AI Advisor <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '4px' }}>powered by Gemini</span></span>
+                            <span>{personaName} <span style={{ fontSize: '0.7rem', opacity: 0.6, marginLeft: '4px' }}>powered by Gemini</span></span>
                         </div>
                         <button onClick={handleOpenToggle} className="ai-chat-close">
                             <ChevronDown size={20} />

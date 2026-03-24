@@ -76,7 +76,7 @@ const Projections = () => {
     const { playPop } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
-        blue: theme === 'dark' ? '#818CF8' : '#4FA3F7',
+        blue: '#4FA3F7',
         white: '#ffffff',
         black: '#000000',
         red: '#F43F5E',
