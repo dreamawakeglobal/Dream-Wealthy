@@ -23,6 +23,7 @@ import { SoundProvider } from './SoundContext';
 import ThemeToggle from './components/ThemeToggle';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import PointerGlow from './components/PointerGlow';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 
@@ -39,20 +40,22 @@ function App() {
               <ThemeToggle />
               <PointerGlow />
               <TutorialOverlay />
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Waitlist />} />
-                  <Route path="onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
-                  <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                  <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
-                  <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
-                  <Route path="projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
-                  <Route path="investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
-                  <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                  <Route path="pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
-                  <Route path="signup" element={<SignUp />} />
-                </Route>
-              </Routes>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Layout />}>
+                    <Route index element={<Waitlist />} />
+                    <Route path="onboarding" element={<ProtectedRoute requireOnboarding={false}><Onboarding /></ProtectedRoute>} />
+                    <Route path="dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                    <Route path="income" element={<ProtectedRoute><Income /></ProtectedRoute>} />
+                    <Route path="expenses" element={<ProtectedRoute><Expenses /></ProtectedRoute>} />
+                    <Route path="projections" element={<ProtectedRoute><Projections /></ProtectedRoute>} />
+                    <Route path="investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
+                    <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                    <Route path="pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                    <Route path="signup" element={<SignUp />} />
+                  </Route>
+                </Routes>
+              </ErrorBoundary>
             </BrowserRouter>
           </SoundProvider>
         </FinancialProvider>

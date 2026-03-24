@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
 import { LogOut, User, Settings, CreditCard } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
+import AiAdvisorWidget from './AiAdvisorWidget';
 import './Layout.css';
 
 const Layout = () => {
@@ -69,6 +70,7 @@ const Layout = () => {
                                 </div>
                             )}
                         </div>
+                        <AiAdvisorWidget />
                     </div>
                 ) : (
                     location.pathname !== '/' && (

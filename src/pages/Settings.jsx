@@ -7,7 +7,7 @@ import { supabase } from '../supabaseClient';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2 } from 'lucide-react';
+import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Settings.css';
@@ -25,6 +25,11 @@ const Settings = () => {
     const [email] = useState(user?.email || '');
     const [profileUpdating, setProfileUpdating] = useState(false);
     const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+
+    // State for AI Advisor Persona
+    const [activePersona, setActivePersona] = useState(user?.user_metadata?.advisor_persona || 'wealth_manager');
+    const [personaUpdating, setPersonaUpdating] = useState(false);
+    const [personaMessage, setPersonaMessage] = useState({ type: '', text: '' });
 
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -153,6 +158,12 @@ const Settings = () => {
                         <User size={18} /> Profile
                     </button>
                     <button 
+                        className={`settings-tab ${activeTab === 'advisor' ? 'active' : ''}`}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('advisor'); }}
+                    >
+                        <Sparkles size={18} /> AI Advisor
+                    </button>
+                    <button 
                         className={`settings-tab ${activeTab === 'security' ? 'active' : ''}`}
                         onClick={() => { if(playPop) playPop(); setActiveTab('security'); }}
                     >
@@ -248,7 +259,76 @@ const Settings = () => {
                         </form>
                     </div>
                 </AnimateOnScroll>
-                )}
+                    )}
+
+                    {/* AI Advisor Selection Card */}
+                    {activeTab === 'advisor' && (
+                        <AnimateOnScroll delay={0.1}>
+                            <div className="settings-section ai-advisor-card">
+                                <div className="card-header">
+                                    <Sparkles size={20} className="text-primary" />
+                                    <h2>Hire Your AI Advisor</h2>
+                                </div>
+                                <p className="text-muted" style={{ marginBottom: '24px' }}>Select the specific Persona and psychological archetype you want your AI Financial Advisor embedded with. This completely rewrites the mathematical advisory engine natively to fit your personality.</p>
+
+                                <div className="advisor-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                                    {[
+                                        { id: 'wealth_manager', name: 'Wealth Manager', icon: Briefcase, color: '#F59E0B', desc: 'Professional, Analytical, and Exclusive. Focuses strictly on maximum ROI and compounding wealth.' },
+                                        { id: 'accountability_coach', name: 'Accountability Coach', icon: Zap, color: '#EF4444', desc: 'Aggressive, blunt, and intense. Pushes you to drastically cut matrix expenses and eliminate debt instantly.' },
+                                        { id: 'visionary_guide', name: 'Visionary Guide', icon: Sparkles, color: '#8B5CF6', desc: 'Warm, wildly encouraging, and futuristic. Paints the picture of your Dream Wealthy timeline.' },
+                                        { id: 'cfo', name: 'Agentic C.F.O.', icon: BrainCircuit, color: '#3B82F6', desc: 'Hyper-logical, systems-driven protocol. Speaks purely in actionable numbers and optimization percentages.' }
+                                    ].map(persona => (
+                                        <div 
+                                            key={persona.id}
+                                            className={`persona-card glass ${activePersona === persona.id ? 'active-persona' : ''}`}
+                                            style={{
+                                                padding: '24px',
+                                                borderRadius: '16px',
+                                                border: activePersona === persona.id ? `2px solid ${persona.color}` : '1px solid rgba(255, 255, 255, 0.1)',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: activePersona === persona.id ? `0 0 24px ${persona.color}40` : 'none',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '12px'
+                                            }}
+                                            onClick={async () => {
+                                                if(playPop) playPop();
+                                                setActivePersona(persona.id);
+                                                setPersonaUpdating(true);
+                                                setPersonaMessage({ type: '', text: '' });
+                                                try {
+                                                    const { error } = await supabase.auth.updateUser({
+                                                        data: { advisor_persona: persona.id } // Store natively via JWT bypass!
+                                                    });
+                                                    if (error) throw error;
+                                                    setPersonaMessage({ type: 'success', text: `Successfully hired the ${persona.name}!` });
+                                                } catch (err) {
+                                                    setPersonaMessage({ type: 'error', text: err.message });
+                                                } finally {
+                                                    setPersonaUpdating(false);
+                                                }
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ padding: '12px', borderRadius: '12px', background: `${persona.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <persona.icon size={24} color={persona.color} />
+                                                </div>
+                                                <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{persona.name}</h3>
+                                            </div>
+                                            <p className="text-muted" style={{ margin: 0, lineHeight: '1.5', fontSize: '0.95rem' }}>{persona.desc}</p>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {personaMessage.text && (
+                                    <div className={`message-banner ${personaMessage.type}`} style={{ marginTop: '24px' }}>
+                                        {personaMessage.text}
+                                    </div>
+                                )}
+                            </div>
+                        </AnimateOnScroll>
+                    )}
 
                 {/* Linked Accounts Card */}
                 {activeTab === 'integrations' && (
