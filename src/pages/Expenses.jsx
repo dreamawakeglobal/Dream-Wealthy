@@ -844,7 +844,7 @@ const Expenses = () => {
                         isOpen={showAddSub}
                         onClose={() => setShowAddSub(false)}
                         silent={true}
-                        useNeonGlow={true}
+                        useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                         transparentOverlay={true}
                         lessTransparent={true}
                         customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
@@ -854,7 +854,7 @@ const Expenses = () => {
                                 blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                                 red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                                 yellow: '#eab308', orange: '#f97316'
-                            }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                             return (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
                                     Add <span style={{ color: activeColor }}>Custom Subscription</span>
@@ -1060,7 +1060,7 @@ const Expenses = () => {
                             isOpen={showAddTrackerForm}
                             onClose={() => setShowAddTrackerForm(false)}
                             silent={true}
-                            useNeonGlow={true}
+                            useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                             transparentOverlay={true}
                             lessTransparent={true}
                             customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
@@ -1070,7 +1070,7 @@ const Expenses = () => {
                                     blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                                     red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                                     yellow: '#eab308', orange: '#f97316'
-                                }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                                 return (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
                                         Track <span style={{ color: activeColor }}>New Debt</span>
@@ -1629,7 +1629,7 @@ const Expenses = () => {
             <Modal
                 isOpen={isActivityModalOpen}
                 onClose={() => setIsActivityModalOpen(false)}
-                useNeonGlow={true}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                 clearBlur={true}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
@@ -1637,7 +1637,7 @@ const Expenses = () => {
                         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                         yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Wallet size={20} color={activeColor} /> 

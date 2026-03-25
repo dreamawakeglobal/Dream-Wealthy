@@ -142,14 +142,15 @@ const Projections = () => {
                 isOpen={showEngineModal}
                 onClose={() => setShowEngineModal(false)}
                 silent={true}
-                useNeonGlow={true}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                 transparentOverlay={true}
                 lessTransparent={true}
                 customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
                 containerStyle={{ maxWidth: '450px', borderRadius: '24px' }}
                 title={(
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-                        <Settings size={20} color={activeColor} /> Projection <span style={{ color: activeColor }}>Engine</span>
+                        <Settings size={20} color={expenseBorderColor === 'none' && theme === 'dark' ? '#ffffff' : activeColor} /> 
+                        Projection <span style={{ color: expenseBorderColor === 'none' && theme === 'dark' ? '#ffffff' : activeColor }}>Engine</span>
                     </div>
                 )}
             >

@@ -672,7 +672,7 @@ const Income = () => {
             <Modal
                 isOpen={isActivityModalOpen}
                 onClose={() => setIsActivityModalOpen(false)}
-                useNeonGlow={true}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                 clearBlur={true}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
@@ -680,7 +680,7 @@ const Income = () => {
                         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                         yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <Wallet size={20} color={activeColor} /> 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
@@ -7,6 +7,8 @@ import { Sparkles, ArrowRight, Mail } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import './Home.css';
+import './Waitlist.css';
 import './SignUp.css';
 
 const SignUp = () => {
@@ -20,9 +22,11 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
-    const [successMsg] = useState(null);
+    const [successMsg, setSuccessMsg] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
+    const [searchParams] = useSearchParams();
+    const [isEmailSent, setIsEmailSent] = useState(searchParams.get('demo') === 'verify');
 
     React.useEffect(() => {
         if (user) {
@@ -57,7 +61,7 @@ const SignUp = () => {
         try {
             const { error } = await supabase.auth.signInWithOtp({ email });
             if (error) throw error;
-            setErrorMsg("Magic link sent! Check your inbox.");
+            setIsEmailSent(true);
         } catch (error) {
             setErrorMsg(error.message);
         } finally {
@@ -73,30 +77,38 @@ const SignUp = () => {
 
         try {
             if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email.trim(),
                     password,
                 });
                 if (error) throw error;
+                // Session is active immediately upon password login
                 navigate('/dashboard');
             } else {
                 if (password !== confirmPassword) {
                     throw new Error("Passwords do not match");
                 }
-                const { error } = await supabase.auth.signUp({
-                    email,
+                const { data, error } = await supabase.auth.signUp({
+                    email: email.trim(),
                     password,
                     options: {
                         data: {
-                            first_name: firstName,
-                            last_name: lastName
+                            first_name: firstName.trim(),
+                            last_name: lastName.trim()
                         }
                     }
                 });
 
                 if (error) throw error;
 
-                navigate('/dashboard');
+                // Supabase returns a null session if Email Confirmations are enabled
+                if (!data?.session) {
+                    setErrorMsg(null); // Clear errors
+                    setIsEmailSent(true);
+                    return; // Halt navigation
+                } else {
+                    navigate('/dashboard');
+                }
             }
         } catch (error) {
             setErrorMsg(error.message);
@@ -108,12 +120,45 @@ const SignUp = () => {
     return (
         <div className="signup-page-container fade-in-up">
             <Card glass className="signup-card">
-                <div className="signup-header">
-                    <h2>{isLogin ? 'Welcome Back' : 'Start Your Journey'}</h2>
-                    <p className="text-secondary">
-                        {isLogin ? 'Log in to continue building wealth.' : 'Sign up to access your personalized financial dashboard.'}
-                    </p>
-                </div>
+                {isEmailSent ? (
+                    <div className="fade-in-up" style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', padding: '12px 0' }}>
+                        <div style={{ background: 'rgba(79, 163, 247, 0.15)', padding: '24px', borderRadius: '50%', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Mail size={48} color="var(--accent-primary)" strokeWidth={1.5} />
+                        </div>
+                        
+                        <h2 className="signup-title" style={{ margin: 0, fontSize: '2.5rem' }}>Check your inbox</h2>
+                        
+                        <p className="text-muted" style={{ fontSize: '1.05rem', lineHeight: '1.6', color: 'var(--text-secondary)', margin: 0 }}>
+                            We sent a secure verification link to <br/><strong>{email}</strong>.<br/><br/>Please check your inbox to confirm your identity and access your dashboard.
+                        </p>
+
+                        <button 
+                            onClick={() => { playPop(); setIsEmailSent(false); }} 
+                            style={{ 
+                                background: 'transparent', 
+                                border: 'none', 
+                                color: 'var(--text-secondary)', 
+                                marginTop: '8px', 
+                                cursor: 'pointer', 
+                                textDecoration: 'underline',
+                                fontWeight: '500',
+                                transition: 'color 0.2s',
+                                fontSize: '0.95rem'
+                            }}
+                            onMouseOver={(e) => e.target.style.color = 'var(--text-primary)'}
+                            onMouseOut={(e) => e.target.style.color = 'var(--text-secondary)'}
+                        >
+                            Did not receive it? Back to Login
+                        </button>
+                    </div>
+                ) : (
+                    <>
+                        <div className="signup-header">
+                            <h2>{isLogin ? 'Welcome Back' : 'Start Your Journey'}</h2>
+                            <p className="text-secondary">
+                                {isLogin ? 'Log in to continue building wealth.' : 'Sign up to access your personalized financial dashboard.'}
+                            </p>
+                        </div>
 
                 {errorMsg && (
                     <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '8px', fontSize: '0.9rem', textAlign: 'center' }}>
@@ -258,6 +303,8 @@ const SignUp = () => {
                             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
                         </button>
                     </div>
+                )}
+                    </>
                 )}
             </Card>
         </div>

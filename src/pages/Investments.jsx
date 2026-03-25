@@ -167,10 +167,12 @@ const Investments = () => {
                 let updatedAssets = [...INITIAL_ASSET_CLASSES[selectedClass]];
 
                 if (selectedClass === 'Crypto') {
-                    // Fetch from CoinGecko (No API Key Required)
+                    // Fetch from CoinGecko via Supabase Edge Function
                     const cryptoIds = updatedAssets.map(a => a.apiId).join(',');
-                    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`);
-                    const data = await res.json();
+                    const { data, error } = await supabase.functions.invoke('fetch-market-data', {
+                        body: { action: 'coingecko_price', payload: { ids: cryptoIds } }
+                    });
+                    if (error) throw error;
 
                     updatedAssets = updatedAssets.map(asset => {
                         if (data[asset.apiId] && typeof data[asset.apiId].usd === 'number') {
@@ -186,42 +188,37 @@ const Investments = () => {
                     // Fetch from Finnhub (Stocks and Commodities)
                     // Note: If no API key is present in env, it will likely return 401s, we handle gracefully.
                     // FREE TIER LIMIT: Finnhub restricts free API usage to 60 calls/minute. We can only fetch a few at a time.
-                    const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
-                    if (FINNHUB_KEY && FINNHUB_KEY !== 'your_api_key_here') {
-                        // Only fetch the top 5 assets strictly to avoid hitting a 429 Too Many Requests wall instantly
-                        const assetsToFetch = updatedAssets.slice(0, 5);
+                    // Edge Layer: Fetch from Finnhub via proxy
+                    const assetsToFetch = updatedAssets.slice(0, 5);
 
-                        const fetches = assetsToFetch.map(async (asset) => {
-                            try {
-                                const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${asset.symbol}&token=${FINNHUB_KEY}`);
-                                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                                const data = await res.json();
-                                // c = Current price, d = Change, dp = Percent change
-                                if (data && typeof data.c === 'number' && data.c !== 0) {
-                                    return {
-                                        ...asset,
-                                        price: data.c,
-                                        change: typeof data.dp === 'number' ? Number(data.dp.toFixed(2)) : 0
-                                    };
-                                }
-                                return asset;
-                            } catch (e) {
-                                console.warn(`Failed to fetch ${asset.symbol}:`, e);
-                                return asset;
+                    const fetches = assetsToFetch.map(async (asset) => {
+                        try {
+                            const { data, error } = await supabase.functions.invoke('fetch-market-data', {
+                                body: { action: 'finnhub_quote', payload: { symbol: asset.symbol } }
+                            });
+                            if (error || data?.error) throw new Error(error?.message || data?.error);
+                            
+                            // c = Current price, d = Change, dp = Percent change
+                            if (data && typeof data.c === 'number' && data.c !== 0) {
+                                return {
+                                    ...asset,
+                                    price: data.c,
+                                    change: typeof data.dp === 'number' ? Number(data.dp.toFixed(2)) : 0
+                                };
                             }
-                        });
+                            return asset;
+                        } catch (e) {
+                            console.warn(`Failed to fetch ${asset.symbol}:`, e);
+                            return asset;
+                        }
+                    });
 
-                        const fetchedResults = await Promise.all(fetches);
+                    const fetchedResults = await Promise.all(fetches);
 
-                        // Merge the fetched 5 items back into the rest of the generic mock zeroed array 
-                        updatedAssets = updatedAssets.map(asset => {
-                            const found = fetchedResults.find(f => f.id === asset.id);
-                            return found ? found : asset;
-                        });
-
-                    } else {
-                        console.warn("No Finnhub API Key found. Displaying zeroed out mock data for non-crypto assets.");
-                    }
+                    updatedAssets = updatedAssets.map(asset => {
+                        const found = fetchedResults.find(f => f.id === asset.id);
+                        return found ? found : asset;
+                    });
                 }
 
                 if (isMounted) {
@@ -268,18 +265,21 @@ const Investments = () => {
                 let currentSearchResults = [];
 
                 if (selectedClass === 'Crypto') {
-                    // Search CoinGecko
-                    const res = await fetch(`https://api.coingecko.com/api/v3/search?query=${searchQuery}`);
-                    const data = await res.json();
+                    // Search CoinGecko via Edge Function
+                    const { data, error } = await supabase.functions.invoke('fetch-market-data', {
+                        body: { action: 'coingecko_search', payload: { query: searchQuery } }
+                    });
+                    if (error) throw error;
 
                     if (data.coins && data.coins.length > 0) {
-                        // Take top 10 results
                         const topCoins = data.coins.slice(0, 10);
                         const cryptoIds = topCoins.map(c => c.id).join(',');
 
-                        // Fetch prices
-                        const priceRes = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`);
-                        const priceData = await priceRes.json();
+                        // Fetch prices via Edge Function
+                        const { data: priceData, error: priceError } = await supabase.functions.invoke('fetch-market-data', {
+                            body: { action: 'coingecko_price', payload: { ids: cryptoIds } }
+                        });
+                        if (priceError) throw priceError;
 
                         currentSearchResults = topCoins.map(coin => ({
                             id: `c_${coin.id}`,
@@ -291,38 +291,40 @@ const Investments = () => {
                         }));
                     }
                 } else {
-                    // Search Finnhub
-                    const FINNHUB_KEY = import.meta.env.VITE_FINNHUB_API_KEY;
-                    if (FINNHUB_KEY && FINNHUB_KEY !== 'your_api_key_here') {
-                        const res = await fetch(`https://finnhub.io/api/v1/search?q=${searchQuery}&token=${FINNHUB_KEY}`);
-                        const data = await res.json();
+                    // Search Finnhub via Edge proxy
+                    const { data, error } = await supabase.functions.invoke('fetch-market-data', {
+                        body: { action: 'finnhub_search', payload: { query: searchQuery } }
+                    });
+                    if (error || data?.error) throw new Error(error?.message || data?.error);
 
-                        if (data.result && data.result.length > 0) {
-                            let filteredResults = data.result;
-                            if (selectedClass === 'Stocks') {
-                                filteredResults = filteredResults.filter(r => r.type === "Common Stock");
-                            }
-                            const topResults = filteredResults.slice(0, 10);
-
-                            const fetches = topResults.map(async (searchHit) => {
-                                try {
-                                    const quoteRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${searchHit.symbol}&token=${FINNHUB_KEY}`);
-                                    const quoteData = await quoteRes.json();
-                                    return {
-                                        id: `s_${searchHit.symbol}`,
-                                        symbol: searchHit.symbol,
-                                        name: searchHit.description,
-                                        price: quoteData.c || 0,
-                                        change: Number((quoteData.dp || 0).toFixed(2))
-                                    };
-                                } catch {
-                                    return null;
-                                }
-                            });
-
-                            const fetchedPrices = await Promise.all(fetches);
-                            currentSearchResults = fetchedPrices.filter(item => item !== null && item.price > 0);
+                    if (data.result && data.result.length > 0) {
+                        let filteredResults = data.result;
+                        if (selectedClass === 'Stocks') {
+                            filteredResults = filteredResults.filter(r => r.type === "Common Stock");
                         }
+                        const topResults = filteredResults.slice(0, 10);
+
+                        const fetches = topResults.map(async (searchHit) => {
+                            try {
+                                const { data: quoteData, error: quoteError } = await supabase.functions.invoke('fetch-market-data', {
+                                    body: { action: 'finnhub_quote', payload: { symbol: searchHit.symbol } }
+                                });
+                                if (quoteError || quoteData?.error) throw new Error("Quote failed");
+                                
+                                return {
+                                    id: `s_${searchHit.symbol}`,
+                                    symbol: searchHit.symbol,
+                                    name: searchHit.description,
+                                    price: quoteData.c || 0,
+                                    change: Number((quoteData.dp || 0).toFixed(2))
+                                };
+                            } catch {
+                                return null;
+                            }
+                        });
+
+                        const fetchedPrices = await Promise.all(fetches);
+                        currentSearchResults = fetchedPrices.filter(item => item !== null && item.price > 0);
                     }
                 }
 
@@ -714,7 +716,7 @@ const Investments = () => {
                             isOpen={isAddingCustom}
                             onClose={() => setIsAddingCustom(false)}
                             silent={true}
-                            useNeonGlow={true}
+                            useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                             transparentOverlay={true}
                             lessTransparent={true}
                             customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
@@ -724,7 +726,7 @@ const Investments = () => {
                                     blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                                     red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                                     yellow: '#eab308', orange: '#f97316'
-                                }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                                 return (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
                                         Add <span style={{ color: activeColor }}>Custom Asset</span>

@@ -54,7 +54,7 @@ serve(async (req) => {
       products: [Products.Transactions],
       language: 'en',
       country_codes: [CountryCode.Us],
-      // webhook: 'https://OUR-PRODUCTION-SUPABASE.supabase.co/functions/v1/sync-transactions' // We will add this later in Production
+      webhook: Deno.env.get('PLAID_WEBHOOK_URL') || undefined,
     });
 
     // 4. Return the Token securely
