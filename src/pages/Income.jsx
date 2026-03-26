@@ -14,7 +14,7 @@ import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GoalsSection } from '../components/dashboard/GoalsSection';
 import './Income.css';
 
-const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
+const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -37,11 +37,9 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
         }
     };
 
-    return (
-        <Card glass className={`income-form-card ${className}`.trim()} style={{ position: 'relative', zIndex: 99 }}>
-            <h3 className="form-title">{title}</h3>
-            <form onSubmit={handleSubmit} className="income-form">
-                <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+    const content = (
+        <form onSubmit={handleSubmit} className="income-form" style={isModal ? { background: 'transparent', padding: '8px 0', border: 'none' } : {}}>
+            <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
                     <Button 
                         type="button" 
                         variant="secondary" 
@@ -90,11 +88,11 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
                         onChange={(e) => setAmount(e.target.value)}
                         required
                         min="0"
-                        style={{ color: 'black' }}
+                        style={{ color: 'black', flex: 1 }}
                     />
                     <Button 
                         type="submit" 
-                        variant="primary"
+                        variant="secondary"
                         style={activeColor ? { 
                             background: activeColor, 
                             borderColor: activeColor, 
@@ -105,6 +103,21 @@ const IncomeStreamForm = ({ onAdd, title, className = '' }) => {
                     </Button>
                 </div>
             </form>
+    );
+
+    if (isModal) {
+        return (
+            <div style={{ position: 'relative', zIndex: 99 }}>
+                {title && <h3 className="form-title" style={{ marginBottom: '16px' }}>{title}</h3>}
+                {content}
+            </div>
+        );
+    }
+
+    return (
+        <Card glass className={`income-form-card ${className}`.trim()} style={{ position: 'relative', zIndex: 99 }}>
+            {title && <h3 className="form-title">{title}</h3>}
+            {content}
         </Card>
     );
 };
@@ -260,6 +273,8 @@ const Income = () => {
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+    const [isCurrentStreamModalOpen, setIsCurrentStreamModalOpen] = useState(false);
+    const [isFutureStreamModalOpen, setIsFutureStreamModalOpen] = useState(false);
     const [activityCategoryFilter, setActivityCategoryFilter] = useState('All');
     const [activityPage, setActivityPage] = useState(1);
     const activityItemsPerPage = 6;
@@ -411,20 +426,43 @@ const Income = () => {
                                     Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0)), 0).toLocaleString()}
                                 </span>
                             </div>
-                            <Button
-                                variant="secondary"
-                                size="sm"
-                                onClick={() => {
-                                    if (playPop) playPop();
-                                    setIsActivityModalOpen(true);
-                                }}
-                                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
-                            >
-                                <Wallet size={16} /> Activity
-                            </Button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (playPop) playPop();
+                                        setIsActivityModalOpen(true);
+                                    }}
+                                    className="activity-sync-btn"
+                                    style={{ 
+                                        padding: '6px 14px', 
+                                        height: '32px',
+                                        ...(activeColor ? {
+                                            backgroundColor: activeColor,
+                                            color: activeColor === '#ffffff' ? '#000000' : '#ffffff',
+                                            border: 'none'
+                                        } : {})
+                                    }}
+                                >
+                                    <Wallet size={16} style={{ marginRight: '6px' }} />
+                                    Activity
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (playPop) playPop();
+                                        setIsCurrentStreamModalOpen(true);
+                                    }}
+                                    style={{ height: '32px', padding: '6px 14px' }}
+                                    className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                                >
+                                    <Plus size={16} style={{ marginRight: '6px' }} />
+                                    Add stream
+                                </Button>
+                            </div>
                         </div>
-
-                        <IncomeStreamForm onAdd={addCurrentIncome} title="Add Stream" className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''} />
                         <IncomeStreamList
                             streams={currentIncome}
                             onRemove={removeCurrentIncome}
@@ -437,12 +475,25 @@ const Income = () => {
 
                     {/* Future Income Column */}
                     <AnimateOnScroll delay={0.2} className="income-column">
-                        <div className="column-header">
-                            <h2>📈 Manifesting / Future</h2>
-                            <span className="badge gold">${projectedFutureIncome.toLocaleString()}</span>
+                        <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <h2 style={{ margin: 0 }}>📈 Manifesting / Future</h2>
+                                <span className="badge gold" style={{ marginLeft: '12px' }}>${projectedFutureIncome.toLocaleString()}</span>
+                            </div>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                    if (playPop) playPop();
+                                    setIsFutureStreamModalOpen(true);
+                                }}
+                                style={{ height: '32px', padding: '6px 14px' }}
+                                className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                            >
+                                <Plus size={16} style={{ marginRight: '6px' }} />
+                                Add stream
+                            </Button>
                         </div>
-
-                        <IncomeStreamForm onAdd={addFutureIncome} title="Add Future Stream" className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''} />
                         <IncomeStreamList
                             streams={futureIncome}
                             onRemove={removeFutureIncome}
@@ -757,6 +808,54 @@ const Income = () => {
                         <Button size="sm" variant="secondary" onClick={() => setActivityPage(p => Math.min(p + 1, activityTotalPages))} disabled={activityPage === activityTotalPages}>Next</Button>
                     </div>
                 )}
+            </Modal>
+
+            <Modal
+                isOpen={isCurrentStreamModalOpen}
+                onClose={() => setIsCurrentStreamModalOpen(false)}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                clearBlur={true}
+                transparentOverlay={true}
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                title={(
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Wallet size={20} color={activeColor || 'var(--text-primary)'} /> 
+                        <span style={{ color: activeColor || 'var(--text-primary)' }}>Add Current Stream</span>
+                    </div>
+                )}
+            >
+                <div className="animate-fade-in" style={{ padding: '8px' }}>
+                    <IncomeStreamForm 
+                        onAdd={(stream) => { addCurrentIncome(stream); setIsCurrentStreamModalOpen(false); }} 
+                        title="" 
+                        isModal={true}
+                    />
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={isFutureStreamModalOpen}
+                onClose={() => setIsFutureStreamModalOpen(false)}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                clearBlur={true}
+                transparentOverlay={true}
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                title={(
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Sparkles size={20} color={activeColor || 'var(--text-primary)'} /> 
+                        <span style={{ color: activeColor || 'var(--text-primary)' }}>Add Future Stream</span>
+                    </div>
+                )}
+            >
+                <div className="animate-fade-in" style={{ padding: '8px' }}>
+                    <IncomeStreamForm 
+                        onAdd={(stream) => { addFutureIncome(stream); setIsFutureStreamModalOpen(false); }} 
+                        title="" 
+                        isModal={true}
+                    />
+                </div>
             </Modal>
         </div>
     );
