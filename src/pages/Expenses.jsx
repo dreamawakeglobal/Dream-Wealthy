@@ -801,7 +801,7 @@ const Expenses = () => {
                 <AnimateOnScroll delay={0.1} className="expense-column fixed-expense-box">
                     <div className="column-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                            <h2 style={{ margin: 0 }}>🏠 Fixed Expenses</h2>
+                            <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
                             <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
                             {(() => {
                                 const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
@@ -875,7 +875,7 @@ const Expenses = () => {
                 <AnimateOnScroll delay={0.2} className="expense-column variable-expense-box">
                     <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <h2 style={{ margin: 0 }}>🛒 Variable Expenses</h2>
+                            <h2 style={{ margin: 0 }}>Variable Expenses</h2>
                             <span className="badge warning-badge" style={{ marginLeft: '12px' }}>
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
@@ -905,7 +905,15 @@ const Expenses = () => {
                                     setIsActivityModalOpen(true);
                                 }}
                                 className="activity-sync-btn"
-                                style={{ padding: '6px 14px', height: '32px' }}
+                                style={{ 
+                                    padding: '6px 14px', 
+                                    height: '32px',
+                                    ...(activeColor ? {
+                                        backgroundColor: activeColor,
+                                        color: activeColor === '#ffffff' ? '#000000' : '#ffffff',
+                                        border: 'none'
+                                    } : {})
+                                }}
                             >
                                 <Activity size={16} style={{ marginRight: '6px' }} />
                                 Activity
@@ -921,7 +929,7 @@ const Expenses = () => {
                                 className={borderGlowClass}
                             >
                                 <Plus size={16} style={{ marginRight: '6px' }} />
-                                Add Tracker
+                                Add expense
                             </Button>
                         </div>
                     </div>
@@ -943,7 +951,7 @@ const Expenses = () => {
                             return (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <CreditCard size={20} color={activeColor} /> 
-                                    <span style={{ color: activeColor }}>Add Custom Tracker</span>
+                                    <span style={{ color: activeColor }}>Add Variable Expense</span>
                                 </div>
                             );
                         })()}
