@@ -59,7 +59,7 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
                         border: useNeonGlow ? `3px solid ${glowColor}` : '1px solid rgba(255, 255, 255, 0.2)'
                     } : {}),
                     ...(lessTransparent ? {
-                        background: theme === 'dark' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.75)'
+                        background: theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.75)'
                     } : {}),
                     ...containerStyle
                 }}

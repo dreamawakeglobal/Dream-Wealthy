@@ -143,9 +143,9 @@ const Projections = () => {
                 onClose={() => setShowEngineModal(false)}
                 silent={true}
                 useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                clearBlur={true}
                 transparentOverlay={true}
-                lessTransparent={true}
-                customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 containerStyle={{ maxWidth: '450px', borderRadius: '24px' }}
                 title={(
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>

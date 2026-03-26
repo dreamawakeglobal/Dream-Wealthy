@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,10 +23,11 @@ import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Expenses.css';
 
-const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
+const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCategory = false, uniqueCategories = [], isModal = false }) => {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [dueDate, setDueDate] = useState('');
+    const [category, setCategory] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const { playReceiptTear } = useSound();
     const { expenseBorderColor, theme } = useTheme();
@@ -42,101 +43,138 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true }) => {
         e.preventDefault();
         if (name && amount) {
             playReceiptTear();
-            onAdd({ id: crypto.randomUUID(), name, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
+            onAdd({ id: crypto.randomUUID(), name, targetCategory: category || null, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
             setName('');
             setAmount('');
             setDueDate('');
+            setCategory('');
         }
     };
 
+    const formContent = (
+        <form onSubmit={handleSubmit} className="expense-form" style={isModal ? { background: 'transparent', padding: '8px 0', border: 'none' } : {}}>
+            <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
+                <Button 
+                    type="button" 
+                    variant="secondary" 
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    style={{ padding: '0 12px', height: '42px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
+                    title="Add Emoji"
+                >
+                    <Smile size={20} color="var(--text-secondary)" />
+                </Button>
+                <div style={{ flex: 1 }}>
+                    <Input
+                        placeholder={placeholder}
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        style={{ color: 'black', marginBottom: 0 }}
+                    />
+                </div>
+                {showEmojiPicker && (
+                    <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 100 }}>
+                        <div 
+                            style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
+                            onClick={() => setShowEmojiPicker(false)} 
+                        />
+                        <div style={{ position: 'relative', zIndex: 100, boxShadow: '0 16px 32px rgba(0,0,0,0.5)', borderRadius: '8px' }}>
+                            <EmojiPicker 
+                                onEmojiClick={(emojiData) => {
+                                    setName(prev => (prev ? prev + ' ' : '') + emojiData.emoji);
+                                    setShowEmojiPicker(false);
+                                }}
+                                theme={theme === 'dark' ? 'dark' : 'light'}
+                                searchPosition="none"
+                                skinTonesDisabled
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {showCategory && (
+                <div style={{ display: 'flex', marginBottom: '16px' }}>
+                    <select 
+                        value={category} 
+                        onChange={e => setCategory(e.target.value)}
+                        style={{ background: 'var(--surface)', border: `1px solid var(--surface-border)`, color: category ? 'var(--text-primary)' : 'var(--text-muted)', outline: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}
+                    >
+                        <option value="">Auto-Detect Category (AI)</option>
+                        <optgroup label="Custom Tracking Categories">
+                            {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                        </optgroup>
+                        <optgroup label="Smart Sub-Categories">
+                            <option value="PSEUDO_GAS">Gas & Fuel Stations</option>
+                            <option value="PSEUDO_RIDE_SHARE">Ride Share (Uber/Lyft)</option>
+                            <option value="PSEUDO_GROCERIES">Groceries & Supermarkets</option>
+                            <option value="PSEUDO_HYGIENE_HOUSEHOLD">Hygiene & Household</option>
+                        </optgroup>
+                    </select>
+                </div>
+            )}
+
+            <div className="amount-input-group">
+                <Input
+                    type="number" step="0.01"
+                    placeholder="Amount"
+                    leftIcon={Wallet}
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    min="0"
+                    style={{ color: 'black', flex: 1.5 }}
+                />
+                {showDueDate && (
+                    <Input
+                        type="number"
+                        min="1"
+                        max="31"
+                        placeholder="Day (1-31)"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        style={{ color: 'black', flex: 1 }}
+                    />
+                )}
+                <Button 
+                    type="submit" 
+                    variant="secondary"
+                    style={activeColor ? { 
+                        background: activeColor, 
+                        borderColor: activeColor, 
+                        color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                    } : {}}
+                >
+                    <Plus size={18} /> Add
+                </Button>
+            </div>
+        </form>
+    );
+
+    if (isModal) {
+        return (
+            <div style={{ position: 'relative', zIndex: 99 }}>
+                {title && <h3 className="form-title" style={{ marginBottom: '16px' }}>{title}</h3>}
+                {formContent}
+            </div>
+        );
+    }
+
     return (
         <Card glass className={`expense-form-card ${borderGlowClass}`} style={{ position: 'relative', zIndex: 99 }}>
-            <h3 className="form-title">{title}</h3>
-            <form onSubmit={handleSubmit} className="expense-form">
-                <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
-                    <Button 
-                        type="button" 
-                        variant="secondary" 
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        style={{ padding: '0 12px', height: '42px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                        title="Add Emoji"
-                    >
-                        <Smile size={20} color="var(--text-secondary)" />
-                    </Button>
-                    <div style={{ flex: 1 }}>
-                        <Input
-                            placeholder={placeholder}
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                            style={{ color: 'black', marginBottom: 0 }}
-                        />
-                    </div>
-                    {showEmojiPicker && (
-                        <div style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, zIndex: 100 }}>
-                            <div 
-                                style={{ position: 'fixed', inset: 0, zIndex: 99 }} 
-                                onClick={() => setShowEmojiPicker(false)} 
-                            />
-                            <div style={{ position: 'relative', zIndex: 100, boxShadow: '0 16px 32px rgba(0,0,0,0.5)', borderRadius: '8px' }}>
-                                <EmojiPicker 
-                                    onEmojiClick={(emojiData) => {
-                                        setName(prev => (prev ? prev + ' ' : '') + emojiData.emoji);
-                                        setShowEmojiPicker(false);
-                                    }}
-                                    theme={theme === 'dark' ? 'dark' : 'light'}
-                                    searchPosition="none"
-                                    skinTonesDisabled
-                                />
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="amount-input-group">
-                    <Input
-                        type="number" step="0.01"
-                        placeholder="Amount"
-                        leftIcon={Wallet}
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        required
-                        min="0"
-                        style={{ color: 'black', flex: 1.5 }}
-                    />
-                    {showDueDate && (
-                        <Input
-                            type="number"
-                            min="1"
-                            max="31"
-                            placeholder="Day (1-31)"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            style={{ color: 'black', flex: 1 }}
-                        />
-                    )}
-                    <Button 
-                        type="submit" 
-                        variant="secondary"
-                        style={activeColor ? { 
-                            background: activeColor, 
-                            borderColor: activeColor, 
-                            color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
-                        } : {}}
-                    >
-                        <Plus size={18} /> Add
-                    </Button>
-                </div>
-            </form>
+            {title && <h3 className="form-title">{title}</h3>}
+            {formContent}
         </Card>
     );
 };
 
-const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, showDueDate = true }) => {
+const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, mapUserExpenseToPlaidCategory, showDueDate = true, uniqueCategories = [] }) => {
     const { playCheck } = useSound();
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editAmount, setEditAmount] = useState('');
     const [editDueDate, setEditDueDate] = useState('');
+    const [editTargetCategory, setEditTargetCategory] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
@@ -149,13 +187,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const startEditing = (expense) => {
         setEditingId(expense.id);
         setEditName(expense.name);
+        setEditTargetCategory(expense.targetCategory || '');
         setEditAmount(expense.amount.toString());
         setEditDueDate(expense.dueDate || '');
     };
 
     const saveEdit = (id) => {
         if (editName && editAmount) {
-            onEdit(id, { name: editName, amount: parseFloat(editAmount), dueDate: editDueDate || null });
+            onEdit(id, { name: editName, targetCategory: editTargetCategory || null, amount: parseFloat(editAmount), dueDate: editDueDate || null });
             setEditingId(null);
         }
     };
@@ -189,6 +228,24 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         placeholder="Amount"
                                         style={{ width: '100px' }}
                                     />
+                                    {uniqueCategories.length > 0 && (
+                                        <select 
+                                            value={editTargetCategory} 
+                                            onChange={e => setEditTargetCategory(e.target.value)}
+                                            style={{ background: 'var(--surface)', border: `1px solid var(--surface-border)`, color: 'var(--text-primary)', outline: 'none', padding: '0 8px', borderRadius: '4px', cursor: 'pointer', maxWidth: '120px' }}
+                                        >
+                                            <option value="">Auto AI</option>
+                                            <optgroup label="Custom Tracking Categories">
+                                                {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                                            </optgroup>
+                                            <optgroup label="Smart Sub-Categories">
+                                                <option value="PSEUDO_GAS">Gas & Fuel Stations</option>
+                                                <option value="PSEUDO_RIDE_SHARE">Ride Share (Uber/Lyft)</option>
+                                                <option value="PSEUDO_GROCERIES">Groceries & Supermarkets</option>
+                                                <option value="PSEUDO_HYGIENE_HOUSEHOLD">Hygiene & Household</option>
+                                            </optgroup>
+                                        </select>
+                                    )}
                                     {showDueDate && (
                                         <Input
                                             type="number" min="1" max="31"
@@ -225,7 +282,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         </div>
                                     )}
                                     <div className="stream-info">
-                                        <p className="stream-name">{expense.name}</p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <p className="stream-name" style={{ margin: 0 }}>{expense.name}</p>
+                                            {expense.targetCategory && (
+                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'var(--primary)', color: 'white' }}>
+                                                    {expense.targetCategory.replace('PSEUDO_', '')}
+                                                </span>
+                                            )}
+                                        </div>
                                         <span className="stream-freq">
                                             Monthly {showDueDate && expense.dueDate && `• Due on the ${expense.dueDate}${[11, 12, 13].includes(Number(expense.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(expense.dueDate) % 10) - 1] || 'th')}`}
                                         </span>
@@ -239,7 +303,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             <input
                                                 className="auto-tracker-input"
                                                 type="number" step="0.01"
-                                                value={expense.manualSpent !== undefined ? expense.manualSpent : (transactionsByCategory[expense.name] || '')}
+                                                value={expense.manualSpent !== undefined ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
@@ -253,14 +317,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             fontSize: '0.85rem',
                                             fontWeight: 600,
                                             color: (() => {
-                                                const spent = expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.name]) || 0);
+                                                const spent = expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0);
                                                 const left = expense.amount - spent;
                                                 if (left <= 0) return 'var(--danger)';
                                                 if (left <= expense.amount * 0.1) return '#ff9f0a';
                                                 return 'var(--success)';
                                             })()
                                         }}>
-                                            Left: ${(expense.amount - (expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.name]) || 0))).toLocaleString()}
+                                            Left: ${(expense.amount - (expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0))).toLocaleString()}
                                         </div>
                                     </div>
                                 )}
@@ -310,13 +374,15 @@ const Expenses = () => {
         variableExpenses, setVariableExpenses,
         totalFixedExpenses, totalVariableExpenses, totalSubscriptionCost, totalTrackedMonthlyPayments, totalMonthlyExpenses,
         netMonthlyCashFlow, savingsRate,
-        transactionsByCategory, transactions,
+        transactionsByCategory, transactions, mapUserExpenseToPlaidCategory,
         trackedDebts, setTrackedDebts,
         subscriptions, setSubscriptions
     } = useFinancialContext();
     const { playCheck, playPop } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
+    const [isFixedModalOpen, setIsFixedModalOpen] = useState(false);
+    const [isVariableModalOpen, setIsVariableModalOpen] = useState(false);
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
@@ -327,20 +393,24 @@ const Expenses = () => {
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activityCategoryFilter, setActivityCategoryFilter] = useState('All');
+    const [editingTransactionId, setEditingTransactionId] = useState(null);
     const [activityPage, setActivityPage] = useState(1);
     const activityItemsPerPage = 6;
 
     // --- Derived Modal Data ---
     const uniqueCategories = useMemo(() => {
         if (!transactions) return ['All'];
-        const cats = new Set(transactions.map(tx => tx.category || 'Uncategorized'));
+        const expenseTxs = transactions.filter(tx => tx.amount > 0 && !tx.pending);
+        if (expenseTxs.length === 0) return ['All'];
+        const cats = new Set(expenseTxs.map(tx => tx.category || 'Uncategorized'));
         return ['All', ...cats].sort();
     }, [transactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!transactions) return [];
-        if (activityCategoryFilter === 'All') return transactions;
-        return transactions.filter(tx => (tx.category || 'Uncategorized') === activityCategoryFilter);
+        const expenseTxs = transactions.filter(tx => tx.amount > 0 && !tx.pending);
+        if (activityCategoryFilter === 'All') return expenseTxs;
+        return expenseTxs.filter(tx => (tx.category || 'Uncategorized') === activityCategoryFilter);
     }, [transactions, activityCategoryFilter]);
 
     const activityTotalPages = Math.ceil(filteredTransactions.length / activityItemsPerPage);
@@ -729,7 +799,7 @@ const Expenses = () => {
             <div className="expense-content-grid">
                 {/* Fixed Expenses */}
                 <AnimateOnScroll delay={0.1} className="expense-column fixed-expense-box">
-                    <div className="column-header" style={{ display: 'flex', alignItems: 'center' }}>
+                    <div className="column-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                             <h2 style={{ margin: 0 }}>🏠 Fixed Expenses</h2>
                             <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
@@ -748,13 +818,51 @@ const Expenses = () => {
                                 );
                             })()}
                         </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                                if (playPop) playPop();
+                                setIsFixedModalOpen(true);
+                            }}
+                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px' }}
+                            className={borderGlowClass}
+                        >
+                            <Plus size={16} style={{ marginRight: '6px' }} />
+                            Add Bill
+                        </Button>
                     </div>
 
-                    <ExpenseForm
-                        onAdd={addFixed}
-                        title="Add Fixed Expense"
-                        placeholder="e.g. Rent, Mortgage, Insurance"
-                    />
+                    <Modal 
+                        isOpen={isFixedModalOpen} 
+                        onClose={() => setIsFixedModalOpen(false)}
+                        useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                        clearBlur={true}
+                        transparentOverlay={true}
+                        customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                        containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                        title={(() => {
+                            const activeColor = {
+                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                yellow: '#eab308', orange: '#f97316'
+                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                            return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Home size={20} color={activeColor} /> 
+                                    <span style={{ color: activeColor }}>Add Fixed Expense</span>
+                                </div>
+                            );
+                        })()}
+                    >
+                        <ExpenseForm
+                            onAdd={(exp) => { addFixed(exp); setIsFixedModalOpen(false); }}
+                            title=""
+                            placeholder="e.g. Rent, Mortgage, Insurance"
+                            isModal={true}
+                        />
+                    </Modal>
+
                     <ExpenseList
                         expenses={fixedExpenses}
                         onRemove={removeFixed}
@@ -772,10 +880,10 @@ const Expenses = () => {
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
                             <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.name]) || 0)), 0).toLocaleString()}
+                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
                             </span>
                             {(() => {
-                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.name]) || 0)), 0);
+                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0);
                                 const left = totalVariableExpenses - spent;
                                 const isNegative = left < 0;
                                 const isWarning = left > 0 && left <= (totalVariableExpenses * 0.1);
@@ -788,25 +896,68 @@ const Expenses = () => {
                                 );
                             })()}
                         </div>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                                if (playPop) playPop();
-                                setIsActivityModalOpen(true);
-                            }}
-                            style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
-                        >
-                            <Wallet size={16} /> Activity
-                        </Button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                    if (playPop) playPop();
+                                    setIsActivityModalOpen(true);
+                                }}
+                                className="activity-sync-btn"
+                                style={{ padding: '6px 14px', height: '32px' }}
+                            >
+                                <Activity size={16} style={{ marginRight: '6px' }} />
+                                Activity
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                    if (playPop) playPop();
+                                    setIsVariableModalOpen(true);
+                                }}
+                                style={{ height: '32px', padding: '6px 14px' }}
+                                className={borderGlowClass}
+                            >
+                                <Plus size={16} style={{ marginRight: '6px' }} />
+                                Add Tracker
+                            </Button>
+                        </div>
                     </div>
 
-                    <ExpenseForm
-                        onAdd={addVariable}
-                        title="Add Variable Expense"
-                        placeholder="e.g. Groceries, Dining, Entertainment"
-                        showDueDate={false}
-                    />
+                    <Modal 
+                        isOpen={isVariableModalOpen} 
+                        onClose={() => setIsVariableModalOpen(false)}
+                        useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                        clearBlur={true}
+                        transparentOverlay={true}
+                        customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                        containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                        title={(() => {
+                            const activeColor = {
+                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                yellow: '#eab308', orange: '#f97316'
+                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                            return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <CreditCard size={20} color={activeColor} /> 
+                                    <span style={{ color: activeColor }}>Add Custom Tracker</span>
+                                </div>
+                            );
+                        })()}
+                    >
+                        <ExpenseForm 
+                            onAdd={(exp) => { playCheck(); addVariable(exp); setIsVariableModalOpen(false); }} 
+                            title="" 
+                            showDueDate={false} 
+                            showCategory={true}
+                            uniqueCategories={uniqueCategories.filter(c => c !== 'All' && !c.includes('PSEUDO_'))}
+                            isModal={true}
+                        />
+                    </Modal>
+
                     <ExpenseList
                         expenses={variableExpenses}
                         onRemove={removeVariable}
@@ -814,6 +965,7 @@ const Expenses = () => {
                         emptyMessage="No variable expenses added."
                         showTracking={true}
                         transactionsByCategory={transactionsByCategory}
+                        mapUserExpenseToPlaidCategory={mapUserExpenseToPlaidCategory}
                         showDueDate={false}
                     />
                 </AnimateOnScroll>
@@ -845,9 +997,9 @@ const Expenses = () => {
                         onClose={() => setShowAddSub(false)}
                         silent={true}
                         useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                        clearBlur={true}
                         transparentOverlay={true}
-                        lessTransparent={true}
-                        customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                        customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                         containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                         title={(() => {
                             const activeColor = {
@@ -1061,8 +1213,8 @@ const Expenses = () => {
                             onClose={() => setShowAddTrackerForm(false)}
                             silent={true}
                             useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                            clearBlur={true}
                             transparentOverlay={true}
-                            lessTransparent={true}
                             customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                             title={(() => {
@@ -1631,6 +1783,7 @@ const Expenses = () => {
                 onClose={() => setIsActivityModalOpen(false)}
                 useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                 clearBlur={true}
+                transparentOverlay={true}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
                     const activeColor = {
@@ -1696,9 +1849,52 @@ const Expenses = () => {
                                     {new Date(tx.date).toLocaleDateString()}
                                 </div>
                                 <div className="tx-category">
-                                    <span className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)' }}>
-                                        {tx.category || 'Uncategorized'}
-                                    </span>
+                                    {editingTransactionId === tx.id ? (
+                                        <input
+                                            autoFocus
+                                            list="category-options"
+                                            defaultValue={tx.category || ''}
+                                            style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '130px', outline: 'none' }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    const newCat = e.target.value.trim();
+                                                    setEditingTransactionId(null);
+                                                    if (newCat && newCat !== tx.category) {
+                                                        useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
+                                                        supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
+                                                    }
+                                                }
+                                            }}
+                                            onChange={(e) => {
+                                                const newCat = e.target.value.trim();
+                                                if (uniqueCategories.includes(newCat) && newCat !== tx.category) {
+                                                    setEditingTransactionId(null);
+                                                    useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
+                                                    supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
+                                                }
+                                            }}
+                                            onBlur={async (e) => {
+                                                const newCat = e.target.value.trim();
+                                                setTimeout(async () => {
+                                                    setEditingTransactionId(null);
+                                                    // Only save on blur if it hasn't already been saved by onChange! 
+                                                    if (newCat && newCat !== tx.category && !uniqueCategories.includes(newCat)) {
+                                                        useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
+                                                        await supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
+                                                    }
+                                                }, 150);
+                                            }}
+                                        />
+                                    ) : (
+                                        <span 
+                                            onClick={() => setEditingTransactionId(tx.id)}
+                                            className="badge badge-hover" 
+                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s' }}
+                                            title="Click to edit category"
+                                        >
+                                            {tx.category || 'Uncategorized'}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className={`tx-amount ${tx.amount > 0 ? 'text-danger' : 'text-success'}`} style={{ textAlign: 'right', fontWeight: 'bold' }}>
                                     {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString()}
@@ -1707,6 +1903,10 @@ const Expenses = () => {
                         ))
                     )}
                 </div>
+                
+                <datalist id="category-options">
+                    {uniqueCategories.filter(c => c !== 'All').map(c => <option key={c} value={c} />)}
+                </datalist>
                 {activityTotalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                         <Button 
@@ -1745,8 +1945,7 @@ const Expenses = () => {
                 onClose={() => setShowCustomPaymentModal(false)}
                 useNeonGlow={true}
                 dimOverlay={false}
-                lessTransparent={true}
-                customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 containerStyle={{ width: '100%', maxWidth: '500px', padding: '32px', borderRadius: '24px' }}
                 title={(() => {
                     const activeColor = {

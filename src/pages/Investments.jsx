@@ -138,7 +138,7 @@ const Investments = () => {
 
     // Custom Asset State
     const [isAddingCustom, setIsAddingCustom] = useState(false);
-    const [customAsset, setCustomAsset] = useState({ name: '', price: '', quantity: '' });
+    const [customAsset, setCustomAsset] = useState({ name: '', price: '', quantity: '', assetClass: 'Stock' });
 
     const handleAddCustom = () => {
         if (!customAsset.name || !customAsset.price || !customAsset.quantity) return;
@@ -150,11 +150,11 @@ const Investments = () => {
             change: 0,
             quantity: Number(customAsset.quantity),
             avgPrice: Number(customAsset.price), // Persisted indefinitely 
-            assetClass: 'Custom',
+            assetClass: customAsset.assetClass || 'Custom',
             apiId: null
         }]);
         setIsAddingCustom(false);
-        setCustomAsset({ name: '', price: '', quantity: '' });
+        setCustomAsset({ name: '', price: '', quantity: '', assetClass: 'Stock' });
     };
 
     // --- API Data Fetching ---
@@ -718,8 +718,8 @@ const Investments = () => {
                             silent={true}
                             useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                             transparentOverlay={true}
-                            lessTransparent={true}
-                            customClass={`dark-mode-black-text ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}
+                            clearBlur={true}
+                            customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                             title={(() => {
                                 const activeColor = {
@@ -736,6 +736,23 @@ const Investments = () => {
                         >
                             <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+                                    
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Asset Type</label>
+                                        <select 
+                                            className="dream-input"
+                                            value={customAsset.assetClass}
+                                            onChange={e => setCustomAsset({...customAsset, assetClass: e.target.value})}
+                                            style={{ cursor: 'pointer', appearance: 'none' }}
+                                        >
+                                            <option value="Stock">Stock / Equity</option>
+                                            <option value="Crypto">Crypto</option>
+                                            <option value="Real Estate">Real Estate</option>
+                                            <option value="Business Equity">Business Equity</option>
+                                            <option value="Savings Bank Account">Savings Bank Account</option>
+                                        </select>
+                                    </div>
+
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Asset Name</label>
                                         <Input 
@@ -823,7 +840,12 @@ const Investments = () => {
                                                     )}
                                                 </div>
                                                 <div className="holding-symbol">{holding.symbol}</div>
-                                                <div className="holding-price text-muted">${displayPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                                                {holding.assetClass && !['Stocks', 'Commodities'].includes(holding.assetClass) && (
+                                                    <div style={{ fontSize: '0.65rem', padding: '2px 8px', background: 'rgba(255,255,255,0.08)', borderRadius: '12px', marginTop: '2px', color: 'var(--text-secondary)', fontWeight: 600, border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                        {holding.assetClass}
+                                                    </div>
+                                                )}
+                                                <div className="holding-price text-muted" style={{ marginTop: '4px' }}>${displayPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                             </div>
 
                                             <div className="holding-controls">

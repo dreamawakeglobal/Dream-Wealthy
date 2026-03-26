@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { UserLevelBadge } from '../components/dashboard/UserLevelBadge';
+import { BudgetWidget } from '../components/dashboard/BudgetWidget';
 import { useFinancialContext } from '../FinancialContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -201,6 +202,11 @@ const Home = () => {
                 {/* Ultra Premium Profile Badge Engine */}
                 <AnimateOnScroll delay={0.4}>
                     <UserLevelBadge />
+                </AnimateOnScroll>
+
+                {/* Monthly Autopilot Budget Widget */}
+                <AnimateOnScroll delay={0.5}>
+                    <BudgetWidget />
                 </AnimateOnScroll>
 
                 <div className="dashboard-panels">

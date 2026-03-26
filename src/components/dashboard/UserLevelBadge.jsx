@@ -16,7 +16,8 @@ export const UserLevelBadge = () => {
         totalMonthlyExpenses,
         netMonthlyCashFlow,
         getProjectionData,
-        startingSavings
+        startingSavings,
+        plaidBalances
     } = useFinancialContext();
 
     const fullName = user?.user_metadata?.full_name || user?.user_metadata?.first_name || 'Visionary Saver';
@@ -33,8 +34,14 @@ export const UserLevelBadge = () => {
 
     const totalAssets = useMemo(() => {
         const investments = (portfolio || []).reduce((acc, p) => acc + ((p.price || p.avgPrice || 0) * (p.quantity || 0)), 0);
-        return investments + currentMonthSavings;
-    }, [portfolio, currentMonthSavings]);
+        
+        // Dynamic Plaid Integrity Check: If the Live Bank connection is pulsing integers, we explicitly override 
+        // the simulated projections engine to mathematically lock Net Worth to the authentic Vault state!
+        const liveCash = Number(plaidBalances?.checking || 0) + Number(plaidBalances?.savings || 0);
+        const activeCashValue = liveCash !== 0 ? liveCash : currentMonthSavings;
+
+        return investments + activeCashValue;
+    }, [portfolio, currentMonthSavings, plaidBalances]);
 
     const totalLiabilities = useMemo(() => {
         return (trackedDebts || []).reduce((acc, d) => acc + Number(d.balance || 0), 0);
@@ -93,6 +100,22 @@ export const UserLevelBadge = () => {
                             <div className="breakdown-item">
                                 <span className="breakdown-label">Total Liabilities</span>
                                 <span className="breakdown-value liability-text">${totalLiabilities.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
+                            </div>
+
+                            {/* Live Sync Array */}
+                            <div className="breakdown-divider" />
+                            <div className="breakdown-item">
+                                <span className="breakdown-label">Checking Bank Account</span>
+                                <span className="breakdown-value" style={{ color: 'var(--text-primary)', textShadow: '0 0 12px rgba(255,255,255,0.2)' }}>
+                                    ${Number(plaidBalances?.checking || 0).toLocaleString(undefined, {maximumFractionDigits:0})}
+                                </span>
+                            </div>
+                            <div className="breakdown-divider" />
+                            <div className="breakdown-item">
+                                <span className="breakdown-label">Savings Bank Account</span>
+                                <span className="breakdown-value" style={{ color: 'var(--text-primary)', textShadow: '0 0 12px rgba(255,255,255,0.2)' }}>
+                                    ${Number(plaidBalances?.savings || 0).toLocaleString(undefined, {maximumFractionDigits:0})}
+                                </span>
                             </div>
                         </div>
                     </div>
