@@ -40,7 +40,8 @@ serve(async (req: Request) => {
             { data: expenses },
             { data: incomeStreams },
             { data: portfolios },
-            { data: goals }
+            { data: goals },
+            { data: transactions }
         ] = await Promise.all([
             supabase.from('profiles').select('*').eq('user_id', user.id).single(),
             supabase.from('tracked_debts').select('*').eq('user_id', user.id),
@@ -48,7 +49,8 @@ serve(async (req: Request) => {
             supabase.from('expenses').select('*').eq('user_id', user.id),
             supabase.from('income_streams').select('*').eq('user_id', user.id),
             supabase.from('portfolios').select('*').eq('user_id', user.id),
-            supabase.from('goals').select('*').eq('user_id', user.id)
+            supabase.from('goals').select('*').eq('user_id', user.id),
+            supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(50)
         ]);
 
         // 5. Mathematically Aggregate Total Expenses Dynamically
@@ -165,6 +167,19 @@ Savings Goal Target: $${profile?.savings_target || 0}
             });
         }
 
+        if (transactions && transactions.length > 0) {
+            systemPrompt += `\n--- RECENT BANK TRANSACTIONS (RAW PLAID LEDGER) ---\n`;
+            systemPrompt += `This is a chronological ledger of the user's 50 most recent physical bank swipes/transfers. (Positive = Spent Money / Debt. Negative = Deposited Income):\n`;
+            transactions.forEach((tx: any) => {
+                const amount = Number(tx.amount || 0);
+                const isDeposit = amount < 0;
+                const signStr = isDeposit ? `+$${Math.abs(amount).toFixed(2)} [INCOME/REFUND]` : `$${amount.toFixed(2)} [SPENT]`;
+                const catStr = (tx.category_string || tx.category || 'Uncategorized').replace(/[\[\]"]/g, '').trim();
+                const merchStr = tx.merchant_name || tx.name || 'Unknown Merchant';
+                systemPrompt += `[${tx.date}] ${merchStr} | Amount: ${signStr} | Plaid Category: ${catStr}\n`;
+            });
+        }
+
         systemPrompt += `\n=== STRICT FORMATTING & COMMUNICATION RULES ===
 1. EXTREME CONCISION: Get straight to the point. Absolutely NO conversational filler, fluffy introductions, or generic conclusions (e.g. NEVER say "Here is a breakdown", "Based on my calculations", or "Let me know if you need anything else").
 2. HIGH-DENSITY STRUCTURE: Use short, punchy statements. Rely heavily on bullet points to make data instantly readable. 
@@ -174,6 +189,7 @@ Savings Goal Target: $${profile?.savings_target || 0}
 6. TEMPORAL ACCURACY: When evaluating Cumulative Projections, the listed value represents total savings at the END of that month. If asked how much they will have "by" or "in" a certain month (e.g. "by October"), ALWAYS quote the exact figure for that exact month's row (October), NEVER the preceding month.
 7. CURRENT YEAR PRIORITY: If the user asks about a specific month without specifying a year (e.g., "October" instead of "October 2027"), ALWAYS assume they mean the **CURRENT YEAR**. Do not proactively provide data for next year or subsequent years unless explicitly asked.
 8. SCENARIO MODELING PROTOCOL: If the user asks a "What If" hypothetical (e.g., buying a car, getting a raise), you MUST act as a Scenario Engine. Mentally calculate the Monthly Cost/Gain of their hypothetical, multiply it by the remaining months in the detailed projection matrix, and format your output as a strict A/B Comparison showing: 1) Their Current Trajectory Total. 2) Their Hypothetical Trajectory Total. 3) The exact structural difference between the two.
+9. BANK ACTIVITY AWARENESS: You now have full visibility into the user's raw bank ledger. If they ask about recent spending, confidently analyze this exact list. Explain trends or call out specific merchants when relevant to their current budget query!
 
 Execute your response now following these rigorous constraints.`;
 
