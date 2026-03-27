@@ -117,6 +117,16 @@ serve(async (req) => {
                 // If the cursor string is rotated or fundamentally corrupted by Plaid, it throws `SYNC_CURSOR_INVALID`
                 // We explicitly trap this payload and natively wipe the Supabase token, ensuring the Edge API self-heals!
                 const errorCode = err?.response?.data?.error_code;
+                
+                if (errorCode === 'ITEM_LOGIN_REQUIRED') {
+                    console.error(`Plaid MFA Expired for Account ${account.id}! Flagging for Re-Link Mode...`);
+                    await supabaseAdmin
+                        .from('accounts')
+                        .update({ needs_relink: true })
+                        .eq('id', account.id);
+                    continue; // Fast-fail this account's iteration without bringing down the other accounts
+                }
+
                 if (errorCode === 'SYNC_CURSOR_INVALID' || errorCode === 'INVALID_REQUEST') {
                     console.error("Critical Cursor Invalidated! Autonomously wiping PostgreSQL cursor constraint...");
                     await supabaseAdmin

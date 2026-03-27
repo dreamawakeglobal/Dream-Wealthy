@@ -37,7 +37,7 @@ serve(async (req) => {
 
     // We could decode the JWT here to get the exact User ID, but for the link request 
     // we can just extract the payload sent by the client.
-    const { userId } = await req.json();
+    const { userId, accessToken } = await req.json();
 
     if (!userId) {
       throw new Error("Missing user ID in request body.");
@@ -46,18 +46,27 @@ serve(async (req) => {
     // 3. Request Link Token from Plaid
     const plaidClient = getPlaidClient();
 
-    const tokenResponse = await plaidClient.linkTokenCreate({
-      user: {
-        client_user_id: userId, // Plaid demands a unique ID per user to prevent duplicate items
-      },
+    const requestParams: any = {
+      user: { client_user_id: userId },
       client_name: 'Dream Wealthy',
-      products: [Products.Transactions],
-      transactions: { days_requested: 30 }, // Natively cap history so dashboards don't mathematically bloat!
       language: 'en',
       country_codes: [CountryCode.Us],
       webhook: Deno.env.get('PLAID_WEBHOOK_URL') || undefined,
       redirect_uri: Deno.env.get('PLAID_REDIRECT_URI') || undefined,
-    });
+    };
+
+    if (accessToken) {
+        // [UPDATE MODE] Plaid strictly forbids passing `products` or `transactions` objects when issuing an Update Token.
+        requestParams.access_token = accessToken;
+        console.log(`Generating Update Mode Token for user ${userId}...`);
+    } else {
+        // [STANDARD MODE]
+        requestParams.products = [Products.Transactions];
+        requestParams.transactions = { days_requested: 30 }; // Natively cap history so dashboards don't mathematically bloat!
+        console.log(`Generating Standard Mode Token for user ${userId}...`);
+    }
+
+    const tokenResponse = await plaidClient.linkTokenCreate(requestParams);
 
     // 4. Return the Token securely
     return new Response(

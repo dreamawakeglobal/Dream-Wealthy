@@ -8,6 +8,7 @@ import { useSound } from '../SoundContext';
 import { LogOut, User, Settings, CreditCard } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import AiAdvisorWidget from './AiAdvisorWidget';
+import BrokenConnectionModal from './BrokenConnectionModal';
 import './Layout.css';
 
 const Layout = () => {

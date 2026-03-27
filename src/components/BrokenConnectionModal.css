@@ -1,0 +1,85 @@
+.broken-connection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeInOverlay 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.broken-connection-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4), 0 0 0 1px inset rgba(255, 255, 255, 0.05);
+    border-radius: 24px;
+    padding: 40px;
+    width: 90%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    animation: popInModal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.broken-icon-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(255, 59, 48, 0.1);
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    margin-bottom: 24px;
+    box-shadow: 0 0 30px rgba(255, 59, 48, 0.15);
+}
+
+.broken-icon {
+    color: #ff453a;
+}
+
+.broken-connection-modal h2 {
+    margin: 0 0 12px 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.broken-connection-modal p {
+    margin: 0 0 32px 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+}
+
+.broken-action-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popInModal {
+    from { 
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}

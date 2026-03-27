@@ -6,7 +6,7 @@ import { supabase } from '../supabaseClient';
 import { Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import './PlaidConnectButton.css';
 
-const PlaidConnectButton = ({ onConnectionSuccess }) => {
+const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedAccessToken = null, brokenAccountId = null }) => {
     const { user } = useAuth();
     const { fetchAllData } = useFinancialContext();
     const [token, setToken] = useState(null);
@@ -32,7 +32,7 @@ const PlaidConnectButton = ({ onConnectionSuccess }) => {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({ userId: user.id })
+                body: JSON.stringify({ userId: user.id, accessToken: linkedAccessToken })
             });
 
             const data = await response.json().catch(() => null);
@@ -78,6 +78,23 @@ const PlaidConnectButton = ({ onConnectionSuccess }) => {
             // Fetch active session token for exchange
             const { data: { session }, error: sessionError } = await supabase.auth.getSession();
             if (sessionError || !session) throw new Error("Could not retrieve authentication session.");
+
+            // [UPDATE MODE BYPASS] If we are merely repairing a broken connection, do NOT exchange a new token!
+            // Simply repair the flags natively and close the loop.
+            if (isUpdateMode && brokenAccountId) {
+                const { error: relinkError } = await supabase
+                    .from('accounts')
+                    .update({ needs_relink: false })
+                    .eq('id', brokenAccountId);
+
+                if (relinkError) throw new Error("Database Error: Could not clear relink lock.");
+
+                setSuccessMessage(`Successfully restored connection for ${institutionName}!`);
+                await fetchAllData();
+                if (onConnectionSuccess) onConnectionSuccess();
+                setIsExchanging(false);
+                return;
+            }
 
             // Send public token to our Edge Function for permanent secure exchange
             const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/exchange-public-token`, {
