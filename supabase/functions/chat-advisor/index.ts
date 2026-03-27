@@ -27,7 +27,7 @@ serve(async (req: Request) => {
         if (authError || !user) throw new Error("Invalid or expired token");
 
         // 3. Extract Payload
-        const { messages, projections } = await req.json();
+        const { messages, projections, trackerContext } = await req.json();
         if (!messages || !Array.isArray(messages)) {
             throw new Error("Invalid payload: messages array is required.");
         }
@@ -106,6 +106,16 @@ Savings Goal Target: $${profile?.savings_target || 0}
             systemPrompt += `\n--- DAY-TO-DAY EXPENSES ---\n`;
             expenses.forEach((e: any) => {
                 systemPrompt += `- ${e.name || 'Expense'}: $${e.amount} (Type: ${e.is_variable ? 'Variable' : 'Fixed'})\n`;
+            });
+        }
+
+        if (trackerContext?.variableExpenses?.length > 0) {
+            systemPrompt += `\n--- LIVE VARIABLE EXPENSES (BANK TRACKER PROGRESS) ---\n`;
+            systemPrompt += `This data shows exactly how much the user has spent this month against their budget ceiling, synced directly to their bank accounts tracking tags:\n`;
+            trackerContext.variableExpenses.forEach((exp: any) => {
+                const diff = (exp.budget || 0) - (exp.spent || 0);
+                const status = diff >= 0 ? `(Under budget by $${diff})` : `(OVER budget by $${Math.abs(diff)})`;
+                systemPrompt += `- ${exp.name || 'Expense'}: Spent $${exp.spent} out of $${exp.budget} target ${status}\n`;
             });
         }
 

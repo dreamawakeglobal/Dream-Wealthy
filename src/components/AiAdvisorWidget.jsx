@@ -6,13 +6,15 @@ import { supabase } from '../supabaseClient';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFinancialContext } from '../FinancialContext';
+import useStore from '../store';
 import './AiAdvisorWidget.css';
 
 const AiAdvisorWidget = () => {
     const { playWhoosh, playPop, playChime } = useSound();
     const { theme, expenseBorderColor } = useTheme();
     const { user } = useAuth();
-    const { getProjectionData } = useFinancialContext();
+    const { getProjectionData, transactionsByCategory, mapUserExpenseToPlaidCategory } = useFinancialContext();
+    const { variableExpenses, fixedExpenses } = useStore();
     
     const [isOpen, setIsOpen] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
@@ -102,6 +104,14 @@ const AiAdvisorWidget = () => {
                 return { ...p, month: `${p.month} ${currentYear + yearOffset}` };
             });
 
+            const trackerContext = {
+                variableExpenses: (variableExpenses || []).map(exp => ({
+                    name: exp.name,
+                    budget: exp.amount,
+                    spent: exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)
+                }))
+            };
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -110,7 +120,8 @@ const AiAdvisorWidget = () => {
                 },
                 body: JSON.stringify({ 
                     messages: newMessages,
-                    projections: projectionsWithYear
+                    projections: projectionsWithYear,
+                    trackerContext: trackerContext
                 })
             });
 
