@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
 import { useAuth } from '../contexts/AuthContext';
+import { useFinancialContext } from '../FinancialContext';
 import { supabase } from '../supabaseClient';
 import { Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import './PlaidConnectButton.css';
 
 const PlaidConnectButton = ({ onConnectionSuccess }) => {
     const { user } = useAuth();
+    const { fetchAllData } = useFinancialContext();
     const [token, setToken] = useState(null);
     const [isGeneratingToken, setIsGeneratingToken] = useState(false);
     const [isExchanging, setIsExchanging] = useState(false);
@@ -33,12 +35,23 @@ const PlaidConnectButton = ({ onConnectionSuccess }) => {
                 body: JSON.stringify({ userId: user.id })
             });
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Failed to generate link token.");
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                console.error("Link Token Failure Payload:", data);
+                if (data && data.error) {
+                    if (typeof data.error === 'object') {
+                        throw new Error(JSON.stringify(data.error));
+                    }
+                    throw new Error(data.error);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${JSON.stringify(data)}`);
+                }
+            }
+
             if (data?.link_token) {
                 setToken(data.link_token);
             } else {
-                throw new Error("Did not receive link_token from server.");
+                throw new Error("Did not receive link_token from server: " + JSON.stringify(data));
             }
         } catch (err) {
             console.error('Error generating link token:', err);
@@ -80,6 +93,7 @@ const PlaidConnectButton = ({ onConnectionSuccess }) => {
             if (!response.ok) throw new Error(data.error || "Failed to exchange public token.");
 
             setSuccessMessage(`Successfully connected to ${institutionName}!`);
+            await fetchAllData(); // <--- Dynamically repaint the UI with the fresh data!
             if (onConnectionSuccess) onConnectionSuccess();
 
         } catch (err) {
@@ -95,7 +109,21 @@ const PlaidConnectButton = ({ onConnectionSuccess }) => {
         onSuccess,
     };
 
+    // Capital One OAuth Interception: If the browser URL contains an active OAuth state, 
+    // we explicitly route the physical callback directly into the Plaid Link configuration dynamically.
+    if (window.location.href.includes('?oauth_state_id=')) {
+        config.receivedRedirectUri = window.location.href;
+    }
+
     const { open, ready } = usePlaidLink(config);
+
+    // If an OAuth Redirect occurred successfully from Capital One, the system autonomously 
+    // re-opens the Plaid modal to officially conclude the token extraction sequence!
+    useEffect(() => {
+        if (ready && window.location.href.includes('?oauth_state_id=')) {
+            open();
+        }
+    }, [ready, open]);
 
     if (successMessage) {
         return (

@@ -245,35 +245,7 @@ const Projections = () => {
                                 </div>
                             )}
 
-                            <div className="controls-divider" />
 
-                            <div className="controls-group">
-                                <label>Annual Income Growth (%)</label>
-                                <div className="slider-container">
-                                    <input
-                                        type="range"
-                                        min="0" max="20" step="0.5"
-                                        value={incomeGrowthRate}
-                                        onChange={e => setIncomeGrowthRate(Number(e.target.value))}
-                                        className="dream-slider"
-                                    />
-                                    <span className="slider-value">{incomeGrowthRate}%</span>
-                                </div>
-                            </div>
-
-                            <div className="controls-group">
-                                <label>Annual Expense Inflation (%)</label>
-                                <div className="slider-container">
-                                    <input
-                                        type="range"
-                                        min="0" max="15" step="0.5"
-                                        value={expenseInflationRate}
-                                        onChange={e => setExpenseInflationRate(Number(e.target.value))}
-                                        className="dream-slider danger-slider"
-                                    />
-                                    <span className="slider-value">{expenseInflationRate}%</span>
-                                </div>
-                            </div>
 
                             <div className="controls-divider" />
 

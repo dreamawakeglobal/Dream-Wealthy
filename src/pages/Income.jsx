@@ -13,10 +13,42 @@ import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GoalsSection } from '../components/dashboard/GoalsSection';
 import './Income.css';
+import { getFilterLabel } from './Expenses';
 
-const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false }) => {
-    const [name, setName] = useState('');
-    const [amount, setAmount] = useState('');
+const useRecentIncomeMerchants = (transactions) => {
+    return useMemo(() => {
+        if (!transactions || transactions.length === 0) return [];
+        
+        const merchantMap = new Map();
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        
+        for (const tx of transactions) {
+            if (tx.amount >= 0 || tx.pending) continue;
+            const txDate = new Date(tx.date);
+            if (txDate < sixtyDaysAgo) continue;
+            
+            const rawM = (tx.merchant_name || tx.name || '').trim();
+            if (!rawM) continue;
+            
+            if (!merchantMap.has(rawM)) {
+                merchantMap.set(rawM, Math.abs(tx.amount));
+            }
+        }
+        
+        return Array.from(merchantMap.keys())
+            .sort()
+            .map(merchant => ({
+                merchant,
+                amount: merchantMap.get(merchant)
+            }));
+    }, [transactions]);
+};
+
+const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recentMerchants = [], initialData = null }) => {
+    const [name, setName] = useState(initialData?.name || '');
+    const [amount, setAmount] = useState(initialData?.amount || '');
+    const [linkedMerchant, setLinkedMerchant] = useState(initialData?.apiId || '');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const { playKaChing } = useSound();
     const { expenseBorderColor, theme } = useTheme();
@@ -31,14 +63,52 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false }) => 
         e.preventDefault();
         if (name && amount) {
             playKaChing();
-            onAdd({ id: crypto.randomUUID(), name, amount: parseFloat(amount), frequency: 'monthly' });
-            setName('');
-            setAmount('');
+            onAdd({ 
+                id: initialData?.id || crypto.randomUUID(), 
+                name, 
+                amount: parseFloat(amount), 
+                frequency: 'monthly',
+                apiId: linkedMerchant || null 
+            });
+            if (!initialData) {
+                setName('');
+                setAmount('');
+                setLinkedMerchant('');
+            }
         }
     };
 
     const content = (
         <form onSubmit={handleSubmit} className="income-form" style={isModal ? { background: 'transparent', padding: '8px 0', border: 'none' } : {}}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                <Input
+                    list="recent-income-merchants"
+                    placeholder="🔗 Search Bank Transactions (Last 60 Days)"
+                    value={linkedMerchant}
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        setLinkedMerchant(val);
+                        if (recentMerchants && recentMerchants.length > 0) {
+                            const match = recentMerchants.find(m => m.merchant === val);
+                            if (match) {
+                                if (!name) setName(match.merchant);
+                                if (!amount) setAmount(Math.round(Math.abs(match.amount)));
+                            }
+                        }
+                    }}
+                    style={{ color: 'var(--text-primary)', marginBottom: 0 }}
+                />
+                {recentMerchants && recentMerchants.length > 0 && (
+                    <datalist id="recent-income-merchants">
+                        {recentMerchants.map(m => (
+                            <option key={m.merchant} value={m.merchant}>
+                                ${Number(m.amount).toFixed(2)}
+                            </option>
+                        ))}
+                    </datalist>
+                )}
+            </div>
+
             <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
                     <Button 
                         type="button" 
@@ -122,7 +192,20 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false }) => 
     );
 };
 
-const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, incomeTransactionsByCategory = {} }) => {
+export const getStreamAutoReceivedAmount = (stream, incomeTransactionsByCategory, filteredIncomeTransactions) => {
+    if (stream.apiId && filteredIncomeTransactions && filteredIncomeTransactions.length > 0) {
+        const searchTag = stream.apiId.toLowerCase();
+        return filteredIncomeTransactions
+            .filter(tx => {
+                const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+                return merchant.includes(searchTag) || searchTag.includes(merchant);
+            })
+            .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    }
+    return Number(incomeTransactionsByCategory[stream.name]) || 0;
+};
+
+const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, incomeTransactionsByCategory = {}, filteredIncomeTransactions = [] }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editName, setEditName] = useState(stream.name);
     const [editAmount, setEditAmount] = useState(stream.amount);
@@ -176,7 +259,14 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
     return (
         <div className="stream-item glass">
             <div className="stream-info">
-                <p className="stream-name">{stream.name}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p className="stream-name" style={{ margin: 0 }}>{stream.name}</p>
+                    {stream.apiId && (
+                        <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }} title={`Linked to ${stream.apiId}`}>
+                            🔗
+                        </span>
+                    )}
+                </div>
                 <span className="stream-freq">Monthly</span>
             </div>
 
@@ -188,7 +278,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                             className="auto-tracker-input"
                             type="number"
                             step="0.01"
-                            value={stream.manualReceived !== undefined ? stream.manualReceived : (incomeTransactionsByCategory[stream.name] || '')}
+                            value={stream.manualReceived != null ? stream.manualReceived : (incomeTransactionsByCategory[stream.name] || '')}
                             onChange={(e) => {
                                 const val = e.target.value;
                                 onUpdate({ ...stream, manualReceived: val === '' ? undefined : Number(val) });
@@ -202,7 +292,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                         fontSize: '0.85rem',
                         fontWeight: 600,
                         color: (() => {
-                            const received = stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
+                            const received = stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions);
                             const diff = stream.amount - received;
                             if (diff <= 0) return 'var(--success)';
                             if (received > 0) return '#ff9f0a';
@@ -210,7 +300,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                         })()
                     }}>
                         {(() => {
-                            const received = stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0);
+                            const received = stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions);
                             const diff = stream.amount - received;
                             if (diff <= 0) return `Target Met! (+$${Math.abs(diff).toLocaleString()})`;
                             return `${diff.toLocaleString()} to go`;
@@ -232,7 +322,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
     );
 };
 
-const IncomeStreamList = ({ streams, onRemove, onUpdate, emptyMessage, showTracking = false, incomeTransactionsByCategory = {} }) => {
+const IncomeStreamList = ({ streams, onRemove, onUpdate, emptyMessage, showTracking = false, incomeTransactionsByCategory = {}, filteredIncomeTransactions = [] }) => {
     if (streams.length === 0) {
         return <div className="empty-state text-muted">{emptyMessage}</div>;
     }
@@ -247,6 +337,7 @@ const IncomeStreamList = ({ streams, onRemove, onUpdate, emptyMessage, showTrack
                         onUpdate={onUpdate}
                         showTracking={showTracking}
                         incomeTransactionsByCategory={incomeTransactionsByCategory}
+                        filteredIncomeTransactions={filteredIncomeTransactions}
                     />
                 </AnimateOnScroll>
             ))}
@@ -262,6 +353,7 @@ const Income = () => {
         allocations, setAllocations,
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
+    const recentIncomeMerchants = useRecentIncomeMerchants(transactions);
     const { expenseBorderColor, theme } = useTheme();
     const { playPop } = useSound();
 
@@ -282,13 +374,37 @@ const Income = () => {
     // --- Derived Modal Data ---
     const uniqueIncomeCategories = useMemo(() => {
         if (!transactions) return ['All'];
-        const cats = new Set(transactions.filter(tx => tx.amount < 0 && !tx.pending).map(tx => tx.category || 'Uncategorized'));
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+
+        const fortyDaysAgo = new Date();
+        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+
+        const cats = new Set(transactions.filter(tx => {
+            if (tx.amount >= 0 || tx.pending) return false;
+            const txDate = new Date(tx.date);
+            return txDate >= fortyDaysAgo;
+        }).map(tx => tx.category || 'Uncategorized'));
+        
         return ['All', ...cats].sort();
     }, [transactions]);
 
     const filteredIncomeTransactions = useMemo(() => {
         if (!transactions) return [];
-        const incomeTxs = transactions.filter(tx => tx.amount < 0 && !tx.pending);
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+
+        const fortyDaysAgo = new Date();
+        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+
+        const incomeTxs = transactions.filter(tx => {
+            if (tx.amount >= 0 || tx.pending) return false;
+            const txDate = new Date(tx.date);
+            return txDate >= fortyDaysAgo;
+        });
+        
         if (activityCategoryFilter === 'All') return incomeTxs;
         return incomeTxs.filter(tx => (tx.category || 'Uncategorized') === activityCategoryFilter);
     }, [transactions, activityCategoryFilter]);
@@ -423,7 +539,7 @@ const Income = () => {
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
                                 <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                    Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived !== undefined ? Number(stream.manualReceived) : (Number(incomeTransactionsByCategory[stream.name]) || 0)), 0).toLocaleString()}
+                                    Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions)), 0).toLocaleString()}
                                 </span>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -470,6 +586,7 @@ const Income = () => {
                             emptyMessage="No current streams added."
                             showTracking={true}
                             incomeTransactionsByCategory={incomeTransactionsByCategory}
+                            filteredIncomeTransactions={filteredIncomeTransactions}
                         />
                     </AnimateOnScroll>
 
@@ -498,7 +615,10 @@ const Income = () => {
                             streams={futureIncome}
                             onRemove={removeFutureIncome}
                             onUpdate={updateFutureIncome}
-                            emptyMessage="Start designing your future streams."
+                            emptyMessage="No future streams added."
+                            showTracking={true}
+                            incomeTransactionsByCategory={incomeTransactionsByCategory}
+                            filteredIncomeTransactions={filteredIncomeTransactions}
                         />
                     </AnimateOnScroll>
                 </div>
@@ -746,7 +866,7 @@ const Income = () => {
                         The Rules Engine uses their categories to automatically track your real-life deposits.
                     </p>
                     <div className="total-amount-box" style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--surface-border)', textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({activityCategoryFilter})</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({getFilterLabel(activityCategoryFilter)})</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--success)' }}>
                             +${Math.abs(filteredTotalIncomeAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
@@ -769,7 +889,7 @@ const Income = () => {
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            {cat}
+                            {getFilterLabel(cat)}
                         </button>
                     ))}
                 </div>
@@ -781,7 +901,7 @@ const Income = () => {
                         </div>
                     ) : (
                         paginatedIncomeTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
+                            <div key={tx.id} className="stream-item glass" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
                                 <div className="tx-merchant" style={{ fontWeight: 600 }}>
                                     {tx.merchant_name || 'Income Source'}
                                     {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}
@@ -790,8 +910,8 @@ const Income = () => {
                                     {new Date(tx.date).toLocaleDateString()}
                                 </div>
                                 <div className="tx-category">
-                                    <span className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)' }}>
-                                        {tx.category || 'Uncategorized'}
+                                    <span className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}>
+                                        {getFilterLabel(tx.category || 'Uncategorized')}
                                     </span>
                                 </div>
                                 <div className="tx-amount text-success" style={{ textAlign: 'right', fontWeight: 'bold' }}>
@@ -830,6 +950,7 @@ const Income = () => {
                         onAdd={(stream) => { addCurrentIncome(stream); setIsCurrentStreamModalOpen(false); }} 
                         title="" 
                         isModal={true}
+                        recentMerchants={recentIncomeMerchants}
                     />
                 </div>
             </Modal>
@@ -854,6 +975,7 @@ const Income = () => {
                         onAdd={(stream) => { addFutureIncome(stream); setIsFutureStreamModalOpen(false); }} 
                         title="" 
                         isModal={true}
+                        recentMerchants={recentIncomeMerchants}
                     />
                 </div>
             </Modal>

@@ -15,6 +15,7 @@ const mapToCamel = (item) => {
     if (mapped.asset_class !== undefined) { mapped.assetClass = mapped.asset_class; delete mapped.asset_class; }
 
     // Auto-Tracker Fields
+    if (mapped.target_category !== undefined) { mapped.targetCategory = mapped.target_category; delete mapped.target_category; }
     if (mapped.manual_received !== undefined) { mapped.manualReceived = mapped.manual_received; delete mapped.manual_received; }
     if (mapped.manual_spent !== undefined) { mapped.manualSpent = mapped.manual_spent; delete mapped.manual_spent; }
 
@@ -47,6 +48,7 @@ const mapToSnake = (item) => {
     if (snakeItem.assetClass !== undefined) { snakeItem.asset_class = snakeItem.assetClass; delete snakeItem.assetClass; }
 
     // Auto-Tracker Fields
+    if (snakeItem.targetCategory !== undefined) { snakeItem.target_category = snakeItem.targetCategory; delete snakeItem.targetCategory; }
     if (snakeItem.manualReceived !== undefined) { snakeItem.manual_received = snakeItem.manualReceived; delete snakeItem.manualReceived; }
     if (snakeItem.manualSpent !== undefined) { snakeItem.manual_spent = snakeItem.manualSpent; delete snakeItem.manualSpent; }
 
@@ -147,6 +149,10 @@ export const useStore = create((set, get) => ({
                 portfolio: (portfolioRes.data || []).map(mapToCamel),
                 subscriptions: (subscriptionsRes.data || []).map(mapToCamel)
             });
+
+            if (transactionsRes.error) {
+                alert("SUPABASE RLS SYSTEM ERROR: " + JSON.stringify(transactionsRes.error));
+            }
         } catch (err) {
             console.error("Zustand fetchAllData failed:", err);
         }

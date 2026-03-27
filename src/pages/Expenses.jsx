@@ -21,13 +21,97 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
+import { useStore } from '../store';
+import { supabase } from '../supabaseClient';
 import './Expenses.css';
 
-const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCategory = false, uniqueCategories = [], isModal = false }) => {
-    const [name, setName] = useState('');
-    const [amount, setAmount] = useState('');
-    const [dueDate, setDueDate] = useState('');
-    const [category, setCategory] = useState('');
+export const getFilterLabel = (filterId) => {
+    if (!filterId) return '🏷️ Uncategorized';
+    if (filterId === 'PSEUDO_GAS') return '⛽️ Gas & Fuel';
+    if (filterId === 'PSEUDO_RIDE_SHARE') return '🚗 Ride Share';
+    if (filterId === 'PSEUDO_GROCERIES') return '🛒 Groceries';
+    if (filterId === 'PSEUDO_HYGIENE_HOUSEHOLD') return '🧼 Hygiene & Household';
+    if (filterId === 'All') return '🌎 All';
+    
+    // Format the backend string: replace underscores with spaces and title case
+    const formattedName = filterId
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+        
+    const lower = filterId.toLowerCase();
+    if (lower.includes('food') || lower.includes('drink') || lower.includes('dining') || lower.includes('restaurant')) return `🍔 ${formattedName}`;
+    if (lower.includes('travel') || lower.includes('airline') || lower.includes('hotel')) return `✈️ ${formattedName}`;
+    if (lower.includes('shop') || lower.includes('retail') || lower.includes('clothing')) return `🛍️ ${formattedName}`;
+    if (lower.includes('transfer') || lower.includes('payment') || lower.includes('credit card')) return `💳 ${formattedName}`;
+    if (lower.includes('health') || lower.includes('medical') || lower.includes('doctor')) return `🏥 ${formattedName}`;
+    if (lower.includes('service') || lower.includes('subscription')) return `⚙️ ${formattedName}`;
+    if (lower.includes('entertainment') || lower.includes('recreation')) return `🎟️ ${formattedName}`;
+    if (lower.includes('auto') || lower.includes('car') || lower.includes('transport')) return `🚙 ${formattedName}`;
+    if (lower.includes('utility') || lower.includes('bills')) return `⚡️ ${formattedName}`;
+    if (lower.includes('personal') || lower.includes('care')) return `💅 ${formattedName}`;
+    if (lower.includes('education') || lower.includes('school')) return `🎓 ${formattedName}`;
+    if (lower.includes('home') || lower.includes('rent') || lower.includes('mortgage')) return `🏠 ${formattedName}`;
+    if (lower.includes('income') || lower.includes('salary') || lower.includes('paycheck')) return `💵 ${formattedName}`;
+    
+    return `🏷️ ${formattedName}`;
+};
+
+export const detectPseudoCategory = (tx) => {
+    if (tx.category && tx.category.endsWith(' ')) {
+        return tx.category.trim();
+    }
+    
+    const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+    
+    if (merchant.includes('exxon') || merchant.includes('shell') || merchant.includes('chevron') || merchant.includes('wawa') || merchant.includes('bp ') || merchant.includes('sunoco') || merchant.includes('speedway') || merchant.includes('quik') || merchant.includes('pilot') || merchant.includes('gas') || merchant.includes('fuel')) {
+        return 'PSEUDO_GAS';
+    }
+    if (merchant.includes('uber') || merchant.includes('lyft') || merchant.includes('taxi') || merchant.includes('cab')) {
+        return 'PSEUDO_RIDE_SHARE';
+    }
+    if (merchant.includes('walmart') || merchant.includes('kroger') || merchant.includes('target') || merchant.includes('publix') || merchant.includes('safeway') || merchant.includes('trader joe') || merchant.includes('whole food') || merchant.includes('aldi') || merchant.includes('wegmans') || merchant.includes('h-e-b') || merchant.includes('meijer') || merchant.includes('food lion') || merchant.includes('costco') || merchant.includes("sam's club") || merchant.includes('bjs') || merchant.includes('grocery') || merchant.includes('supermarket')) {
+        return 'PSEUDO_GROCERIES';
+    }
+    if (merchant.includes('cvs') || merchant.includes('walgreens') || merchant.includes('rite aid') || merchant.includes('sephora') || merchant.includes('ulta') || merchant.includes('bath & body') || merchant.includes('home depot') || merchant.includes("lowe's") || merchant.includes('ace hardware') || merchant.includes('ikea') || merchant.includes('bed bath') || merchant.includes('pharmacy') || merchant.includes('drugstore') || merchant.includes('sally beauty') || merchant.includes('mac cosmetics')) {
+        return 'PSEUDO_HYGIENE_HOUSEHOLD';
+    }
+    
+    return tx.category || 'Uncategorized';
+};
+
+export const useRecentMerchants = (transactions) => {
+    return useMemo(() => {
+        if (!transactions || transactions.length === 0) return [];
+        
+        const merchantMap = new Map();
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        
+        for (const tx of transactions) {
+            if (tx.amount <= 0 || tx.pending) continue;
+            const txDate = new Date(tx.date);
+            if (txDate < sixtyDaysAgo) continue;
+            
+            const rawM = (tx.merchant_name || tx.name || '').trim();
+            if (!rawM) continue;
+            
+            if (!merchantMap.has(rawM)) {
+                merchantMap.set(rawM, tx.amount);
+            }
+        }
+        
+        const recent = Array.from(merchantMap.entries()).map(([merchant, amount]) => ({ merchant, amount }));
+        return recent.sort((a, b) => a.merchant.localeCompare(b.merchant));
+    }, [transactions]);
+};
+
+const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCategory = false, uniqueCategories = [], isModal = false, recentMerchants = [], initialData = null }) => {
+    const [name, setName] = useState(initialData?.name || '');
+    const [amount, setAmount] = useState(initialData?.amount?.toString() || '');
+    const [dueDate, setDueDate] = useState(initialData?.dueDate?.toString() || '');
+    const [category, setCategory] = useState(initialData?.targetCategory || '');
+    const [linkedMerchant, setLinkedMerchant] = useState(initialData?.apiId || '');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const { playReceiptTear } = useSound();
     const { expenseBorderColor, theme } = useTheme();
@@ -43,11 +127,22 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
         e.preventDefault();
         if (name && amount) {
             playReceiptTear();
-            onAdd({ id: crypto.randomUUID(), name, targetCategory: category || null, amount: parseFloat(amount), frequency: 'monthly', dueDate: dueDate ? parseInt(dueDate, 10) : null });
-            setName('');
-            setAmount('');
-            setDueDate('');
-            setCategory('');
+            onAdd({ 
+                id: initialData?.id || crypto.randomUUID(), 
+                name, 
+                targetCategory: category || null, 
+                amount: parseFloat(amount), 
+                frequency: 'monthly', 
+                dueDate: dueDate ? parseInt(dueDate, 10) : null,
+                apiId: linkedMerchant || null
+            });
+            if (!initialData) {
+                setName('');
+                setAmount('');
+                setDueDate('');
+                setCategory('');
+                setLinkedMerchant('');
+            }
         }
     };
 
@@ -93,6 +188,37 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                 )}
             </div>
 
+            {!showCategory && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    <Input
+                        list="recent-merchants"
+                        placeholder="🔗 Search Bank Transactions (Last 60 Days)"
+                        value={linkedMerchant}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setLinkedMerchant(val);
+                            if (recentMerchants && recentMerchants.length > 0) {
+                                const match = recentMerchants.find(m => m.merchant === val);
+                                if (match) {
+                                    if (!name) setName(match.merchant);
+                                    if (!amount) setAmount(Math.round(Math.abs(match.amount)));
+                                }
+                            }
+                        }}
+                        style={{ color: 'var(--text-primary)', marginBottom: 0 }}
+                    />
+                    {recentMerchants && recentMerchants.length > 0 && (
+                        <datalist id="recent-merchants">
+                            {recentMerchants.map(m => (
+                                <option key={m.merchant} value={m.merchant}>
+                                    ${Number(m.amount).toFixed(2)}
+                                </option>
+                            ))}
+                        </datalist>
+                    )}
+                </div>
+            )}
+
             {showCategory && (
                 <div style={{ display: 'flex', marginBottom: '16px' }}>
                     <select 
@@ -100,16 +226,12 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         onChange={e => setCategory(e.target.value)}
                         style={{ background: 'var(--surface)', border: `1px solid var(--surface-border)`, color: category ? 'var(--text-primary)' : 'var(--text-muted)', outline: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}
                     >
-                        <option value="">Auto-Detect Category (AI)</option>
-                        <optgroup label="Custom Tracking Categories">
-                            {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                        </optgroup>
-                        <optgroup label="Smart Sub-Categories">
-                            <option value="PSEUDO_GAS">Gas & Fuel Stations</option>
-                            <option value="PSEUDO_RIDE_SHARE">Ride Share (Uber/Lyft)</option>
-                            <option value="PSEUDO_GROCERIES">Groceries & Supermarkets</option>
-                            <option value="PSEUDO_HYGIENE_HOUSEHOLD">Hygiene & Household</option>
-                        </optgroup>
+                        <option value="">Category</option>
+                        <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
+                        <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
+                        <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
+                        <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                        {uniqueCategories.map(c => <option key={c} value={c}>{getFilterLabel(c)}</option>)}
                     </select>
                 </div>
             )}
@@ -145,7 +267,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
                     } : {}}
                 >
-                    <Plus size={18} /> Add
+                    {initialData ? 'Save Changes' : <><Plus size={18} /> Add</>}
                 </Button>
             </div>
         </form>
@@ -168,8 +290,9 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
     );
 };
 
-const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, mapUserExpenseToPlaidCategory, showDueDate = true, uniqueCategories = [] }) => {
+const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, mapUserExpenseToPlaidCategory, showDueDate = true, uniqueCategories = [], recentMerchants = [] }) => {
     const { playCheck } = useSound();
+    const { expenseBorderColor, theme } = useTheme();
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
     const [editAmount, setEditAmount] = useState('');
@@ -192,13 +315,6 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
         setEditDueDate(expense.dueDate || '');
     };
 
-    const saveEdit = (id) => {
-        if (editName && editAmount) {
-            onEdit(id, { name: editName, targetCategory: editTargetCategory || null, amount: parseFloat(editAmount), dueDate: editDueDate || null });
-            setEditingId(null);
-        }
-    };
-
     const cancelEdit = () => {
         setEditingId(null);
     };
@@ -212,81 +328,80 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
             {currentExpenses.map((expense) => (
                 <AnimateOnScroll key={expense.id} delay={0.05} yOffset={20}>
                     <div className={`stream-item ${expense.isPaid ? 'paid' : ''} glass`}>
-                        {editingId === expense.id ? (
-                            <div className="stream-edit-form" style={{ display: 'flex', width: '100%', gap: '8px', alignItems: 'center' }}>
-                                <div style={{ flex: 1, display: 'flex', gap: '8px' }}>
-                                    <Input
-                                        value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        placeholder="Name"
-                                        style={{ flex: 1 }}
-                                    />
-                                    <Input
-                                        type="number" step="0.01"
-                                        value={editAmount}
-                                        onChange={(e) => setEditAmount(e.target.value)}
-                                        placeholder="Amount"
-                                        style={{ width: '100px' }}
-                                    />
-                                    {uniqueCategories.length > 0 && (
-                                        <select 
-                                            value={editTargetCategory} 
-                                            onChange={e => setEditTargetCategory(e.target.value)}
-                                            style={{ background: 'var(--surface)', border: `1px solid var(--surface-border)`, color: 'var(--text-primary)', outline: 'none', padding: '0 8px', borderRadius: '4px', cursor: 'pointer', maxWidth: '120px' }}
-                                        >
-                                            <option value="">Auto AI</option>
-                                            <optgroup label="Custom Tracking Categories">
-                                                {uniqueCategories.map(c => <option key={c} value={c}>{c}</option>)}
-                                            </optgroup>
-                                            <optgroup label="Smart Sub-Categories">
-                                                <option value="PSEUDO_GAS">Gas & Fuel Stations</option>
-                                                <option value="PSEUDO_RIDE_SHARE">Ride Share (Uber/Lyft)</option>
-                                                <option value="PSEUDO_GROCERIES">Groceries & Supermarkets</option>
-                                                <option value="PSEUDO_HYGIENE_HOUSEHOLD">Hygiene & Household</option>
-                                            </optgroup>
-                                        </select>
-                                    )}
-                                    {showDueDate && (
-                                        <Input
-                                            type="number" min="1" max="31"
-                                            value={editDueDate}
-                                            onChange={(e) => setEditDueDate(e.target.value)}
-                                            placeholder="Due (1-31)"
-                                            style={{ width: '100px' }}
-                                        />
-                                    )}
-                                </div>
-                                <div className="stream-actions">
-                                    <Button size="sm" onClick={() => saveEdit(expense.id)}>Save</Button>
-                                    <Button size="sm" variant="secondary" onClick={cancelEdit}>Cancel</Button>
-                                </div>
-                            </div>
-                        ) : (
-                            <>
+                        {editingId === expense.id && (
+                            <Modal 
+                                isOpen={true} 
+                                onClose={cancelEdit} 
+                                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                                clearBlur={true}
+                                transparentOverlay={true}
+                                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                                containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                                title={(() => {
+                                    const activeColor = {
+                                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+                                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                        yellow: '#eab308', orange: '#f97316'
+                                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                    return (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', background: activeColor, padding: '8px 16px', borderRadius: '12px', boxShadow: `0 4px 12px ${activeColor}40` }}>
+                                            <Activity size={20} />
+                                            <span>Edit Bill</span>
+                                        </div>
+                                    );
+                                })()}
+                            >
+                                <ExpenseForm
+                                    initialData={expense}
+                                    onAdd={(updates) => {
+                                        onEdit(expense.id, updates);
+                                        setEditingId(null);
+                                    }}
+                                    title=""
+                                    placeholder="Name"
+                                    isModal={true}
+                                    showCategory={!!expense.targetCategory}
+                                    uniqueCategories={uniqueCategories}
+                                    recentMerchants={recentMerchants}
+                                />
+                            </Modal>
+                        )}
+                        <>
                                 <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                                     {!showTracking && (
                                         <div className="checkbox-wrapper">
-                                            <input
-                                                type="checkbox"
-                                                className="expense-checkbox"
-                                                checked={expense.isPaid || false}
-                                                onChange={(e) => {
-                                                    const isChecked = e.target.checked;
-                                                    if (isChecked) {
-                                                        playCheck();
-                                                    }
-                                                    onEdit(expense.id, { isPaid: isChecked });
-                                                }}
-                                                title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
-                                            />
+                                            {expense.autoPaid ? (
+                                                <div title="Auto-Detected Monthly Payment via Bank Link" style={{ marginRight: '16px', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <CheckCircle2 size={24} />
+                                                </div>
+                                            ) : (
+                                                <input
+                                                    type="checkbox"
+                                                    className="expense-checkbox"
+                                                    checked={expense.isPaid || false}
+                                                    onChange={(e) => {
+                                                        const isChecked = e.target.checked;
+                                                        if (isChecked) {
+                                                            playCheck();
+                                                        }
+                                                        onEdit(expense.id, { isPaid: isChecked });
+                                                    }}
+                                                    title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
+                                                />
+                                            )}
                                         </div>
                                     )}
                                     <div className="stream-info">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <p className="stream-name" style={{ margin: 0 }}>{expense.name}</p>
+                                            {expense.apiId && (
+                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }} title={`Linked to ${expense.apiId}`}>
+                                                    🔗
+                                                </span>
+                                            )}
                                             {expense.targetCategory && (
                                                 <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'var(--primary)', color: 'white' }}>
-                                                    {expense.targetCategory.replace('PSEUDO_', '')}
+                                                    {getFilterLabel(expense.targetCategory)}
                                                 </span>
                                             )}
                                         </div>
@@ -303,7 +418,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             <input
                                                 className="auto-tracker-input"
                                                 type="number" step="0.01"
-                                                value={expense.manualSpent !== undefined ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
+                                                value={expense.manualSpent != null ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
@@ -317,14 +432,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             fontSize: '0.85rem',
                                             fontWeight: 600,
                                             color: (() => {
-                                                const spent = expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0);
+                                                const spent = expense.manualSpent != null ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0);
                                                 const left = expense.amount - spent;
                                                 if (left <= 0) return 'var(--danger)';
                                                 if (left <= expense.amount * 0.1) return '#ff9f0a';
                                                 return 'var(--success)';
                                             })()
                                         }}>
-                                            Left: ${(expense.amount - (expense.manualSpent !== undefined ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0))).toLocaleString()}
+                                            Left: ${(expense.amount - (expense.manualSpent != null ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0))).toLocaleString()}
                                         </div>
                                     </div>
                                 )}
@@ -337,7 +452,6 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                     </button>
                                 </div>
                             </>
-                        )}
                     </div>
                 </AnimateOnScroll>
             ))}
@@ -400,17 +514,41 @@ const Expenses = () => {
     // --- Derived Modal Data ---
     const uniqueCategories = useMemo(() => {
         if (!transactions) return ['All'];
-        const expenseTxs = transactions.filter(tx => tx.amount > 0 && !tx.pending);
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+        
+        const expenseTxs = transactions.filter(tx => {
+            if (tx.amount <= 0 || tx.pending) return false;
+            const txDate = new Date(tx.date);
+            // Must strictly use local month because Plaid returns YYYY-MM-DD
+            return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
+        });
+        
         if (expenseTxs.length === 0) return ['All'];
-        const cats = new Set(expenseTxs.map(tx => tx.category || 'Uncategorized'));
+        const cats = new Set(expenseTxs.map(tx => tx.category ? tx.category.trim() : 'Uncategorized'));
         return ['All', ...cats].sort();
     }, [transactions]);
 
     const filteredTransactions = useMemo(() => {
         if (!transactions) return [];
-        const expenseTxs = transactions.filter(tx => tx.amount > 0 && !tx.pending);
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+
+        const expenseTxs = transactions.filter(tx => {
+            if (tx.amount <= 0 || tx.pending) return false;
+            const txDate = new Date(tx.date);
+            return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
+        });
+        
         if (activityCategoryFilter === 'All') return expenseTxs;
-        return expenseTxs.filter(tx => (tx.category || 'Uncategorized') === activityCategoryFilter);
+
+        if (activityCategoryFilter.startsWith('PSEUDO_')) {
+            return expenseTxs.filter(tx => detectPseudoCategory(tx) === activityCategoryFilter);
+        }
+
+        return expenseTxs.filter(tx => (tx.category ? tx.category.trim() : 'Uncategorized') === activityCategoryFilter);
     }, [transactions, activityCategoryFilter]);
 
     const activityTotalPages = Math.ceil(filteredTransactions.length / activityItemsPerPage);
@@ -419,6 +557,38 @@ const Expenses = () => {
     const filteredTotalAmount = useMemo(() => {
         return filteredTransactions.reduce((sum, tx) => sum + (Number(tx.amount) || 0), 0);
     }, [filteredTransactions]);
+
+    const recentMerchants = useRecentMerchants(transactions);
+
+    const computedFixedExpenses = useMemo(() => {
+        if (!transactions || !fixedExpenses) return fixedExpenses || [];
+        
+        const now = new Date();
+        const fortyDaysAgo = new Date();
+        fortyDaysAgo.setDate(now.getDate() - 40);
+        
+        const thisMonthMerchants = [];
+        transactions.forEach(tx => {
+            if (tx.amount <= 0 || tx.pending) return;
+            const txDate = new Date(tx.date);
+            if (txDate >= fortyDaysAgo) {
+                const m = (tx.merchant_name || tx.name || '').trim();
+                if (m) thisMonthMerchants.push(m.toLowerCase());
+            }
+        });
+
+        return fixedExpenses.map(exp => {
+            if (exp.apiId) {
+                const searchTag = exp.apiId.toLowerCase();
+                // Fuzzy Match: Check if any transaction merchant contains the typed tag, or the tag contains the merchant string
+                const isPaid = thisMonthMerchants.some(m => m.includes(searchTag) || searchTag.includes(m));
+                if (isPaid) {
+                    return { ...exp, isPaid: true, autoPaid: true };
+                }
+            }
+            return exp;
+        });
+    }, [fixedExpenses, transactions]);
 
     // --- Debt Destroyer State & Handlers ---
     const [strategy, setStrategy] = useState('avalanche');
@@ -804,7 +974,7 @@ const Expenses = () => {
                             <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
                             <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
                             {(() => {
-                                const paid = fixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
+                                const paid = computedFixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
                                 const left = totalFixedExpenses - paid;
                                 return (
                                     <>
@@ -860,11 +1030,12 @@ const Expenses = () => {
                             title=""
                             placeholder="e.g. Rent, Mortgage, Insurance"
                             isModal={true}
+                            recentMerchants={recentMerchants}
                         />
                     </Modal>
 
                     <ExpenseList
-                        expenses={fixedExpenses}
+                        expenses={computedFixedExpenses}
                         onRemove={removeFixed}
                         onEdit={editFixed}
                         emptyMessage="No fixed expenses added."
@@ -880,10 +1051,10 @@ const Expenses = () => {
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
                             <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
+                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
                             </span>
                             {(() => {
-                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent !== undefined ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0);
+                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0);
                                 const left = totalVariableExpenses - spent;
                                 const isNegative = left < 0;
                                 const isWarning = left > 0 && left <= (totalVariableExpenses * 0.1);
@@ -1813,7 +1984,7 @@ const Expenses = () => {
                         The Rules Engine uses their categories to automatically deduct from your Variable Expense budgets.
                     </p>
                     <div className="total-amount-box activity-blur-box" style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--surface-border)', textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({activityCategoryFilter})</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({getFilterLabel(activityCategoryFilter)})</div>
                         <div style={{ fontSize: '1.5rem', fontWeight: 700, color: filteredTotalAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
                             {filteredTotalAmount > 0 ? '-' : ''}${Math.abs(filteredTotalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
@@ -1821,22 +1992,29 @@ const Expenses = () => {
                 </div>
 
                 <div className="category-filters" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid var(--surface-border)' }}>
-                    {uniqueCategories.map(cat => (
+                    {[
+                        { id: 'All', label: getFilterLabel('All') },
+                        { id: 'PSEUDO_GAS', label: getFilterLabel('PSEUDO_GAS') },
+                        { id: 'PSEUDO_RIDE_SHARE', label: getFilterLabel('PSEUDO_RIDE_SHARE') },
+                        { id: 'PSEUDO_GROCERIES', label: getFilterLabel('PSEUDO_GROCERIES') },
+                        { id: 'PSEUDO_HYGIENE_HOUSEHOLD', label: getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD') },
+                        ...uniqueCategories.filter(c => c !== 'All').map(c => ({ id: c, label: getFilterLabel(c) }))
+                    ].map(catObj => (
                         <button
-                            key={cat}
-                            onClick={() => { setActivityCategoryFilter(cat); setActivityPage(1); }}
-                            className={`badge ${activityCategoryFilter === cat ? 'primary-badge' : ''}`}
+                            key={catObj.id}
+                            onClick={() => { setActivityCategoryFilter(catObj.id); setActivityPage(1); }}
+                            className={`badge ${activityCategoryFilter === catObj.id ? 'primary-badge' : ''}`}
                             style={{
                                 cursor: 'pointer',
-                                border: activityCategoryFilter === cat ? 'none' : '1px solid var(--surface-border)',
-                                background: activityCategoryFilter === cat ? 'var(--primary)' : 'transparent',
-                                color: activityCategoryFilter === cat ? 'black' : 'var(--text-secondary)',
+                                border: activityCategoryFilter === catObj.id ? 'none' : '1px solid var(--surface-border)',
+                                background: activityCategoryFilter === catObj.id ? 'var(--primary)' : 'transparent',
+                                color: activityCategoryFilter === catObj.id ? 'black' : 'var(--text-secondary)',
                                 padding: '6px 16px',
                                 fontSize: '0.85rem',
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            {cat}
+                            {catObj.label}
                         </button>
                     ))}
                 </div>
@@ -1848,7 +2026,7 @@ const Expenses = () => {
                         </div>
                     ) : (
                         paginatedTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
+                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
                                 <div className="tx-merchant" style={{ fontWeight: 600 }}>
                                     {tx.merchant_name || 'Unknown Merchant'}
                                     {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}
@@ -1858,49 +2036,46 @@ const Expenses = () => {
                                 </div>
                                 <div className="tx-category">
                                     {editingTransactionId === tx.id ? (
-                                        <input
-                                            autoFocus
-                                            list="category-options"
-                                            defaultValue={tx.category || ''}
-                                            style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '130px', outline: 'none' }}
-                                            onKeyDown={(e) => {
-                                                if (e.key === 'Enter') {
-                                                    const newCat = e.target.value.trim();
+                                            <select
+                                                autoFocus
+                                                defaultValue={detectPseudoCategory(tx)}
+                                                style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '150px', outline: 'none', cursor: 'pointer' }}
+                                                onChange={(e) => {
+                                                    const newCat = e.target.value;
                                                     setEditingTransactionId(null);
-                                                    if (newCat && newCat !== tx.category) {
-                                                        useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
-                                                        supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
+                                                    if (newCat && newCat !== detectPseudoCategory(tx)) {
+                                                        const overrideCat = newCat + ' ';
+                                                        
+                                                        // Optimistic Update
+                                                        useStore.setState(s => ({
+                                                            transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
+                                                        }));
+                                                        
+                                                        // Network Push (Fire and Forget)
+                                                        supabase.from('transactions').update({ category: overrideCat }).eq('id', tx.id).then();
                                                     }
-                                                }
-                                            }}
-                                            onChange={(e) => {
-                                                const newCat = e.target.value.trim();
-                                                if (uniqueCategories.includes(newCat) && newCat !== tx.category) {
-                                                    setEditingTransactionId(null);
-                                                    useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
-                                                    supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
-                                                }
-                                            }}
-                                            onBlur={async (e) => {
-                                                const newCat = e.target.value.trim();
-                                                setTimeout(async () => {
-                                                    setEditingTransactionId(null);
-                                                    // Only save on blur if it hasn't already been saved by onChange! 
-                                                    if (newCat && newCat !== tx.category && !uniqueCategories.includes(newCat)) {
-                                                        useStore.setState(s => ({ transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: newCat } : t) }));
-                                                        await supabase.from('transactions').update({ category: newCat }).eq('id', tx.id);
-                                                    }
-                                                }, 150);
-                                            }}
-                                        />
+                                                }}
+                                                onBlur={() => {
+                                                    setTimeout(() => setEditingTransactionId(null), 150);
+                                                }}
+                                            >
+                                                <option disabled value="">Select Category</option>
+                                                <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
+                                                <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
+                                                <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
+                                                <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                                                {uniqueCategories.filter(c => c !== 'All').map(c => (
+                                                    <option key={c} value={c}>{getFilterLabel(c)}</option>
+                                                ))}
+                                            </select>
                                     ) : (
                                         <span 
                                             onClick={() => setEditingTransactionId(tx.id)}
                                             className="badge badge-hover" 
-                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s' }}
+                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}
                                             title="Click to edit category"
                                         >
-                                            {tx.category || 'Uncategorized'}
+                                            {getFilterLabel(detectPseudoCategory(tx))}
                                         </span>
                                     )}
                                 </div>
@@ -1912,9 +2087,7 @@ const Expenses = () => {
                     )}
                 </div>
                 
-                <datalist id="category-options">
-                    {uniqueCategories.filter(c => c !== 'All').map(c => <option key={c} value={c} />)}
-                </datalist>
+
                 {activityTotalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>
                         <Button 

@@ -52,9 +52,11 @@ serve(async (req) => {
       },
       client_name: 'Dream Wealthy',
       products: [Products.Transactions],
+      transactions: { days_requested: 30 }, // Natively cap history so dashboards don't mathematically bloat!
       language: 'en',
       country_codes: [CountryCode.Us],
       webhook: Deno.env.get('PLAID_WEBHOOK_URL') || undefined,
+      redirect_uri: Deno.env.get('PLAID_REDIRECT_URI') || undefined,
     });
 
     // 4. Return the Token securely

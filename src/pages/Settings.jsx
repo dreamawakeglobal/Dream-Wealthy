@@ -161,7 +161,7 @@ const Settings = () => {
                         className={`settings-tab ${activeTab === 'advisor' ? 'active' : ''}`}
                         onClick={() => { if(playPop) playPop(); setActiveTab('advisor'); }}
                     >
-                        <Sparkles size={18} /> AI Advisor
+                        <Sparkles size={18} /> Financial Advisor
                     </button>
                     <button 
                         className={`settings-tab ${activeTab === 'security' ? 'active' : ''}`}
@@ -267,7 +267,7 @@ const Settings = () => {
                             <div className="settings-section ai-advisor-card">
                                 <div className="card-header">
                                     <Sparkles size={20} className="text-primary" />
-                                    <h2>Hire Your AI Advisor</h2>
+                                    <h2>Hire Your Financial Advisor</h2>
                                 </div>
                                 <p className="text-muted" style={{ marginBottom: '24px' }}>Select the specific Persona and psychological archetype you want your AI Financial Advisor embedded with. This completely rewrites the mathematical advisory engine natively to fit your personality.</p>
 
