@@ -338,36 +338,26 @@ const Projections = () => {
                                     </Button>
                                     {projectionData.length > 12 && (
                                         <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
                                             onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
                                             disabled={currentPage === 0}
-                                            style={{
-                                                padding: '6px 12px',
-                                                borderRadius: '8px',
-                                                border: '1px solid var(--surface-border)',
-                                                background: currentPage === 0 ? 'rgba(255,255,255,0.05)' : 'var(--accent-primary)',
-                                                color: currentPage === 0 ? 'var(--text-muted)' : '#fff',
-                                                cursor: currentPage === 0 ? 'not-allowed' : 'pointer',
-                                                fontSize: '0.85rem'
-                                            }}
+                                            style={{ height: '32px', padding: '6px 14px' }}
+                                            className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                                         >
                                             Previous Year
-                                        </button>
-                                        <button
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
                                             onClick={() => setCurrentPage(prev => Math.min(Math.ceil(projectionData.length / 12) - 1, prev + 1))}
                                             disabled={currentPage >= Math.ceil(projectionData.length / 12) - 1}
-                                            style={{
-                                                padding: '6px 12px',
-                                                borderRadius: '8px',
-                                                border: '1px solid var(--surface-border)',
-                                                background: currentPage >= Math.ceil(projectionData.length / 12) - 1 ? 'rgba(255,255,255,0.05)' : 'var(--accent-primary)',
-                                                color: currentPage >= Math.ceil(projectionData.length / 12) - 1 ? 'var(--text-muted)' : '#fff',
-                                                cursor: currentPage >= Math.ceil(projectionData.length / 12) - 1 ? 'not-allowed' : 'pointer',
-                                                fontSize: '0.85rem'
-                                            }}
+                                            style={{ height: '32px', padding: '6px 14px' }}
+                                            className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                                         >
                                             Next Year
-                                        </button>
+                                        </Button>
                                     </div>
                                 )}
                                 </div>
@@ -437,7 +427,7 @@ const Projections = () => {
                                             <td colSpan={4 + extraColumns.length} style={{ borderTop: '2px solid transparent', textAlign: 'right', color: 'var(--text-primary)', paddingRight: '24px', fontSize: '1.2rem', paddingTop: '24px' }}>
                                                 Total {projectionYears} Year Savings:
                                             </td>
-                                            <td style={{ borderTop: '2px solid transparent', color: 'var(--accent-primary)', fontSize: '1.5rem', paddingTop: '24px' }}>
+                                            <td style={{ borderTop: '2px solid transparent', color: 'var(--success)', fontSize: '1.5rem', paddingTop: '24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     $<AnimatedNumber value={finalTotal} /> <TrendingUp size={24} className="text-success" />
                                                 </div>

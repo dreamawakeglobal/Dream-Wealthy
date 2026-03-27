@@ -271,23 +271,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
             </div>
 
             {showTracking && (
-                <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--surface-hover)', padding: '8px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)', gap: '16px', margin: '0 12px', flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
-                        <input
-                            className="auto-tracker-input"
-                            type="number"
-                            step="0.01"
-                            value={stream.manualReceived != null ? stream.manualReceived : (incomeTransactionsByCategory[stream.name] || '')}
-                            onChange={(e) => {
-                                const val = e.target.value;
-                                onUpdate({ ...stream, manualReceived: val === '' ? undefined : Number(val) });
-                            }}
-                            style={{ width: '80px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
-                            onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                            onBlur={(e) => e.target.style.borderColor = 'var(--surface-border)'}
-                        />
-                    </div>
+                <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface-hover)', padding: '8px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)', gap: '16px', margin: '0 12px', flex: 1 }}>
                     <div style={{
                         fontSize: '0.85rem',
                         fontWeight: 600,

@@ -119,7 +119,7 @@ export const useStore = create((set, get) => ({
                 supabase.from('tracked_debts').select('*').eq('user_id', user.id),
                 supabase.from('goals').select('*').eq('user_id', user.id),
                 supabase.from('custom_projections').select('*').eq('user_id', user.id),
-                supabase.from('transactions').select('*').eq('user_id', user.id).order('date', { ascending: false }),
+                supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false }),
                 supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
                 supabase.from('subscriptions').select('*').eq('user_id', user.id)
             ]);
