@@ -6,7 +6,7 @@ import { supabase } from '../supabaseClient';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFinancialContext } from '../FinancialContext';
-import useStore from '../store';
+import { useStore } from '../store';
 import './AiAdvisorWidget.css';
 
 const AiAdvisorWidget = () => {
