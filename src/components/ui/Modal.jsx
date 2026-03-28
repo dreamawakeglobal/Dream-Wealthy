@@ -1,19 +1,11 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { useSound } from '../../SoundContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Modal.css';
 
 export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false, silent = false }) => {
-    const { playWhoosh } = useSound();
     const { theme } = useTheme();
-
-    useEffect(() => {
-        if (isOpen && !silent) {
-            playWhoosh();
-        }
-    }, [isOpen, playWhoosh, silent]);
 
     if (!isOpen) return null;
 

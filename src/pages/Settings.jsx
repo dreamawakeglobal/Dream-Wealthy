@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { supabase } from '../supabaseClient';
+import { useStore } from '../store';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit } from 'lucide-react';
+import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Settings.css';
@@ -18,6 +19,7 @@ const Settings = () => {
     const { expenseBorderColor, setExpenseBorderColor } = useTheme();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('profile');
+    const accounts = useStore(state => state.accounts) || [];
 
     // State for Profile Information
     const [firstName, setFirstName] = useState(user?.user_metadata?.first_name || '');
@@ -338,10 +340,42 @@ const Settings = () => {
                                 <Link2 size={20} className="text-primary" />
                                 <h2>Linked Accounts</h2>
                             </div>
-                            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.4' }}>
+                            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
                                 Connect your bank securely via Plaid to automate your budgeting and track expenses in real-time. We never store your credentials.
                             </p>
-                            <PlaidConnectButton />
+                            
+                            {accounts.length > 0 && (
+                                <div className="connected-accounts-list" style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {accounts.map(acc => (
+                                        <div key={acc.id} className="glass" style={{
+                                            padding: '16px', borderRadius: '12px', border: acc.needs_relink ? '1px solid var(--danger)' : '1px solid var(--surface-border)',
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                        }}>
+                                            <div>
+                                                <h4 style={{ margin: '0 0 4px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {acc.institution_name || 'Connected Bank'}
+                                                    {acc.needs_relink ? (
+                                                        <span className="badge" style={{ background: 'var(--danger)', color: 'white', padding: '2px 8px', fontSize: '0.7rem' }}>Action Required</span>
+                                                    ) : (
+                                                        <span className="text-success" style={{ display: 'flex', alignItems: 'center' }}><CheckCircle2 size={14} /></span>
+                                                    )}
+                                                </h4>
+                                                <p className="text-muted" style={{ margin: 0, fontSize: '0.85rem' }}>
+                                                    {acc.needs_relink ? 'Bank connection expired. Reconnect to resume sync.' : 'Connection active and syncing.'}
+                                                </p>
+                                            </div>
+                                            {acc.needs_relink && (
+                                                <PlaidConnectButton isUpdateMode={true} linkedAccessToken={acc.plaid_access_token} brokenAccountId={acc.id} />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <div style={{ borderTop: accounts.length > 0 ? '1px solid var(--surface-border)' : 'none', paddingTop: accounts.length > 0 ? '24px' : '0' }}>
+                                <h4 style={{ marginBottom: '12px', fontSize: '1rem' }}>Add New Connection</h4>
+                                <PlaidConnectButton />
+                            </div>
                         </div>
                     </AnimateOnScroll>
                 )}

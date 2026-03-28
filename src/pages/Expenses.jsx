@@ -89,7 +89,7 @@ export const useRecentMerchants = (transactions) => {
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
         
         for (const tx of transactions) {
-            if (tx.amount <= 0 || tx.pending) continue;
+            if (tx.amount <= 0) continue;
             const txDate = new Date(tx.date);
             if (txDate < sixtyDaysAgo) continue;
             
@@ -301,6 +301,14 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
+    // Derived Dynamic Colors
+    const activeColor = {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+    const badgeTextColor = (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white';
+
     const totalPages = Math.ceil(expenses.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentExpenses = expenses.slice(startIndex, startIndex + itemsPerPage);
@@ -400,7 +408,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                                 </span>
                                             )}
                                             {expense.targetCategory && (
-                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'var(--primary)', color: 'white' }}>
+                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: activeColor, color: badgeTextColor }}>
                                                     {getFilterLabel(expense.targetCategory)}
                                                 </span>
                                             )}
@@ -519,7 +527,7 @@ const Expenses = () => {
         const currentY = now.getFullYear();
         
         const expenseTxs = transactions.filter(tx => {
-            if (tx.amount <= 0 || tx.pending) return false;
+            if (tx.amount <= 0) return false;
             const txDate = new Date(tx.date);
             // Must strictly use local month because Plaid returns YYYY-MM-DD
             return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
@@ -537,7 +545,7 @@ const Expenses = () => {
         const currentY = now.getFullYear();
 
         const expenseTxs = transactions.filter(tx => {
-            if (tx.amount <= 0 || tx.pending) return false;
+            if (tx.amount <= 0) return false;
             const txDate = new Date(tx.date);
             return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
         });

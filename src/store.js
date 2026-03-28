@@ -80,6 +80,7 @@ export const useStore = create((set, get) => ({
     transactions: [], // Plaid Database Cache
     portfolio: [],     // User Investment Holdings
     subscriptions: [],
+    accounts: [],      // Plaid Bank Accounts
 
     // Profile Settings
     profileData: {
@@ -109,7 +110,8 @@ export const useStore = create((set, get) => ({
                 projectionsRes,
                 transactionsRes,
                 portfolioRes,
-                subscriptionsRes
+                subscriptionsRes,
+                accountsRes
             ] = await Promise.all([
                 supabase.from('profiles').select('*').eq('user_id', user.id).single(),
                 supabase.from('income_streams').select('*').eq('user_id', user.id),
@@ -121,7 +123,8 @@ export const useStore = create((set, get) => ({
                 supabase.from('custom_projections').select('*').eq('user_id', user.id),
                 supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false }),
                 supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
-                supabase.from('subscriptions').select('*').eq('user_id', user.id)
+                supabase.from('subscriptions').select('*').eq('user_id', user.id),
+                supabase.from('accounts').select('*').eq('user_id', user.id)
             ]);
 
             const newProfileData = profileRes.data ? {
@@ -147,7 +150,8 @@ export const useStore = create((set, get) => ({
                 customProjections: (projectionsRes.data || []).map(mapToCamel),
                 transactions: (transactionsRes.data || []),
                 portfolio: (portfolioRes.data || []).map(mapToCamel),
-                subscriptions: (subscriptionsRes.data || []).map(mapToCamel)
+                subscriptions: (subscriptionsRes.data || []).map(mapToCamel),
+                accounts: (accountsRes.data || [])
             });
 
             if (transactionsRes.error) {

@@ -24,7 +24,7 @@ const useRecentIncomeMerchants = (transactions) => {
         sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
         
         for (const tx of transactions) {
-            if (tx.amount >= 0 || tx.pending) continue;
+            if (tx.amount >= 0) continue;
             const txDate = new Date(tx.date);
             if (txDate < sixtyDaysAgo) continue;
             
@@ -384,7 +384,7 @@ const Income = () => {
         fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
 
         const incomeTxs = transactions.filter(tx => {
-            if (tx.amount >= 0 || tx.pending) return false;
+            if (tx.amount >= 0) return false;
             const txDate = new Date(tx.date);
             return txDate >= fortyDaysAgo;
         });
@@ -499,12 +499,12 @@ const Income = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.2}>
-                    <Card glass className={`summary-card gold-glow ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ height: '100%' }}>
+                    <Card glass className={`summary-card success-border ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ height: '100%' }}>
                         <div className="summary-label with-icon">
-                            <Sparkles size={16} className="gold-text" />
+                            <Sparkles size={16} className="text-success" />
                             <span>Projected Growth (Current + Future)</span>
                         </div>
-                        <h2 className="summary-value gold-text">
+                        <h2 className="summary-value text-success">
                             $<AnimatedNumber value={totalProjectedMonthly} />
                         </h2>
                         <p className="summary-subtext">Monthly target</p>
