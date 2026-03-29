@@ -146,12 +146,12 @@ export const TutorialOverlay = () => {
 
     const steps = [
         {
-            target: '.hero-actions button:first-child', // Enter Dashboard button on Home
+            target: '.hero-actions button:first-child',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Welcome to DreamWealthy</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Welcome to the Engine</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Let's take a quick premium tour of your financial engine! First, we'll start at your Dashboard. Click this button to jump straight to your financial control center.
+                        You've just unlocked your financial command center. Let's initialize your private wealth environment. Click here to boot up the Dashboard.
                     </p>
                 </div>
             ),
@@ -160,12 +160,12 @@ export const TutorialOverlay = () => {
             disableBeacon: true,
         },
         {
-            target: '#dashboard', // ID attached to the main Home.jsx dashboard section
+            target: '#dashboard',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Financial Overview</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Core Feed</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        These charts aggregate your total net worth and cash flow over a 6-month trailing window. Watch your "Financial Future" chart compound as you optimize your spending.
+                        This is your global financial heartbeat. Watch your net worth automatically compound and aggregate across all live data streams in real-time.
                     </p>
                 </div>
             ),
@@ -173,74 +173,12 @@ export const TutorialOverlay = () => {
             disableBeacon: true,
         },
         {
-            target: '.nav-link[href="/income"]', // The Income/Streams nav link
+            target: '.nav-link[href="/income"]',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Manage Your Streams</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Wealth Architecture</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Next, let's head over to the Streams page to design your cash flow architecture and manage your income and expenses.
-                    </p>
-                </div>
-            ),
-            placement: 'right',
-            spotlightPadding: 5,
-            spotlightClicks: true, // Allow clicking the link explicitly
-        },
-        {
-            target: '.income-column:first-child .income-form-card', // Add Stream form
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Add Your Income Stream</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Start by adding your primary income source (e.g., Salary, Business). The engine will automatically track your progress against actual connected bank deposits.
-                    </p>
-                </div>
-            ),
-            placement: 'top',
-        },
-        {
-            target: '.income-column:nth-child(2)', // Future Streams column
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Manifest Future Streams</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Design your future cash flow. Add your target or prospective income streams here to see how they will impact your financial projections and wealth distribution!
-                    </p>
-                </div>
-            ),
-            placement: 'top',
-        },
-        {
-            target: '.goals-section', // Savings Goal inside Income
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Create Savings Goals</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Set a target for an emergency fund, vacation, or investment account. The engine calculates exactly how many months until you hit it based on your cash flow.
-                    </p>
-                </div>
-            ),
-            placement: 'top',
-        },
-        {
-            target: '.allocation-dashboard', // Allocations section inside Income
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Define Your Allocations</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Use these sliders to distribute your remaining cash flow across your goals. Watch the dynamic pie chart react as you optimize your strategy passive wealth growth!
-                    </p>
-                </div>
-            ),
-            placement: 'top',
-        },
-        {
-            target: '.nav-link[href="/expenses"]', // The Expenses nav link
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Track Your Spending</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Now let's head over to the Expenses page to configure your fixed bills, variable spending, and debt strategies.
+                        Every empire needs cash flow. Let's switch over to your Streams control panel to architect your precise flow of capital.
                     </p>
                 </div>
             ),
@@ -249,72 +187,60 @@ export const TutorialOverlay = () => {
             spotlightClicks: true,
         },
         {
-            target: '.fixed-expense-box', // Fixed expenses
+            target: '.income-column:first-child',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Fixed Expenses</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Current Streams</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        These are your essential, predictable monthly bills like rent, utilities, and insurance. The engine will automatically track these against your connected bank withdrawals.
+                        Inject your active income metrics here—like salaries, dividends, and business yields. The engine automatically tracks these against live bank deposits.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.variable-expense-box', // Variable expenses
+            target: '.income-column:nth-child(2)',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Variable Spending Limits</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Manifestation Drive</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Set budgets for flexible expenses like groceries, dining out, and entertainment. Stay under these limits to maximize your wealth allocations at the end of the month!
+                        What you write here, becomes reality. Plot targets for future acquisitions or side hustles, and the engine will simulate how they accelerate your financial trajectory.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.subscription-box', // Subscriptions
+            target: '.goals-section',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Manage Subscriptions</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Lock In Targets</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Keep an eye on recurring digital subscriptions quickly here so you don't leak money on unused services.
+                        Set acquisition goals—a hypercar, an emergency fund, a luxury escape. The system algorithmically calculates the exact month you will cross the finish line.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.debt-tracker-card', // Debt Tracker
+            target: '.allocation-dashboard',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Monthly Debt Tracker</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Command Your Capital</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Track your minimum payments and due dates across loans and credit cards. Managing all debts in one place builds credit and prevents slip-ups.
+                        Use these dynamic sliders to distribute surplus cash across your goals and investments. Automate the wealth pipeline so you passively grow richer by the minute.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.strategy-card-box', // Attack Strategy
+            target: '.nav-link[href="/expenses"]',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Debt Attack Strategy</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Plugging The Leaks</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Select your debt payoff methodology (Avalanche or Snowball) and project exactly when you'll reach ultimate freedom. The line chart adapts realistically as you allocate excess cash flow here.
-                    </p>
-                </div>
-            ),
-            placement: 'top',
-        },
-        {
-            target: '.nav-link[href="/projections"]', // The Projections nav link
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Project Your Future</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Finally, let's explore the Projections page. This is where the DreamWealthy engine simulates your long-term wealth accumulation.
+                        It's not what you make; it's what you keep. Let's securely navigate to the Expenses terminal to bring order to your spending.
                     </p>
                 </div>
             ),
@@ -323,48 +249,122 @@ export const TutorialOverlay = () => {
             spotlightClicks: true,
         },
         {
-            target: '.chart-container', // Net Wealth Curve Area Chart
+            target: '.fixed-expense-box',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Net Wealth Curve</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Baseline Operations</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Visualize your financial trajectory. The curve maps your cumulative wealth growth over time, dynamically factoring in inflation and your customized flows.
+                        Configure your non-negotiables: rent, utilities, insurance. The engine will relentlessly monitor connected accounts to flag unexpected withdrawal spikes.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.table-container', // Month-by-Month Breakdown Table
+            target: '.variable-expense-box',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Month-by-Month Breakdown</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Tactical Spending Allowances</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Dive into the math. Analyze exactly how your cash flows month over month. You can even click on the numbers directly to override specific months for precision planning!
+                        Set hard limits on variable outflow like dining and lifestyle. Remaining under these thresholds maximizes the massive upside shown in your Allocations dashboard!
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.configure-projections-btn', // Projection Engine Controls
+            target: '.subscription-box',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Projection Engine</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Subscription Radar</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Fine-tune your simulation. Adjust your starting balances, add hypothetical extra flows, and tweak inflation and income growth rates to stress-test your wealth strategy.
+                        Isolate and execute parasitic, unused recurring services here before they bleed your wealth potential over the decades.
+                    </p>
+                </div>
+            ),
+            placement: 'top',
+        },
+        {
+            target: '.debt-tracker-card',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Debt Surveillance</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Aggregate every loan, credit card, and parasitic balance across your lifetime. Centralizing them prevents missed cross-fire payments and protects your credit score.
+                    </p>
+                </div>
+            ),
+            placement: 'top',
+        },
+        {
+            target: '.strategy-card-box',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Destroyer Protocol</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Engage the Avalanche or Snowball methodology. The system calculates your precise 'Debt Free' zero-day instantly based on your excess capital firepower.
+                    </p>
+                </div>
+            ),
+            placement: 'top',
+        },
+        {
+            target: '.nav-link[href="/projections"]',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Simulate Your Reality</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        You've built the engine. Now let's calculate the trajectory. Switch to the Projections core to simulate your life mathematically.
+                    </p>
+                </div>
+            ),
+            placement: 'right',
+            spotlightPadding: 5,
+            spotlightClicks: true,
+        },
+        {
+            target: '.chart-container',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Gravity Curve</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        This is the visual representation of your financial escape velocity. The curve maps your aggregated snowballing wealth across millions of data points over decades.
+                    </p>
+                </div>
+            ),
+            placement: 'top',
+        },
+        {
+            target: '.table-container',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Molecular Breakdown</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Drill directly into the raw math. Every single projected month is itemized and clickable, allowing you to manually override nodes for ruthless precision.
+                    </p>
+                </div>
+            ),
+            placement: 'top',
+        },
+        {
+            target: '.configure-projections-btn',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Simulation Parameters</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Access the master controls. Tweak inflation algorithms, market return thresholds, and theoretical income injects to stress-test your strategy against economic realities.
                     </p>
                 </div>
             ),
             placement: 'bottom',
         },
         {
-            target: '.nav-link[href="/investments"]', // The Investments nav link
+            target: '.nav-link[href="/investments"]',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Grow Your Wealth</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Multiply Capital</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Lastly, welcome to the Investments page! Build your ultimate portfolio to passively outpace inflation.
+                        Saving alone guarantees a loss due to inflation. Navigate to the Investments wing to build a portfolio that hunts yields while you sleep.
                     </p>
                 </div>
             ),
@@ -373,85 +373,120 @@ export const TutorialOverlay = () => {
             spotlightClicks: true,
         },
         {
-            target: '.portfolio-bottom-chart', // Portfolio Performance
+            target: '.portfolio-bottom-chart',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Portfolio Performance</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Live Market Pulse</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Watch your net worth come alive. This interactive candlestick chart simulates the real-world volatility of your custom portfolio over time based on actual market data.
+                        Watch your portfolio breathe. This interactive terminal connects your local entries to external market tickers to simulate authentic volatility and alpha generation.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.sidebar-card', // Market Drawer
+            target: '.sidebar-card',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Market Drawer</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>The Asset Drawer</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Browse live market assets across Stocks, Crypto, and Commodities. Use the category dropdown and search bar to find your favorite tickers.
+                        Access thousands of indexed assets natively. From tech giants to exotic crypto, use the categorized terminal to locate your ultimate acquisitions.
                     </p>
                 </div>
             ),
             placement: 'right',
         },
         {
-            target: '.dropzone-card', // Your Holdings
+            target: '.dropzone-card',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Your Holdings</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Your Vault Space</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Drag and drop assets from the Drawer directly into this zone! Edit your quantities and cost basis to accurately track your real-world gains and losses.
+                        Click & drag assets from the Drawer directly into this vault interface. Assign your cost basis and quantity to fuse them into your total net worth tracking.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.viz-card', // Total Value Header Pie Chart
+            target: '.viz-card',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Allocation Breakdown</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Diversification Visualizer</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Keep your portfolio balanced. This pie chart provides a visual breakdown of your asset allocation, helping you manage risk and maintain your strategy.
+                        Don't let a single volatile asset tank your timeline. Use the instant allocation map to ensure your risk exposure is precisely balanced against your horizon.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.floating-notes-btn', // Cloud Notepad
+            target: '.floating-notes-btn',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Your Cloud Notepad</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Encrypted Cloud Brain</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Jot down strategies, reminders, or ideas. Your notes are automatically saved locally and attached to this specific page for easy context!
+                        Offload your thoughts. Map out complex trade execution plans and sudden epiphanies—they securely persist exactly on the page they were generated.
                     </p>
                 </div>
             ),
             placement: 'bottom',
         },
         {
-            target: '.audio-toggle-btn', // Music Button
+            target: '.ai-fab-button',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Background Audio</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>High-Intelligence Persona</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Control the ambient Lo-Fi focus tracks here. Toggle the music on or off while you plan your empire!
+                        You're never operating alone. This embedded intelligence constantly interprets your exact portfolio layout and provides hyper-contextualized strategic counsel.
+                    </p>
+                </div>
+            ),
+            placement: 'bottom',
+        },
+        {
+            target: '.profile-button',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Identity & Integrations</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Manage your secure biometric authentications, establish API pipelines directly to your banks via Plaid, and recalibrate your global metrics.
+                    </p>
+                </div>
+            ),
+            placement: 'bottom',
+        },
+        {
+            target: '.bell-button',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Master Notification Terminal</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        The engine intercepts everything. Automated sync successes, broken bank connections, and system updates are permanently archived here for your review.
+                    </p>
+                </div>
+            ),
+            placement: 'bottom',
+        },
+        {
+            target: '.audio-toggle-btn',
+            content: (
+                <div style={{ textAlign: 'left' }}>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Atmospheric Modulation</h3>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
+                        Building your legacy requires extreme focus. Toggle the native ambient acoustics here to completely tune out the noise.
                     </p>
                 </div>
             ),
             placement: 'top',
         },
         {
-            target: '.fixed-system-toggle', // Theme Button
+            target: '.fixed-system-toggle',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Theme Toggle</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Dark/Light Override</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Switch seamlessly between Dark Mode and Light Mode anytime. 
-                        This concludes the grand tour. Start building your Dream Wealth!
+                        Instantly cross paths between high-contrast dark mode aesthetics and precision light mode optics. You are officially plugged in. End simulation.
                     </p>
                 </div>
             ),
@@ -622,9 +657,10 @@ export const TutorialOverlay = () => {
                 },
                 spotlight: {
                     backgroundColor: 'transparent',
-                    borderRadius: '12px',
-                    border: '4px solid rgba(255, 255, 255, 0.9)',
-                    boxShadow: '0 0 25px rgba(255, 255, 255, 0.6), inset 0 0 15px rgba(255, 255, 255, 0.3)',
+                    borderRadius: '16px',
+                    border: '3px solid var(--accent-primary)',
+                    boxShadow: '0 0 30px var(--accent-glow), inset 0 0 15px var(--accent-glow)',
+                    animation: 'radarPulse 2.5s infinite ease-in-out'
                 }
             }}
         />

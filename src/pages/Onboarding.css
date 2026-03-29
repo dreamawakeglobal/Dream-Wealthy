@@ -19,15 +19,17 @@
     flex-direction: column;
     gap: 24px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.45) !important;
-    backdrop-filter: blur(40px) !important;
-    -webkit-backdrop-filter: blur(40px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 3px solid var(--accent-primary) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px rgba(var(--accent-primary-rgb), 0.2) !important;
+    border-radius: 24px !important;
 }
 
 [data-theme='dark'] .onboarding-card {
-    background: rgba(15, 23, 42, 0.6) !important;
-    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 3px solid var(--accent-primary) !important;
 }
 
 .onboarding-header h1 {
@@ -36,6 +38,7 @@
     margin-bottom: 8px;
     background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-primary) 100%);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -101,11 +104,7 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-.goal-option.selected {
-    border-color: var(--accent-primary);
-    background: rgba(79, 163, 247, 0.1);
-    box-shadow: 0 0 20px rgba(79, 163, 247, 0.2);
-}
+/* Dynamic JS react inline styles handle .selected state now */
 
 .goal-option h3 {
     margin: 0;
@@ -144,4 +143,14 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; text-shadow: 0 0 8px var(--accent-primary); }
+    50% { opacity: 0.5; text-shadow: none; }
 }

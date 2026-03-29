@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { useStore } from '../store';
 import { injectDemoData } from '../utils/mockDataGenerator';
 import { 
@@ -10,93 +12,41 @@ import {
     Flag, Clock, AlertTriangle, DollarSign, Shield, Heart, Zap, Globe 
 } from 'lucide-react';
 import { useSound } from '../SoundContext';
+import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import './Onboarding.css';
 
 const ONBOARDING_QUESTIONS = [
     {
         id: 'mission',
-        title: 'What is your primary financial focus right now?',
-        subtitle: 'We will tailor your insights specifically to this goal.',
+        title: 'Step 1: Calibrate your primary wealth objective.',
+        subtitle: 'We will tailor your analytical insights specifically to this strategic goal.',
         options: [
             { value: 'wealth', label: 'Aggressively Build Wealth', icon: TrendingUp, color: 'var(--accent-primary)' },
             { value: 'debt', label: 'Destroy Existing Debt', icon: Target, color: 'var(--danger)' },
-            { value: 'save', label: 'Save for a Major Life Purchase', icon: Flag, color: 'var(--success)' },
-            { value: 'fire', label: 'Achieve Total Financial Independence', icon: Globe, color: 'var(--warning)' },
-        ]
-    },
-    {
-        id: 'stage',
-        title: 'How would you describe your current financial stage?',
-        subtitle: 'This helps us benchmark your progress.',
-        options: [
-            { value: 'starting', label: 'Just starting our journey', icon: CheckCircle, color: 'var(--text-secondary)' },
-            { value: 'stable', label: 'Stable, but seeking aggressive growth', icon: TrendingUp, color: 'var(--success)' },
-            { value: 'high_earner', label: 'High-earner needing optimization', icon: Shield, color: 'var(--accent-primary)' },
-            { value: 'rebuilding', label: 'Rebuilding and recovering', icon: AlertTriangle, color: 'var(--warning)' },
+            { value: 'save', label: 'Funding a Life Purchase', icon: Flag, color: 'var(--success)' },
+            { value: 'fire', label: 'Financial Independence', icon: Globe, color: 'var(--warning)' },
         ]
     },
     {
         id: 'timeline',
-        title: 'When do you want to achieve your ultimate state of financial freedom?',
-        subtitle: 'Your time horizon dictates your investment strategy.',
+        title: 'Step 2: Define your time horizon.',
+        subtitle: 'Your timeline dictates the baseline velocity of your investment engine.',
         options: [
             { value: 'fast', label: 'Fast-track (1-3 years)', icon: Zap, color: 'var(--accent-primary)' },
             { value: 'accelerated', label: 'Accelerated (3-7 years)', icon: Clock, color: 'var(--success)' },
-            { value: 'steady', label: 'Steady & Strategic (7-15 years)', icon: Target, color: 'var(--warning)' },
-            { value: 'legacy', label: 'Long-term Legacy (15+ years)', icon: Shield, color: 'var(--text-secondary)' },
-        ]
-    },
-    {
-        id: 'obstacle',
-        title: 'What has historically been your biggest roadblock to financial success?',
-        subtitle: 'Identifying obstacles is the first step to clearing them.',
-        options: [
-            { value: 'debt', label: 'Overwhelming Debt', icon: Target, color: 'var(--danger)' },
-            { value: 'income', label: 'Income Ceiling / Lack of Capital', icon: TrendingUp, color: 'var(--warning)' },
-            { value: 'habits', label: 'Poor Tracking & Spending Habits', icon: AlertTriangle, color: 'var(--accent-primary)' },
-            { value: 'plan', label: 'Information Overload / Lack of Plan', icon: Compass, color: 'var(--success)' },
-        ]
-    },
-    {
-        id: 'income_goal',
-        title: 'What is your target monthly income goal to feel completely secure?',
-        subtitle: 'Dream big. We will help you chart the path.',
-        options: [
-            { value: '5k', label: '$5,000 / month', icon: DollarSign, color: 'var(--text-secondary)' },
-            { value: '10k', label: '$10,000 / month', icon: DollarSign, color: 'var(--success)' },
-            { value: '25k', label: '$25,000 / month', icon: DollarSign, color: 'var(--accent-primary)' },
-            { value: '50k', label: '$50,000+ / month (Empire Status)', icon: Zap, color: 'var(--warning)' },
-        ]
-    },
-    {
-        id: 'strategy',
-        title: 'How do you approach growing your money and investing?',
-        subtitle: 'This determines your asset allocation velocity.',
-        options: [
-            { value: 'conservative', label: 'Conservative & Secure', icon: Shield, color: 'var(--success)' },
-            { value: 'balanced', label: 'Balanced & Calculated', icon: Compass, color: 'var(--accent-primary)' },
-            { value: 'aggressive', label: 'Aggressive & High-Yield', icon: Zap, color: 'var(--warning)' },
+            { value: 'steady', label: 'Steady Scale (7-15 years)', icon: Target, color: 'var(--warning)' },
+            { value: 'legacy', label: 'Permanent Legacy (15+ yrs)', icon: Shield, color: 'var(--text-secondary)' },
         ]
     },
     {
         id: 'dream',
-        title: 'If money were no object, what is the ultimate dream you are funding?',
-        subtitle: 'The true purpose behind the numbers.',
+        title: 'Step 3: What is the ultimate moonshot you are funding?',
+        subtitle: 'The true purpose deeply driving your numbers.',
         options: [
-            { value: 'freedom', label: 'Complete Freedom & Early Retirement', icon: Globe, color: 'var(--accent-primary)' },
-            { value: 'legacy', label: 'Providing Generational Wealth', icon: Heart, color: 'var(--danger)' },
-            { value: 'travel', label: 'Traveling the world endlessly', icon: Compass, color: 'var(--success)' },
-            { value: 'empire', label: 'Building a business or empire', icon: Zap, color: 'var(--warning)' },
-        ]
-    },
-    {
-        id: 'commitment',
-        title: 'How involved do you plan to be inside DreamWealthy?',
-        subtitle: 'Your commitment guarantees your result.',
-        options: [
-            { value: 'daily', label: 'Quick daily check-ins (5 mins/day)', icon: Clock, color: 'var(--success)' },
-            { value: 'weekly', label: 'Weekly deep dives (1 hour/week)', icon: Target, color: 'var(--accent-primary)' },
-            { value: 'all_in', label: 'Fully engaged – whatever it takes', icon: Zap, color: 'var(--danger)' },
+            { value: 'freedom', label: 'Total Freedom & Early Retire', icon: Globe, color: 'var(--accent-primary)' },
+            { value: 'legacy', label: 'Generational Family Wealth', icon: Heart, color: 'var(--danger)' },
+            { value: 'travel', label: 'Endless Global Travel', icon: Compass, color: 'var(--success)' },
+            { value: 'empire', label: 'Building a Business Empire', icon: Zap, color: 'var(--warning)' },
         ]
     }
 ];
@@ -106,11 +56,19 @@ const TOTAL_STEPS = ONBOARDING_QUESTIONS.length + 2;
 const Onboarding = () => {
     const navigate = useNavigate();
     const { user, completeOnboarding } = useAuth();
+    const { theme, expenseBorderColor } = useTheme();
     const { playPop } = useSound();
     const store = useStore();
     const [step, setStep] = useState(1);
     const [answers, setAnswers] = useState({});
     const [useDemoData, setUseDemoData] = useState(true);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : (theme === 'dark' ? '#ffffff' : '#4FA3F7');
 
     const firstName = user?.user_metadata?.first_name || 
                      user?.user_metadata?.full_name?.split(' ')[0] || 
@@ -132,6 +90,11 @@ const Onboarding = () => {
 
     const handleComplete = async (startTour) => {
         if (playPop) playPop();
+        setIsAnalyzing(true);
+        
+        // Artificial intelligence profile synthesis delay
+        await new Promise(r => setTimeout(r, 1500));
+
         if (useDemoData) {
             await injectDemoData(store);
         }
@@ -154,22 +117,36 @@ const Onboarding = () => {
 
     return (
         <div className="onboarding-page-container slide-up-fade">
-            <Card glass className="onboarding-card" style={{ maxWidth: '600px', width: '100%', margin: '0 auto' }}>
+            <Modal
+                isOpen={true}
+                onClose={() => {}}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                clearBlur={true}
+                transparentOverlay={true}
+                customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                containerStyle={{ maxWidth: '600px', borderRadius: '24px' }}
+                title={(
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Zap size={20} color={activeColor || 'var(--text-primary)'} /> 
+                        <span style={{ color: activeColor || 'var(--text-primary)' }}>Engine Initialization</span>
+                    </div>
+                )}
+            >
                 
                 {/* Modern Progress Bar instead of 10 crowded dots */}
                 <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', marginBottom: '32px', overflow: 'hidden' }}>
-                    <div style={{ width: `${progressPercentage}%`, height: '100%', background: 'var(--accent-primary)', transition: 'width 0.4s ease-in-out' }} />
+                    <div style={{ width: `${progressPercentage}%`, height: '100%', background: activeColor || 'var(--accent-primary)', transition: 'width 0.4s ease-in-out' }} />
                 </div>
 
                 {step === 1 && (
                     <div className="slide-up-fade" key="step1">
                         <div className="onboarding-header">
-                            <h1>Welcome, {firstName}!</h1>
-                            <p>We're thrilled to have you. Before we construct your dashboard, let's architect your financial profile.</p>
+                            <h1>Welcome, {firstName}.</h1>
+                            <p>We're thrilled to have you here. Before we build out your massive wealth dashboard, let's calibrate your intelligence engine.</p>
                         </div>
                         <div className="onboarding-actions" style={{ marginTop: '40px' }}>
                             <Button style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }} onClick={handleNext}>
-                                Start Profiler <ArrowRight size={20} style={{ marginLeft: '8px' }}/>
+                                Initiate Calibration <ArrowRight size={20} style={{ marginLeft: '8px' }}/>
                             </Button>
                         </div>
                     </div>
@@ -187,23 +164,24 @@ const Onboarding = () => {
                                 <p>{question.subtitle}</p>
                             </div>
 
-                            <div className="goal-selection-container" style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
+                            <div className="goal-selection-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px' }}>
                                 {question.options.map((opt) => {
                                     const isSelected = answers[question.id] === opt.value;
                                     const Icon = opt.icon;
                                     return (
                                         <div 
                                             key={opt.value}
-                                            className={`goal-option ${isSelected ? 'selected' : ''}`}
+                                            className={`goal-option glass ${isSelected ? 'selected' : ''}`}
                                             onClick={() => handleSelectOption(question.id, opt.value)}
                                             style={{ 
-                                                flexDirection: 'row', alignItems: 'center', textAlign: 'left', padding: '16px 20px', gap: '20px',
-                                                ...(isSelected ? { borderColor: opt.color || 'var(--accent-primary)', background: 'rgba(255,255,255,0.05)' } : {})
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: '32px 16px', gap: '16px',
+                                                cursor: 'pointer', transition: 'all 0.2s', borderRadius: '16px',
+                                                ...(isSelected ? { borderColor: opt.color || 'var(--accent-primary)', background: 'rgba(255,255,255,0.05)', boxShadow: `0 0 20px ${opt.color}33`, transform: 'scale(1.02)' } : { border: '1px solid var(--surface-border)' })
                                             }}
                                         >
-                                            <Icon size={28} color={isSelected ? (opt.color || 'var(--accent-primary)') : 'var(--text-secondary)'} />
+                                            <Icon size={46} color={isSelected ? (opt.color || 'var(--accent-primary)') : 'var(--text-secondary)'} style={{ transition: 'all 0.2s' }} />
                                             <div style={{ flex: 1 }}>
-                                                <h3 style={{ margin: 0, fontSize: '1.05rem', color: isSelected ? '#fff' : 'inherit' }}>{opt.label}</h3>
+                                                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 600, color: isSelected ? '#fff' : 'inherit' }}>{opt.label}</h3>
                                             </div>
                                         </div>
                                     );
@@ -223,13 +201,39 @@ const Onboarding = () => {
                 {step === TOTAL_STEPS && (
                     <div className="slide-up-fade" key={`step${TOTAL_STEPS}`}>
                         <div className="onboarding-header">
-                            <h2>Profile Complete.</h2>
-                            <p>Your dashboard is ready. Feel free to dive straight in, or take a quick interactive tour to see where the magic happens.</p>
+                            <h2>Your 5-Year Dream Board.</h2>
+                            <p>Based on your <strong>{answers.timeline === 'fast' ? "aggressive" : answers.timeline === 'accelerated' ? "accelerated" : "calculated"}</strong> timeline, here is your explosive 5-year trajectory towards funding your moonshot: <strong>{answers.dream === 'freedom' ? 'Total Financial Freedom' : answers.dream === 'legacy' ? 'Generational Family Wealth' : answers.dream === 'travel' ? 'Endless Global Travel' : 'Your Business Empire'}</strong>.</p>
                         </div>
 
-                        <div style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
-                           <Compass size={64} color="var(--accent-primary)" style={{ filter: 'drop-shadow(0 0 16px var(--accent-glow))' }}/>
-                        </div>
+                        {(() => {
+                            // Exponential wealth curve scaling from baseline $100k strictly up to $1M
+                            const projectionData = Array.from({ length: 5 }).map((_, i) => ({
+                                year: `Year ${i + 1}`,
+                                value: Math.round((100000 * Math.pow(1.7782794, i)) / 1000) * 1000
+                            }));
+                            return (
+                                <div style={{ height: '220px', width: '100%', margin: '32px 0 16px 0', border: '1px solid var(--surface-border)', borderRadius: '16px', padding: '24px 24px 0px 8px', background: 'rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <AreaChart data={projectionData}>
+                                            <defs>
+                                                <linearGradient id="colorGlow" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="var(--success)" stopOpacity={0.6}/>
+                                                    <stop offset="95%" stopColor="var(--success)" stopOpacity={0}/>
+                                                </linearGradient>
+                                            </defs>
+                                            <XAxis dataKey="year" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                                            <Tooltip 
+                                                formatter={(value) => [`$${value.toLocaleString()}`, 'Projected Net Worth']}
+                                                labelFormatter={(label) => label}
+                                                contentStyle={{ background: 'var(--surface-hover)', border: '1px solid var(--surface-border)', borderRadius: '8px', color: 'white' }}
+                                                itemStyle={{ color: 'var(--success)', fontWeight: 'bold' }}
+                                            />
+                                            <Area type="monotone" dataKey="value" stroke="var(--success)" strokeWidth={3} fillOpacity={1} fill="url(#colorGlow)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            );
+                        })()}
 
                         <div 
                             style={{ 
@@ -249,18 +253,25 @@ const Onboarding = () => {
                             </div>
                         </div>
 
-                        <div className="onboarding-actions" style={{ flexDirection: 'column' }}>
-                            <Button style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }} onClick={() => handleComplete(true)}>
-                                Take the Interactive Tour
-                            </Button>
-                            <Button variant="secondary" style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }} onClick={() => handleComplete(false)}>
-                                Skip straight to Dashboard
-                            </Button>
-                        </div>
+                        {isAnalyzing ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '40px 0', gap: '24px' }}>
+                                <div className="loading-spinner" style={{ width: '48px', height: '48px', border: '4px solid var(--surface-border)', borderTopColor: 'var(--accent-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                <h3 style={{ margin: 0, color: 'var(--accent-primary)', animation: 'pulse 1.5s infinite' }}>Analyzing Profile...</h3>
+                            </div>
+                        ) : (
+                            <div className="onboarding-actions" style={{ flexDirection: 'column' }}>
+                                <Button style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }} onClick={() => handleComplete(true)}>
+                                    Take the Interactive Tour
+                                </Button>
+                                <Button variant="secondary" style={{ width: '100%', padding: '16px', fontSize: '1.1rem' }} onClick={() => handleComplete(false)}>
+                                    Skip straight to Dashboard
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 )}
 
-            </Card>
+            </Modal>
         </div>
     );
 };

@@ -12,3 +12,17 @@
     backdrop-filter: blur(40px);
 }
 
+@keyframes radarPulse {
+    0% {
+        box-shadow: 0 0 25px var(--accent-glow), inset 0 0 15px var(--accent-glow);
+        transform: scale(0.98);
+    }
+    50% {
+        box-shadow: 0 0 45px var(--accent-glow), inset 0 0 25px var(--accent-glow);
+        transform: scale(1.02);
+    }
+    100% {
+        box-shadow: 0 0 25px var(--accent-glow), inset 0 0 15px var(--accent-glow);
+        transform: scale(0.98);
+    }
+}

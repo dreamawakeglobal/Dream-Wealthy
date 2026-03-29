@@ -98,7 +98,7 @@ const FloatingNotes = () => {
 
     const charCount = currentNote.length;
 
-    if (location.pathname === '/' || !user) return null;
+    if (location.pathname === '/' || location.pathname === '/onboarding' || !user) return null;
 
     return (
         <>

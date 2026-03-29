@@ -27,13 +27,19 @@ const Home = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { playPop } = useSound();
-    const { expenseBorderColor } = useTheme();
+    const { theme, expenseBorderColor } = useTheme();
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const contextData = useFinancialContext();
     const {
         getProjectionData,
         portfolio
     } = contextData;
+
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#10B981', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
     const insights = useMemo(() => generateInsights(contextData), [contextData]);
     const positiveInsight = insights.find(i => i.type === 'success');
@@ -148,49 +154,19 @@ const Home = () => {
                 </video>
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
-                    {positiveInsight && (
-                        <div className="fade-in-up" style={{
-                            position: 'absolute',
-                            top: '20vh',
-                            left: '0%',
-                            transform: 'translate(-50%, -100%)', // Shift up so the *bottom* touches 40vh if it's supposed to sit above the buttons
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            padding: '0 20px',
-                            zIndex: 10
-                        }}>
-                            <Card glass className="insight-card insight-success" style={{
-                                margin: '0', display: 'flex', padding: '16px 24px', alignItems: 'center', gap: '16px', maxWidth: '600px', cursor: positiveInsight.actionLink ? 'pointer' : 'default', animation: 'float 6s ease-in-out infinite',
-                                background: 'rgba(255, 255, 255, 0.4)',
-                                backdropFilter: 'blur(20px)',
-                                WebkitBackdropFilter: 'blur(20px)',
-                                borderWidth: '1px',
-                                borderStyle: 'solid',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                borderTopWidth: '3px'
-                            }} onClick={() => positiveInsight.actionLink && navigate(positiveInsight.actionLink)}>
-                                <div className="insight-icon-wrapper" style={{ color: 'var(--success)', filter: 'drop-shadow(0 0 8px var(--success-glow))' }}>
-                                    <TrendingUp size={24} />
-                                </div>
-                                <div className="insight-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 'bold', color: '#000000' }}>{positiveInsight.title}</h4>
-                                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold', color: '#000000' }}>{positiveInsight.message}</p>
-                                </div>
-                            </Card>
-                        </div>
-                    )}
 
-                    <Card glass className="hero-box fade-in-up" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '480px', width: '100%', margin: '0 auto', marginTop: 'calc(40vh + 8px)' }}>
-                        <div className="hero-actions" style={{ display: 'flex', gap: '20px', width: '100%' }}>
-                            <Button style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', borderRadius: '12px' }} onClick={() => { playPop(); document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' }); }}>
-                                Enter Dashboard
-                            </Button>
-                            <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', borderRadius: '12px', color: 'black' }} onClick={() => { playPop(); navigate(user ? '/income' : '/signup'); }}>
-                                Start Planning <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-                            </Button>
-                        </div>
-                    </Card>
+                    <div className="fade-in-up" style={{ width: '100%', maxWidth: '480px', margin: '0 auto', marginTop: 'calc(40vh + 8px)' }}>
+                        <Card glass className="hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', '--hero-border-color': activeColor, '--hero-shadow-color': `${activeColor}33` }}>
+                            <div className="hero-actions" style={{ display: 'flex', gap: '20px', width: '100%' }}>
+                                <Button style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', background: activeColor, color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? '#000000' : '#ffffff', border: `1px solid ${activeColor}` }} onClick={() => { playPop(); document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' }); }}>
+                                    Enter Dashboard
+                                </Button>
+                                <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', color: 'black' }} onClick={() => { playPop(); navigate(user ? '/income' : '/signup'); }}>
+                                    Start Planning <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
                 </div>
             </section>
 

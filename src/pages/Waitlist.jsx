@@ -120,21 +120,22 @@ const Waitlist = () => {
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <Card glass className="hero-box fade-in-up waitlist-hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', maxWidth: '480px', width: '100%', margin: '0 auto' }}>
-                        <h2 style={{ fontSize: '2rem', textAlign: 'center', margin: 0 }}>Gain Early Access</h2>
-                        <p className="text-muted" style={{ textAlign: 'center', fontSize: '1rem', marginTop: '-12px' }}>
-                            Join the exclusive waitlist to secure your spot for the Dream Wealthy platform.
-                        </p>
+                    <div className="fade-in-up" style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
+                        <Card glass className="hero-box waitlist-hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%' }}>
+                            <h2 style={{ fontSize: '2rem', textAlign: 'center', margin: 0 }}>Gain Early Access</h2>
+                            <p className="text-muted" style={{ textAlign: 'center', fontSize: '1rem', marginTop: '-12px' }}>
+                                Join the exclusive waitlist to secure your spot for the Dream Wealthy platform.
+                            </p>
 
-                        {!showForm && !isSuccess ? (
-                            <div className="hero-actions" style={{ display: 'flex', width: '100%', marginTop: '16px' }}>
-                                <Button
-                                    style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', borderRadius: '12px' }}
-                                    onClick={handleJoinClick}
-                                >
-                                    Join Waitlist <ArrowRight size={18} style={{ marginLeft: '8px' }} />
-                                </Button>
-                            </div>
+                            {!showForm && !isSuccess ? (
+                                <div className="hero-actions" style={{ display: 'flex', width: '100%', marginTop: '16px' }}>
+                                    <Button
+                                        style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto' }}
+                                        onClick={handleJoinClick}
+                                    >
+                                        Join Waitlist <ArrowRight size={18} style={{ marginLeft: '8px' }} />
+                                    </Button>
+                                </div>
                         ) : isSuccess ? (
                             <div className="success-message" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', marginTop: '16px', color: 'var(--success)' }}>
                                 <CheckCircle2 size={48} />
@@ -188,13 +189,14 @@ const Waitlist = () => {
                                 <Button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    style={{ padding: '16px 32px', fontSize: '1.1rem', height: 'auto', borderRadius: '12px', marginTop: '8px' }}
+                                    style={{ padding: '16px 32px', fontSize: '1.1rem', height: 'auto', marginTop: '8px' }}
                                 >
                                     {isSubmitting ? 'Submitting...' : 'Submit'}
                                 </Button>
                             </form>
                         )}
                     </Card>
+                    </div>
                 </div>
             </section>
         </div>

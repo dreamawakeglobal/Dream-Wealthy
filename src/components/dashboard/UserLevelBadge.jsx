@@ -1,14 +1,25 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, ShieldCheck, ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, ArrowUpRight, ArrowDownRight, Activity, Brain } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinancialContext } from '../../FinancialContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { AnimatedNumber } from '../ui/AnimatedNumber';
 import './UserLevelBadge.css';
 
+const WEALTH_QUOTES = [
+    { text: "Compound interest is the eighth wonder of the world. He who understands it, earns it.", author: "Albert Einstein" },
+    { text: "Do not save what is left after spending, but spend what is left after saving.", author: "Warren Buffett" },
+    { text: "Wealth is not about having a lot of money; it's about having a lot of options.", author: "Chris Rock" },
+    { text: "Every time you borrow money, you're robbing your future self.", author: "Nathan W. Morris" },
+    { text: "The intelligent investor is a realist who sells to optimists and buys from pessimists.", author: "Benjamin Graham" },
+    { text: "You don't have to be a mathematical genius to build wealth. You just need discipline.", author: "Engine Principle" },
+    { text: "A budget is telling your money where to go instead of wondering where it went.", author: "John C. Maxwell" }
+];
+
 export const UserLevelBadge = () => {
     const { user } = useAuth();
     const { expenseBorderColor } = useTheme();
+    const financialContext = useFinancialContext();
     const {
         portfolio,
         trackedDebts,
@@ -18,7 +29,12 @@ export const UserLevelBadge = () => {
         getProjectionData,
         startingSavings,
         plaidBalances
-    } = useFinancialContext();
+    } = financialContext;
+
+    const dailyQuote = useMemo(() => {
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        return WEALTH_QUOTES[dayOfYear % WEALTH_QUOTES.length];
+    }, []);
 
     const fullName = user?.user_metadata?.full_name || user?.user_metadata?.first_name || 'Visionary Saver';
 
@@ -87,9 +103,36 @@ export const UserLevelBadge = () => {
                             </div>
                         </div>
                         
-                        <h1 className="networth-massive-value">
-                            ${networth.toLocaleString(undefined, {maximumFractionDigits:0})}
-                        </h1>
+                        <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '48px' }}>
+                            <h1 className="networth-massive-value">
+                                ${networth.toLocaleString(undefined, {maximumFractionDigits:0})}
+                            </h1>
+                            
+                            {dailyQuote && (() => {
+                                const isSuccess = true;
+                                const colorHex = '#4FA3F7'; // Use the classic engine blue or dynamic theme color
+                                const glowHex = 'rgba(79, 163, 247, 0.2)';
+                                
+                                return (
+                                    <div className="insight-hud-box fade-in-up" style={{ 
+                                        '--insight-color': colorHex,
+                                        '--insight-glow': glowHex
+                                    }}>
+                                        <div style={{ color: colorHex, filter: `drop-shadow(0 0 12px ${glowHex})`, zIndex: 1 }}>
+                                            <Brain size={28} />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', zIndex: 1, alignItems: 'center' }}>
+                                            <div>
+                                                <span className="insight-hud-tag">
+                                                    Daily Mantra
+                                                </span>
+                                            </div>
+                                            <span style={{ fontSize: '1rem', fontWeight: 700, fontStyle: 'italic', color: 'var(--text-primary)', lineHeight: 1.4, marginTop: '4px' }}>"{dailyQuote.text}"</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
 
                         <div className="networth-breakdown-bar">
                             <div className="breakdown-item">

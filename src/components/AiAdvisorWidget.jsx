@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Send, User, ChevronDown } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { useSound } from '../SoundContext';
 import { supabase } from '../supabaseClient';
@@ -15,6 +16,7 @@ const AiAdvisorWidget = () => {
     const { user } = useAuth();
     const { getProjectionData, transactionsByCategory, mapUserExpenseToPlaidCategory } = useFinancialContext();
     const { variableExpenses, fixedExpenses } = useStore();
+    const location = useLocation();
     
     const [isOpen, setIsOpen] = useState(false);
     const [isThinking, setIsThinking] = useState(false);
@@ -77,6 +79,8 @@ const AiAdvisorWidget = () => {
         playPop();
         setIsOpen(!isOpen);
     };
+
+    if (location.pathname === '/onboarding') return null;
 
     const handleSend = async (e) => {
         e?.preventDefault();

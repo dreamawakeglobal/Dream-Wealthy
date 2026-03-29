@@ -51,10 +51,24 @@
 
 .hero-box {
     margin-top: 10px;
-    background: rgba(255, 255, 255, 0.03) !important;
-    backdrop-filter: blur(20px) !important;
-    -webkit-backdrop-filter: blur(20px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 3px solid var(--hero-border-color, var(--accent-primary)) !important;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px var(--hero-shadow-color, rgba(var(--accent-primary-rgb), 0.2)) !important;
+    border-radius: 24px !important;
+    animation: float 6s ease-in-out infinite;
+    transition: transform var(--transition-bounce), box-shadow var(--transition-bounce);
+}
+
+.hero-box:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 50px var(--hero-shadow-color, rgba(var(--accent-primary-rgb), 0.4)) !important;
+}
+
+[data-theme='dark'] .hero-box {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 3px solid var(--hero-border-color, var(--accent-primary)) !important;
 }
 
 .hero-title {

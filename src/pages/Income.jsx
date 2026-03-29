@@ -206,58 +206,50 @@ export const getStreamAutoReceivedAmount = (stream, incomeTransactionsByCategory
 };
 
 const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, incomeTransactionsByCategory = {}, filteredIncomeTransactions = [] }) => {
+    const { theme, expenseBorderColor } = useTheme();
     const [isEditing, setIsEditing] = useState(false);
-    const [editName, setEditName] = useState(stream.name);
-    const [editAmount, setEditAmount] = useState(stream.amount);
-
-    const handleSave = () => {
-        if (editName && editAmount) {
-            onUpdate({ ...stream, name: editName, amount: parseFloat(editAmount) });
-            setIsEditing(false);
-        }
-    };
 
     const handleCancel = () => {
-        setEditName(stream.name);
-        setEditAmount(stream.amount);
         setIsEditing(false);
     };
 
-    if (isEditing) {
-        return (
-            <div className="stream-item glass" style={{ flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
-                    <Input
-                        value={editName}
-                        onChange={(e) => setEditName(e.target.value)}
-                        placeholder="Stream Name"
-                        style={{ flex: 1 }}
-                        autoFocus
-                    />
-                    <Input
-                        type="number"
-                        step="0.01"
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(e.target.value)}
-                        placeholder="Amount"
-                        leftIcon={DollarSign}
-                        style={{ width: '140px' }}
-                    />
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', width: '100%' }}>
-                    <Button size="sm" variant="ghost" onClick={handleCancel}>
-                        <X size={16} /> Cancel
-                    </Button>
-                    <Button size="sm" variant="primary" onClick={handleSave}>
-                        <Check size={16} /> Save
-                    </Button>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="stream-item glass">
+            {isEditing && (
+                <Modal 
+                    isOpen={true} 
+                    onClose={handleCancel} 
+                    useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                    clearBlur={true}
+                    transparentOverlay={true}
+                    customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                    containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                    title={(() => {
+                        const activeColor = {
+                            blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+                            red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                            yellow: '#eab308', orange: '#f97316'
+                        }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                        return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', background: activeColor, padding: '8px 16px', borderRadius: '12px', boxShadow: `0 4px 12px ${activeColor}40` }}>
+                                <Edit2 size={20} />
+                                <span>Edit Stream</span>
+                            </div>
+                        );
+                    })()}
+                >
+                    <IncomeStreamForm
+                        initialData={stream}
+                        onAdd={(updates) => {
+                            onUpdate({ ...stream, ...updates });
+                            setIsEditing(false);
+                        }}
+                        title=""
+                        isModal={true}
+                    />
+                </Modal>
+            )}
+
             <div className="stream-info">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p className="stream-name" style={{ margin: 0 }}>{stream.name}</p>
@@ -518,7 +510,7 @@ const Income = () => {
                     <AnimateOnScroll delay={0.1} className="income-column">
                         <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ margin: 0 }}>💼 Current Streams</h2>
+                                <h2 style={{ margin: 0 }}>Current Streams</h2>
                                 <span className="badge" style={{ marginLeft: '12px' }}>
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
@@ -578,7 +570,7 @@ const Income = () => {
                     <AnimateOnScroll delay={0.2} className="income-column">
                         <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ margin: 0 }}>📈 Manifesting / Future</h2>
+                                <h2 style={{ margin: 0 }}>Manifesting / Future</h2>
                                 <span className="badge gold" style={{ marginLeft: '12px' }}>${projectedFutureIncome.toLocaleString()}</span>
                             </div>
                             <Button
@@ -829,6 +821,8 @@ const Income = () => {
                 onClose={() => setIsActivityModalOpen(false)}
                 useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                 clearBlur={true}
+                transparentOverlay={true}
+                containerStyle={{ maxWidth: '800px', borderRadius: '24px' }}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
                     const activeColor = {

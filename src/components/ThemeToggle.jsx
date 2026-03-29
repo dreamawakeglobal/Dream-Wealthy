@@ -12,7 +12,7 @@ const ThemeToggle = () => {
     const location = useLocation();
     const { user } = useAuth();
 
-    if (!user || location.pathname === '/') return null;
+    if (!user || location.pathname === '/' || location.pathname === '/onboarding') return null;
 
     const handleThemeToggle = () => {
         playPop();

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const AnimateOnScroll = ({
     children,
@@ -7,10 +8,16 @@ export const AnimateOnScroll = ({
     yOffset = 30,
     duration = 0.5
 }) => {
-    const [isVisible, setIsVisible] = useState(false);
+    const auth = useAuth() || {};
+    const isTutorialActive = auth?.isTutorialActive || false;
+    const [isVisible, setIsVisible] = useState(isTutorialActive);
     const domRef = useRef();
 
     useEffect(() => {
+        if (isTutorialActive) {
+            setIsVisible(true);
+            return;
+        }
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 // If the element is now in the viewport

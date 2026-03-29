@@ -3,25 +3,20 @@
     width: 100%;
     margin: 40px auto;
     border-radius: 24px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.15),
-        inset 0 1px 1px rgba(255, 255, 255, 0.4),
-        inset 0 -2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     overflow: hidden;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), border 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ultra-badge-container:hover {
     transform: translateY(-4px) scale(1.01);
     box-shadow: 
-        0 16px 48px rgba(0, 0, 0, 0.5),
-        0 0 20px rgba(var(--accent-primary-rgb), 0.2),
-        inset 0 1px 1px rgba(255, 255, 255, 0.3),
-        inset 0 -2px 10px rgba(0, 0, 0, 0.5);
+        0 25px 50px rgba(0, 0, 0, 0.7),
+        0 0 20px rgba(var(--accent-primary-rgb), 0.2);
 }
 
 .ultra-badge-grid {
@@ -44,8 +39,8 @@
     justify-content: center;
     padding: 48px 32px;
     position: relative;
-    border-right: 1px solid rgba(255, 255, 255, 0.05);
-    background: radial-gradient(circle at center, rgba(var(--accent-primary-rgb), 0.12) 0%, transparent 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: transparent;
 }
 
 @media (max-width: 968px) {
@@ -133,13 +128,11 @@
     flex-direction: column;
     padding: 40px;
     gap: 24px;
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: transparent;
 }
 
 [data-theme='dark'] .metrics-pane {
-    background: var(--surface);
+    background: transparent;
 }
 
 @media (max-width: 768px) {
@@ -150,6 +143,7 @@
 
 /* Net Worth Hero Card */
 .networth-hero-card {
+    position: relative;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 20px;
@@ -158,6 +152,19 @@
     flex-direction: column;
     gap: 16px;
     box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+    overflow: hidden;
+}
+
+.networth-hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+    animation: hud-scanline 5s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
+    pointer-events: none;
 }
 
 .networth-header {
@@ -275,6 +282,7 @@
 }
 
 .flow-micro-card {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 16px;
@@ -283,6 +291,19 @@
     padding: 20px;
     border-radius: 16px;
     transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.flow-micro-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    animation: hud-scanline 5s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
+    pointer-events: none;
 }
 
 .flow-micro-card:hover {
@@ -332,3 +353,53 @@
 .success-text { color: var(--success); text-shadow: 0 0 8px var(--success-glow); }
 .danger-text { color: var(--danger); text-shadow: 0 0 8px var(--danger-glow); }
 .accent-text { color: var(--accent-primary); text-shadow: 0 0 8px var(--accent-glow); }
+
+/* Intelligence HUD Insight Box */
+.insight-hud-box {
+    position: relative;
+    max-width: 65%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--insight-color, var(--accent-primary));
+    border-radius: 0px 20px 20px 0px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: inset 30px 0 50px -20px var(--insight-glow, rgba(255,255,255,0.1)), 0 10px 30px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.insight-hud-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    animation: hud-scanline 5s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
+    pointer-events: none;
+}
+
+@keyframes hud-scanline {
+    0% { left: -100%; }
+    20% { left: 200%; }
+    100% { left: 200%; }
+}
+
+.insight-hud-tag {
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: #fff;
+    background-color: var(--insight-color, var(--accent-primary));
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 12px var(--insight-glow, rgba(255,255,255,0.2));
+    display: inline-block;
+}
