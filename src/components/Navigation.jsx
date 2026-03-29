@@ -24,7 +24,7 @@ const Navigation = () => {
     ];
 
     return (
-        <nav className={`navigation-bar ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+        <nav className={`navigation-bar ${isMobileMenuOpen ? 'mobile-open' : ''} ${location.pathname === '/' ? 'waitlist-nav' : ''}`}>
             {/* Hamburger Toggle - Only visible on mobile */}
             <button
                 className="mobile-menu-toggle"
