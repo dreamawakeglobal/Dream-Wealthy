@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Target, AlertCircle, Plus, Trash2, Edit2, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
+import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { useFinancialContext } from '../FinancialContext';
 import './Allocations.css';
@@ -159,10 +161,9 @@ const Allocations = () => {
 
                                             {editingCategory === cat.id ? (
                                                 <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-hover)', borderRadius: '4px', padding: '2px 4px', border: `1px solid ${cat.color}` }}>
-                                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>$</span>
-                                                    <input
+                                                    <CurrencyInput
+                                                        raw
                                                         autoFocus
-                                                        type="number" step="0.01"
                                                         value={editValue}
                                                         onChange={(e) => setEditValue(e.target.value)}
                                                         onBlur={() => handleDollarEditSave(cat.id)}
@@ -190,10 +191,15 @@ const Allocations = () => {
                                                             setEditValue(Math.round(dollarValue).toString());
                                                         }
                                                     }}
-                                                    style={{ cursor: totalMonthlyIncome > 0 ? 'pointer' : 'default', borderBottom: '1px dashed transparent' }}
+                                                    style={{ 
+                                                        cursor: totalMonthlyIncome > 0 ? 'pointer' : 'default', 
+                                                        padding: '2px 6px', 
+                                                        borderRadius: '4px',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
                                                     title={totalMonthlyIncome > 0 ? "Click to set precise dollar amount" : "Set income first"}
-                                                    onMouseEnter={(e) => totalMonthlyIncome > 0 && (e.currentTarget.style.borderBottom = `1px dashed ${cat.color}`)}
-                                                    onMouseLeave={(e) => e.currentTarget.style.borderBottom = '1px dashed transparent'}
+                                                    onMouseEnter={(e) => totalMonthlyIncome > 0 && (e.currentTarget.style.textShadow = `0 0 12px ${cat.color}`)}
+                                                    onMouseLeave={(e) => e.currentTarget.style.textShadow = 'none'}
                                                 >
                                                     ${dollarValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                                 </span>

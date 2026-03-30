@@ -5,8 +5,10 @@ import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircl
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
+import { SyncButton } from '../components/ui/SyncButton';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
@@ -149,9 +151,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
                     )}
                 </div>
                 <div className="amount-input-group">
-                    <Input
-                        type="number"
-                        step="0.01"
+                    <CurrencyInput
                         placeholder="Amount (Monthly)"
                         leftIcon={DollarSign}
                         value={amount}
@@ -685,11 +685,9 @@ const Income = () => {
 
                                                 {editingCategory === cat.id ? (
                                                     <div style={{ display: 'flex', alignItems: 'center', background: 'var(--surface-hover)', borderRadius: '4px', padding: '2px 4px', border: `1px solid ${cat.color}` }}>
-                                                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>$</span>
-                                                        <input
+                                                        <CurrencyInput
+                                                            raw
                                                             autoFocus
-                                                            type="number"
-                                                            step="0.01"
                                                             value={editValue}
                                                             onChange={(e) => setEditValue(e.target.value)}
                                                             onBlur={() => handleDollarEditSave(cat.id)}
@@ -831,9 +829,12 @@ const Income = () => {
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Wallet size={20} color={activeColor} /> 
-                            <span style={{ color: activeColor }}>Recent Income Activity</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Wallet size={20} color={activeColor} /> 
+                                <span style={{ color: activeColor }}>Recent Income Activity</span>
+                            </div>
+                            <SyncButton />
                         </div>
                     );
                 })()}

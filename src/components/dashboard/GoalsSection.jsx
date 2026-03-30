@@ -6,6 +6,7 @@ import { useSound } from '../../SoundContext';
 import { GoalOrb } from './GoalOrb';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { CurrencyInput } from '../ui/CurrencyInput';
 import { Card } from '../ui/Card';
 import { useTheme } from '../../contexts/ThemeContext';
 import '../ui/Modal.css';
@@ -189,8 +190,7 @@ export const GoalsSection = () => {
                             <div style={{ display: 'flex', gap: '16px' }}>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Target Amount ($)</label>
-                                    <Input
-                                        type="number" step="0.01"
+                                    <CurrencyInput
                                         placeholder="10000"
                                         value={newGoal.targetAmount}
                                         onChange={e => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
@@ -200,8 +200,7 @@ export const GoalsSection = () => {
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Saved So Far ($)</label>
-                                    <Input
-                                        type="number" step="0.01"
+                                    <CurrencyInput
                                         placeholder="0"
                                         value={newGoal.currentAmount}
                                         onChange={e => setNewGoal({ ...newGoal, currentAmount: e.target.value })}
@@ -216,8 +215,7 @@ export const GoalsSection = () => {
                                 <div style={{ display: 'flex', gap: '16px' }}>
                                     <div style={{ flex: 1.5 }}>
                                         <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Amount to Contribute ($)</label>
-                                        <Input
-                                            type="number" step="0.01"
+                                        <CurrencyInput
                                             placeholder="e.g. 200"
                                             value={newGoal.contributionAmount}
                                             onChange={e => setNewGoal({ ...newGoal, contributionAmount: e.target.value })}

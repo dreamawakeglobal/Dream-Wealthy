@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
 import { supabase } from './supabaseClient';
@@ -71,6 +71,53 @@ export const FinancialProvider = ({ children }) => {
     const store = useStore();
     const [plaidBalances, setPlaidBalances] = useState({ checking: 0, savings: 0, total: 0 });
 
+    const forceSyncPlaid = useCallback(async () => {
+        if (!user) return false;
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+            
+            return new Promise((resolve) => {
+                const syncTransactionsPaginated = async () => {
+                    const resTx = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-plaid-transactions`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${session.access_token}`
+                        }
+                    });
+
+                    const txData = await resTx.json();
+                    
+                    if (!resTx.ok) {
+                        console.error("SUPABASE EDGE NODE ERROR PING:", txData.error || txData);
+                        resolve(false);
+                        return;
+                    }
+
+                    if (resTx.ok && !txData.error && txData.synced) {
+                        if (txData.synced.added > 0 || txData.synced.modified > 0 || txData.synced.removed > 0) {
+                            console.log(`Manual Plaid Sync Executed: Extracted ${txData.synced.added} unseen transactions natively!`);
+                            store.fetchAllData(); 
+                        }
+
+                        if (txData.synced.has_more) {
+                            setTimeout(syncTransactionsPaginated, 1500);
+                        } else {
+                            resolve(true);
+                        }
+                    } else {
+                        resolve(false);
+                    }
+                };
+                syncTransactionsPaginated();
+            });
+        } catch (e) {
+            console.error("Manual Plaid Sync Error:", e);
+            return false;
+        }
+    }, [user, store]);
+
     // Tie Auth State to Zustand and Plaid
     useEffect(() => {
         store.setUser(user);
@@ -96,45 +143,11 @@ export const FinancialProvider = ({ children }) => {
                         setPlaidBalances(accountData);
                     }
 
-                    // 2. Automatically sync transactions safely bypassing the 10.0s Supabase Limit!
-                    const syncTransactionsPaginated = async () => {
-                        const resTx = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-plaid-transactions`, {
-                            method: 'POST',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${session.access_token}`
-                            }
-                        });
-
-                        const txData = await resTx.json();
-                        
-                        if (!resTx.ok) {
-                            console.error("SUPABASE EDGE NODE ERROR PING:", txData.error || txData);
-                            return;
-                        }
-
-                        if (resTx.ok && !txData.error && txData.synced) {
-                            // If Plaid mapped any brand new transactions, we recursively ping the local Zustand 
-                            // database hook to fundamentally force the native Dashboard UI to strictly repaint!
-                            if (txData.synced.added > 0 || txData.synced.modified > 0 || txData.synced.removed > 0) {
-                                console.log(`Plaid Sync Executed: Extracted ${txData.synced.added} unseen transactions natively! Reloading Dashboard Arrays...`);
-                                store.fetchAllData(); 
-                            }
-
-                            // If Plaid has 800+ transactions, it mathematically exceeds the Supabase Free 10.0s Limit!
-                            // We cleanly process 1 page at a time. If `has_more` is true, we sleep 1.5s and manually pull again!
-                            if (txData.synced.has_more) {
-                                console.log("Plaid Array exceeds pagination length! Automatically pulling next Chunk in 1.5s...");
-                                setTimeout(syncTransactionsPaginated, 1500);
-                            }
-                        }
-                    };
-                    
-                    // Boot the recursion
-                    syncTransactionsPaginated();
+                    // 2. Automatically sync transactions
+                    forceSyncPlaid();
 
                 } catch (e) {
-                    console.error("Plaid Sync Error:", e);
+                    console.error("Plaid Boot Sync Error:", e);
                 }
             };
             
@@ -328,7 +341,10 @@ export const FinancialProvider = ({ children }) => {
 
         // Subscriptions
         subscriptions: store.subscriptions,
-        setSubscriptions: store.setSubscriptions
+        setSubscriptions: store.setSubscriptions,
+
+        // Plaid Sync
+        forceSyncPlaid
     };
 
     return (

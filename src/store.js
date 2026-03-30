@@ -25,6 +25,7 @@ const mapToCamel = (item) => {
     if (mapped.extra_payment !== undefined) { mapped.extraPayment = mapped.extra_payment; delete mapped.extra_payment; }
     if (mapped.down_payment !== undefined) { mapped.downPayment = mapped.down_payment; delete mapped.down_payment; }
     if (mapped.due_date !== undefined) { mapped.dueDate = mapped.due_date; delete mapped.due_date; }
+    if (mapped.custom_payments !== undefined) { mapped.customPayments = mapped.custom_payments; delete mapped.custom_payments; }
 
     return mapped;
 };
@@ -58,6 +59,7 @@ const mapToSnake = (item) => {
     if (snakeItem.extraPayment !== undefined) { snakeItem.extra_payment = snakeItem.extraPayment; delete snakeItem.extraPayment; }
     if (snakeItem.downPayment !== undefined) { snakeItem.down_payment = snakeItem.downPayment; delete snakeItem.downPayment; }
     if (snakeItem.dueDate !== undefined) { snakeItem.due_date = snakeItem.dueDate; delete snakeItem.dueDate; }
+    if (snakeItem.customPayments !== undefined) { snakeItem.custom_payments = snakeItem.customPayments; delete snakeItem.customPayments; }
 
     return snakeItem;
 }
@@ -212,7 +214,11 @@ export const useStore = create((set, get) => ({
             updatedItems.forEach(item => {
                 if (String(item.id).length > 20) {
                     const { id, created_at: _c, user_id: _u, ...rest } = mapToSnake(item);
-                    supabase.from(tableName).update(rest).eq('id', id).then();
+                    supabase.from(tableName).update(rest).eq('id', id).then(res => {
+                        if (res && res.error) {
+                            console.error(`SUPABASE UPDATE ERROR on ${tableName}:`, res.error, "\nPayload:", rest);
+                        }
+                    });
                 }
             });
         }

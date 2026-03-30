@@ -5,6 +5,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import {
     AreaChart,
@@ -146,8 +147,7 @@ const DebtDestroyer = () => {
                                     required
                                 />
                                 <div className="debt-form-row">
-                                    <Input
-                                        type="number" step="0.01"
+                                    <CurrencyInput
                                         placeholder="Balance ($)"
                                         value={newDebt.balance}
                                         onChange={e => setNewDebt({ ...newDebt, balance: e.target.value })}
@@ -161,8 +161,7 @@ const DebtDestroyer = () => {
                                         onChange={e => setNewDebt({ ...newDebt, rate: e.target.value })}
                                         required
                                     />
-                                    <Input
-                                        type="number" step="0.01"
+                                    <CurrencyInput
                                         placeholder="Min Payment ($)"
                                         value={newDebt.minPayment}
                                         onChange={e => setNewDebt({ ...newDebt, minPayment: e.target.value })}

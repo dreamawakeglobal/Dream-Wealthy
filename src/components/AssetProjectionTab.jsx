@@ -3,6 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Trash2, TrendingUp, Calendar } from 'lucide-react';
 import { Card } from './ui/Card';
 import { Input } from './ui/Input';
+import { CurrencyInput } from './ui/CurrencyInput';
 import { AnimatedNumber } from './ui/AnimatedNumber';
 import { Button } from './ui/Button';
 
@@ -81,8 +82,7 @@ export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
 
                     <div className="controls-group">
                         <label>Monthly Contribution ($)</label>
-                        <Input
-                            type="number" step="0.01"
+                        <CurrencyInput
                             value={monthlyContribution}
                             onChange={e => handleUpdate('monthlyContribution', Number(e.target.value))}
                         />

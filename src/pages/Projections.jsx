@@ -5,6 +5,7 @@ import {
 import { TrendingUp, Settings, Plus, Trash2, Edit2, X } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
 import { Button } from '../components/ui/Button';
@@ -39,14 +40,14 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
 
     if (isEditing) {
         return (
-            <input
+            <CurrencyInput
                 autoFocus
-                type="number" step="0.01"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 className="editable-cell-input"
+                style={{ background: 'transparent' }}
             />
         );
     }
@@ -158,8 +159,7 @@ const Projections = () => {
 
                             <div className="controls-group">
                                 <label>Starting Savings (Cumulative)</label>
-                                <Input
-                                    type="number" step="0.01"
+                                <CurrencyInput
                                     value={startingSavings}
                                     onChange={e => setStartingSavings(Number(e.target.value))}
                                     placeholder="e.g. 5000"
@@ -168,8 +168,7 @@ const Projections = () => {
 
                             <div className="controls-group">
                                 <label>Starting Monthly Income</label>
-                                <Input
-                                    type="number" step="0.01"
+                                <CurrencyInput
                                     value={localIncome}
                                     onChange={e => setLocalIncome(Number(e.target.value))}
                                 />
@@ -177,8 +176,7 @@ const Projections = () => {
 
                             <div className="controls-group">
                                 <label>Starting Monthly Expenses</label>
-                                <Input
-                                    type="number" step="0.01"
+                                <CurrencyInput
                                     value={localExpenses}
                                     onChange={e => setLocalExpenses(Number(e.target.value))}
                                 />
@@ -206,12 +204,10 @@ const Projections = () => {
                                                     placeholder="Name"
                                                 />
                                                 <span style={{ color: 'var(--text-muted)' }}>|</span>
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>$</span>
-                                                <input
-                                                    type="number" step="0.01"
+                                                <CurrencyInput
                                                     value={col.amount}
                                                     onChange={e => setExtraColumns(extraColumns.map(c => c.id === col.id ? { ...c, amount: Number(e.target.value) } : c))}
-                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '60px', fontSize: '0.85rem' }}
+                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '80px', fontSize: '0.85rem' }}
                                                     placeholder="Amount"
                                                     onKeyDown={(e) => e.key === 'Enter' && setEditingFlowId(null)}
                                                 />

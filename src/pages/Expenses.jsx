@@ -14,7 +14,9 @@ import {
 } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
+import { SyncButton } from '../components/ui/SyncButton';
 import { Input } from '../components/ui/Input';
+import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -237,8 +239,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
             )}
 
             <div className="amount-input-group">
-                <Input
-                    type="number" step="0.01"
+                <CurrencyInput
                     placeholder="Amount"
                     leftIcon={Wallet}
                     value={amount}
@@ -422,10 +423,10 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                 {showTracking && (
                                     <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--surface-hover)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--surface-border)', gap: '8px', margin: '0 8px', flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: $</span>
-                                            <input
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: </span>
+                                            <CurrencyInput
+                                                raw
                                                 className="auto-tracker-input"
-                                                type="number" step="0.01"
                                                 value={expense.manualSpent != null ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
@@ -1206,6 +1207,7 @@ const Expenses = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Service Name</label>
                                     <Input 
+                                        className="dark-mode-black-text"
                                         placeholder="e.g. Netflix, Spotify" 
                                         value={newSub.name} 
                                         onChange={e => setNewSub({ ...newSub, name: e.target.value })} 
@@ -1215,9 +1217,8 @@ const Expenses = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Cost</label>
-                                        <Input 
-                                            type="number" 
-                                            step="0.01" 
+                                        <CurrencyInput 
+                                            className="dark-mode-black-text"
                                             placeholder="0.00" 
                                             value={newSub.cost} 
                                             onChange={e => setNewSub({ ...newSub, cost: e.target.value })} 
@@ -1228,6 +1229,7 @@ const Expenses = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Domain (Optional)</label>
                                         <Input 
+                                            className="dark-mode-black-text"
                                             placeholder="e.g. netflix.com" 
                                             value={newSub.domain} 
                                             onChange={e => setNewSub({ ...newSub, domain: e.target.value })} 
@@ -1236,6 +1238,7 @@ const Expenses = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
                                         <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Day (Optional)</label>
                                         <Input 
+                                            className="dark-mode-black-text"
                                             type="number" min="1" max="31"
                                             placeholder="1-31" 
                                             value={newSub.dueDate} 
@@ -1324,8 +1327,8 @@ const Expenses = () => {
                                                     onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
                                                     style={{ width: '90%', fontSize: '0.8rem', fontWeight: 600, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px', outline: 'none' }}
                                                 />
-                                                <input
-                                                    type="number" step="0.01"
+                                                <CurrencyInput
+                                                    raw
                                                     value={editSubCost}
                                                     onChange={e => setEditSubCost(e.target.value)}
                                                     onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
@@ -1455,10 +1458,9 @@ const Expenses = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Total Balance</label>
-                                            <Input
+                                            <CurrencyInput
                                                 className="light-accent-input"
                                                 leftIcon={Wallet}
-                                                type="number" step="0.01"
                                                 placeholder="0.00"
                                                 value={newTrackedDebt.balance}
                                                 onChange={e => setNewTrackedDebt({ ...newTrackedDebt, balance: e.target.value })}
@@ -1483,9 +1485,8 @@ const Expenses = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Min</label>
-                                            <Input
+                                            <CurrencyInput
                                                 className="light-accent-input"
-                                                type="number" step="0.01"
                                                 placeholder="$"
                                                 value={newTrackedDebt.minPayment}
                                                 onChange={e => setNewTrackedDebt({ ...newTrackedDebt, minPayment: e.target.value })}
@@ -1494,9 +1495,8 @@ const Expenses = () => {
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Down Payment</label>
-                                            <Input
+                                            <CurrencyInput
                                                 className="light-accent-input"
-                                                type="number" step="0.01"
                                                 placeholder="$ (Opt)"
                                                 value={newTrackedDebt.downPayment || ''}
                                                 onChange={e => setNewTrackedDebt({ ...newTrackedDebt, downPayment: e.target.value })}
@@ -1517,6 +1517,117 @@ const Expenses = () => {
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                                     <Button type="button" variant="secondary" onClick={() => setShowAddTrackerForm(false)} style={{ background: 'transparent', border: '1px solid var(--surface-border)' }}>Cancel</Button>
                                     <Button type="submit" variant="primary" style={{ padding: '0 24px' }}>Add Debt Pipeline</Button>
+                                </div>
+                            </form>
+                        </Modal>
+
+                        <Modal
+                            isOpen={editingDebtId !== null}
+                            onClose={() => setEditingDebtId(null)}
+                            silent={true}
+                            useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                            clearBlur={true}
+                            transparentOverlay={true}
+                            customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                            containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
+                            title={(() => {
+                                const activeColor = {
+                                    blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+                                    red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                                    yellow: '#eab308', orange: '#f97316'
+                                }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                        Edit <span style={{ color: activeColor }}>Tracked Debt</span>
+                                    </div>
+                                );
+                            })()}
+                        >
+                            <form className="debt-form animate-fade-in" onSubmit={(e) => { e.preventDefault(); saveDebtEdit(editingDebtId); }} style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Debt Name / Creditor</label>
+                                            <Input
+                                                className="light-accent-input dark-mode-black-text"
+                                                placeholder="e.g. Chase Sapphire"
+                                                value={editDebtForm.name}
+                                                onChange={e => setEditDebtForm({ ...editDebtForm, name: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Category</label>
+                                            <select 
+                                                value={editDebtForm.type}
+                                                onChange={e => setEditDebtForm({...editDebtForm, type: e.target.value})}
+                                                className="dream-input light-accent-input dark-mode-black-text"
+                                                style={{ width: '100%', backgroundColor: 'var(--surface-hover)', color: 'var(--text-primary)', border: '1px solid transparent', borderRadius: '50px', padding: '12px 16px', outline: 'none', appearance: 'none', cursor: 'pointer' }}
+                                            >
+                                                <option value="Credit Card">Credit Card</option>
+                                                <option value="Auto Loan">Auto Loan</option>
+                                                <option value="Student Loan">Student Loan</option>
+                                                <option value="Personal Loan">Personal Loan</option>
+                                                <option value="Mortgage">Mortgage</option>
+                                                <option value="Medical">Medical</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ height: '1px', background: 'var(--surface-border)', opacity: 0.5, margin: '4px 0' }}></div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Total Balance</label>
+                                            <CurrencyInput
+                                                className="light-accent-input dark-mode-black-text"
+                                                leftIcon={Wallet}
+                                                placeholder="0.00"
+                                                value={editDebtForm.balance}
+                                                onChange={e => setEditDebtForm({ ...editDebtForm, balance: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Interest Rate</label>
+                                            <Input
+                                                className="light-accent-input dark-mode-black-text"
+                                                leftIcon={Percent}
+                                                type="number" step="0.01"
+                                                placeholder="0.00"
+                                                value={editDebtForm.rate}
+                                                onChange={e => setEditDebtForm({ ...editDebtForm, rate: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Min</label>
+                                            <CurrencyInput
+                                                className="light-accent-input dark-mode-black-text"
+                                                placeholder="$"
+                                                value={editDebtForm.minPayment}
+                                                onChange={e => setEditDebtForm({ ...editDebtForm, minPayment: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Date</label>
+                                            <Input
+                                                className="light-accent-input dark-mode-black-text"
+                                                type="number" min="1" max="31"
+                                                placeholder="Day (1-31)"
+                                                value={editDebtForm.dueDate}
+                                                onChange={e => setEditDebtForm({ ...editDebtForm, dueDate: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
+                                    <Button type="button" variant="secondary" onClick={() => setEditingDebtId(null)} style={{ background: 'transparent', border: '1px solid var(--surface-border)' }}>Cancel</Button>
+                                    <Button type="submit" variant="primary" style={{ padding: '0 24px' }}>Save Changes</Button>
                                 </div>
                             </form>
                         </Modal>
@@ -1686,32 +1797,6 @@ const Expenses = () => {
 
                                         return (
                                             <div key={debt.id} className={`debt-item glass stream-item ${debt.isPaid ? 'paid' : ''} ${isJustPaid ? 'just-paid' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', transition: 'all 0.3s ease' }}>
-                                                {editingDebtId === debt.id ? (
-                                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', padding: '8px' }}>
-                                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                                            <Input placeholder="Debt Name" value={editDebtForm.name} onChange={e => setEditDebtForm({ ...editDebtForm, name: e.target.value })} style={{ flex: 1, minWidth: '200px' }} />
-                                                            <select value={editDebtForm.type} onChange={e => setEditDebtForm({...editDebtForm, type: e.target.value})} className="dream-input" style={{ width: '160px', backgroundColor: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)', borderRadius: '12px', padding: '12px 16px' }}>
-                                                                <option value="Credit Card">Credit Card</option>
-                                                                <option value="Auto Loan">Auto Loan</option>
-                                                                <option value="Student Loan">Student Loan</option>
-                                                                <option value="Personal Loan">Personal Loan</option>
-                                                                <option value="Mortgage">Mortgage</option>
-                                                                <option value="Medical">Medical</option>
-                                                            </select>
-                                                        </div>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
-                                                            <Input type="number" step="0.01" placeholder="Bal ($)" value={editDebtForm.balance} onChange={e => setEditDebtForm({ ...editDebtForm, balance: e.target.value })} />
-                                                            <Input type="number" step="0.1" placeholder="Rate (%)" value={editDebtForm.rate} onChange={e => setEditDebtForm({ ...editDebtForm, rate: e.target.value })} />
-                                                            <Input type="number" step="0.01" placeholder="Min ($)" value={editDebtForm.minPayment} onChange={e => setEditDebtForm({ ...editDebtForm, minPayment: e.target.value })} />
-                                                            <Input type="number" min="1" max="31" placeholder="Due Day (1-31)" value={editDebtForm.dueDate} onChange={e => setEditDebtForm({ ...editDebtForm, dueDate: e.target.value })} />
-                                                        </div>
-                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
-                                                            <Button size="sm" variant="secondary" onClick={() => setEditingDebtId(null)}>Cancel</Button>
-                                                            <Button size="sm" variant="primary" onClick={() => saveDebtEdit(debt.id)}>Save</Button>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                <>
                                                 <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '16px' }}>
                                                     <div className="checkbox-wrapper" style={{ margin: 0 }}>
                                                         <input
@@ -1801,8 +1886,6 @@ const Expenses = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                </>
-                                                )}
                                             </div>
                                         );
                                     })
@@ -1979,9 +2062,12 @@ const Expenses = () => {
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Wallet size={20} color={activeColor} /> 
-                            <span style={{ color: activeColor }}>Recent Bank Activity</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Wallet size={20} color={activeColor} /> 
+                                <span style={{ color: activeColor }}>Recent Bank Activity</span>
+                            </div>
+                            <SyncButton />
                         </div>
                     );
                 })()}
