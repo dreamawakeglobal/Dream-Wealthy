@@ -242,6 +242,7 @@
 .projection-table td {
     padding: 16px;
     font-size: 1rem;
+    font-weight: 700;
     border-bottom: 1px solid var(--surface-border);
     font-variant-numeric: tabular-nums;
 }
