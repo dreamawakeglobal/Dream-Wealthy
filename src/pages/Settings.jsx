@@ -11,7 +11,7 @@ import { Button } from '../components/ui/Button';
 import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
-import { MonthlyReportsTab } from '../components/dashboard/MonthlyReportsTab';
+// import { MonthlyReportsTab } from '../components/dashboard/MonthlyReportsTab';
 import './Settings.css';
 
 const Settings = () => {
@@ -182,12 +182,12 @@ const Settings = () => {
                     >
                         <User size={18} /> Profile
                     </button>
-                    <button 
+                    {/* <button 
                         className={`settings-tab ${activeTab === 'reports' ? 'active' : ''}`}
                         onClick={() => { if(playPop) playPop(); setActiveTab('reports'); }}
                     >
                         <FileText size={18} /> Monthly Reports
-                    </button>
+                    </button> */}
                     <button 
                         className={`settings-tab ${activeTab === 'advisor' ? 'active' : ''}`}
                         onClick={() => { if(playPop) playPop(); setActiveTab('advisor'); }}
@@ -293,9 +293,9 @@ const Settings = () => {
                     )}
 
                     {/* Monthly Reports Card */}
-                    {activeTab === 'reports' && (
+                    {/* {activeTab === 'reports' && (
                         <MonthlyReportsTab />
-                    )}
+                    )} */}
 
                     {/* AI Advisor Selection Card */}
                     {activeTab === 'advisor' && (
