@@ -990,7 +990,7 @@ const Expenses = () => {
                                         <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
                                             Paid: ${paid.toLocaleString()}
                                         </span>
-                                        <span className={`badge ${left > 0 ? 'warning-badge' : 'success-badge'}`}>
+                                        <span className="badge success-badge">
                                             Left: ${left.toLocaleString()}
                                         </span>
                                     </>
@@ -1089,9 +1089,12 @@ const Expenses = () => {
                                     padding: '6px 14px', 
                                     height: '32px',
                                     ...(activeColor ? {
-                                        backgroundColor: activeColor,
-                                        color: activeColor === '#ffffff' ? '#000000' : '#ffffff',
-                                        border: 'none'
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        backdropFilter: 'blur(8px)',
+                                        WebkitBackdropFilter: 'blur(8px)',
+                                        border: `1px solid ${activeColor}`,
+                                        color: activeColor === '#ffffff' ? 'var(--text-primary)' : activeColor,
+                                        boxShadow: `0 0 10px ${activeColor}33`
                                     } : {})
                                 }}
                             >
@@ -2218,19 +2221,21 @@ const Expenses = () => {
             <Modal
                 isOpen={showCustomPaymentModal}
                 onClose={() => setShowCustomPaymentModal(false)}
-                useNeonGlow={true}
-                dimOverlay={false}
+                useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
+                clearBlur={true}
+                transparentOverlay={true}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
-                containerStyle={{ width: '100%', maxWidth: '500px', padding: '32px', borderRadius: '24px' }}
+                containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                 title={(() => {
                     const activeColor = {
                         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
                         red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
                         yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                            Custom Payment <span style={{ color: activeColor }}>{customPaymentData.monthLabel}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <DollarSign size={20} color={activeColor} />
+                            <span style={{ color: activeColor }}>Custom Payment: {customPaymentData.monthLabel}</span>
                         </div>
                     );
                 })()}

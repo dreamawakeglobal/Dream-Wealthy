@@ -20,6 +20,7 @@
 .metric-title {
     color: var(--text-secondary);
     font-size: 0.9rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }

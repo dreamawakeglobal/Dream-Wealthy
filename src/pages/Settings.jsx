@@ -8,9 +8,10 @@ import { useStore } from '../store';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
+import { MonthlyReportsTab } from '../components/dashboard/MonthlyReportsTab';
 import './Settings.css';
 
 const Settings = () => {
@@ -143,6 +144,28 @@ const Settings = () => {
         navigate('/dashboard');
     };
 
+    const handleDisconnectBank = async (accountId) => {
+        if(playPop) playPop();
+        const confirmDisconnect = window.confirm("Are you sure you want to disconnect this bank account? All loaded transactions will be purged from your dashboard.");
+        if (!confirmDisconnect) return;
+        
+        try {
+            // Delete from Supabase. Assuming ON DELETE CASCADE removes associated transactions.
+            const { error } = await supabase.from('accounts').delete().eq('id', accountId);
+            if (error) throw error;
+            
+            // Remove from local Zustand store to update UI instantly
+            useStore.setState(state => ({
+                accounts: state.accounts.filter(a => String(a.id) !== String(accountId))
+            }));
+            
+            // Optional: You could also hit an Edge Function here to call plaidClient.itemRemove() 
+            // to permanently sever the Plaid API connection and halt billing.
+        } catch (err) {
+            alert(`Error disconnecting bank: ${err.message}`);
+        }
+    };
+
     return (
         <div className="settings-page-container animate-fade-in">
             <div className="settings-header">
@@ -158,6 +181,12 @@ const Settings = () => {
                         onClick={() => { if(playPop) playPop(); setActiveTab('profile'); }}
                     >
                         <User size={18} /> Profile
+                    </button>
+                    <button 
+                        className={`settings-tab ${activeTab === 'reports' ? 'active' : ''}`}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('reports'); }}
+                    >
+                        <FileText size={18} /> Monthly Reports
                     </button>
                     <button 
                         className={`settings-tab ${activeTab === 'advisor' ? 'active' : ''}`}
@@ -263,6 +292,11 @@ const Settings = () => {
                 </AnimateOnScroll>
                     )}
 
+                    {/* Monthly Reports Card */}
+                    {activeTab === 'reports' && (
+                        <MonthlyReportsTab />
+                    )}
+
                     {/* AI Advisor Selection Card */}
                     {activeTab === 'advisor' && (
                         <AnimateOnScroll delay={0.1}>
@@ -364,10 +398,19 @@ const Settings = () => {
                                                     {acc.needs_relink ? 'Bank connection expired. Reconnect to resume sync.' : 'Connection active and syncing.'}
                                                 </p>
                                             </div>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                             {acc.needs_relink && (
                                                 <PlaidConnectButton isUpdateMode={true} linkedAccessToken={acc.plaid_access_token} brokenAccountId={acc.id} />
                                             )}
+                                            <Button 
+                                                variant="secondary" 
+                                                onClick={() => handleDisconnectBank(acc.id)} 
+                                                style={{ color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                                            >
+                                                Disconnect
+                                            </Button>
                                         </div>
+                                    </div>
                                     ))}
                                 </div>
                             )}

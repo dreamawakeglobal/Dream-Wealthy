@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { StickyNote, X } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { supabase } from '../supabaseClient';
 import './FloatingNotes.css';
 
 const STORAGE_KEY = 'dream-wealthy-notes';
@@ -14,6 +16,7 @@ const getPageName = (pathname) => {
 const FloatingNotes = () => {
     const location = useLocation();
     const { user } = useAuth();
+    const { theme, expenseBorderColor } = useTheme();
     const pageName = getPageName(location.pathname);
 
     // Notes state keyed by page
@@ -25,6 +28,45 @@ const FloatingNotes = () => {
 
     const [isOpen, setIsOpen] = useState(false);
 
+    // Initial Cloud Merge
+    useEffect(() => {
+        if (!user) return;
+        const loadCloudNotes = async () => {
+            const cloudNotes = user?.user_metadata?.notes || {};
+            const localNotesRaw = localStorage.getItem(STORAGE_KEY);
+            let localNotes = {};
+            try { if (localNotesRaw) localNotes = JSON.parse(localNotesRaw); } catch(e) {}
+
+            // If cloud is empty but local has data, push local up (zero data loss on migration)
+            if (Object.keys(cloudNotes).length === 0 && Object.keys(localNotes).length > 0) {
+                try {
+                    await supabase.auth.updateUser({ data: { notes: localNotes } });
+                } catch(e) { console.error('Failed to migrate local notes to cloud:', e); }
+            } else if (Object.keys(cloudNotes).length > 0) {
+                // If cloud has data, cloud wins.
+                setAllNotes(cloudNotes);
+            }
+        };
+        loadCloudNotes();
+    }, [user]);
+
+    // Save to localStorage and push to Supabase Cloud securely via Debounce
+    const debounceTimer = useRef(null);
+    useEffect(() => {
+        if (!user) return;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(allNotes));
+
+        // 1.5s Rate limit protection logic against Supabase API
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(async () => {
+            try {
+                await supabase.auth.updateUser({ data: { notes: allNotes } });
+            } catch(e) { console.error('Silently failed syncing notes to cloud:', e); }
+        }, 1500);
+
+        return () => { if (debounceTimer.current) clearTimeout(debounceTimer.current); };
+    }, [allNotes, user]);
+
     // Dragging state
     const [position, setPosition] = useState({ x: 20, y: 100 });
     const isDragging = useRef(false);
@@ -33,11 +75,6 @@ const FloatingNotes = () => {
     const btnRef = useRef(null);
 
     const currentNote = allNotes[pageName] || '';
-
-    // Save to localStorage whenever notes change
-    useEffect(() => {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(allNotes));
-    }, [allNotes]);
 
     const updateNote = (text) => {
         setAllNotes(prev => ({ ...prev, [pageName]: text }));
@@ -100,13 +137,23 @@ const FloatingNotes = () => {
 
     if (location.pathname === '/' || location.pathname === '/onboarding' || !user) return null;
 
+    const activeRgb = expenseBorderColor && expenseBorderColor !== 'none' ? ({
+        blue: '79, 163, 247', white: '255, 255, 255', black: '136, 136, 136',
+        red: '255, 59, 48', green: '46, 204, 113', purple: '139, 92, 246',
+        yellow: '234, 179, 8', orange: '249, 115, 22'
+    }[expenseBorderColor] || '255, 215, 0') : '255, 215, 0';
+
     return (
         <>
             {/* Draggable Button */}
             <button
                 ref={btnRef}
                 className="floating-notes-btn"
-                style={{ left: position.x, top: position.y }}
+                style={{ 
+                    left: position.x, 
+                    top: position.y,
+                    '--glow-rgb': activeRgb
+                }}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}

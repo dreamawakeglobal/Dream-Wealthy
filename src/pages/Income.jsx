@@ -481,25 +481,25 @@ const Income = () => {
 
             <div className="income-summary-grid">
                 <AnimateOnScroll delay={0.1}>
-                    <Card glass className={`summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                        <p className="summary-label">Current Monthly</p>
+                    <Card glass className={`summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ textAlign: 'center' }}>
+                        <p className="summary-label" style={{ textAlign: 'center' }}>Current Monthly</p>
                         <h2 className="summary-value positive">
                             $<AnimatedNumber value={totalMonthlyIncome} />
                         </h2>
-                        <p className="summary-subtext">Bi-Monthly: ${totalBiWeeklyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}  |  Yearly: ${totalYearlyIncome.toLocaleString()}</p>
+                        <p className="summary-subtext" style={{ textAlign: 'center' }}>Bi-Monthly: ${totalBiWeeklyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}  |  Yearly: ${totalYearlyIncome.toLocaleString()}</p>
                     </Card>
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.2}>
-                    <Card glass className={`summary-card success-border ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ height: '100%' }}>
-                        <div className="summary-label with-icon">
+                    <Card glass className={`summary-card success-border ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ height: '100%', textAlign: 'center' }}>
+                        <div className="summary-label with-icon" style={{ justifyContent: 'center' }}>
                             <Sparkles size={16} className="text-success" />
                             <span>Projected Growth (Current + Future)</span>
                         </div>
                         <h2 className="summary-value text-success">
                             $<AnimatedNumber value={totalProjectedMonthly} />
                         </h2>
-                        <p className="summary-subtext">Monthly target</p>
+                        <p className="summary-subtext" style={{ textAlign: 'center' }}>Monthly target</p>
                     </Card>
                 </AnimateOnScroll>
             </div>
@@ -515,7 +515,7 @@ const Income = () => {
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
                                 <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                    Received: ${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions)), 0).toLocaleString()}
+                                    Received: <span className="text-success" style={{ marginLeft: '4px' }}>${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions)), 0).toLocaleString()}</span>
                                 </span>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -531,9 +531,12 @@ const Income = () => {
                                         padding: '6px 14px', 
                                         height: '32px',
                                         ...(activeColor ? {
-                                            backgroundColor: activeColor,
-                                            color: activeColor === '#ffffff' ? '#000000' : '#ffffff',
-                                            border: 'none'
+                                            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                            backdropFilter: 'blur(8px)',
+                                            WebkitBackdropFilter: 'blur(8px)',
+                                            border: `1px solid ${activeColor}`,
+                                            color: activeColor === '#ffffff' ? 'var(--text-primary)' : activeColor,
+                                            boxShadow: `0 0 10px ${activeColor}33`
                                         } : {})
                                     }}
                                 >

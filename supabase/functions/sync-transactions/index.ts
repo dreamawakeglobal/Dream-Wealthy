@@ -85,26 +85,45 @@ serve(async (req) => {
 
     console.log(`Plaid Sync logic found ${added.length} new transactions for User ${account.user_id}`);
 
-    // 4. Map Plaid Data to our Database Schema
-    const mappedTransactions = added.map((tx) => ({
-      plaid_transaction_id: tx.transaction_id,
-      user_id: account.user_id,
-      account_id: account.id, // Use our internal Postgres UUID representation, not Plaid's string.
-      amount: tx.amount, // Plaid amounts are positive for outflows (expenses) and negative for inflows (income)
-      date: tx.date,
-      merchant_name: tx.merchant_name || tx.name,
-      category: tx.personal_finance_category?.primary || tx.category?.[0] || 'Uncategorized',
-      pending: tx.pending
-    }));
+    // 4. Process Added & Modified Transactions (Map to Database Schema)
+    const transactionsToUpsert = [...added, ...modified]
+      .filter(tx => {
+        const preciseCat = tx.personal_finance_category?.detailed;
+        // Natively exclude Internal Bank transfers to prevent duplicate expense distortion!
+        return preciseCat !== 'TRANSFER_IN_ACCOUNT_TRANSFER' && preciseCat !== 'TRANSFER_OUT_ACCOUNT_TRANSFER';
+      })
+      .map((tx) => ({
+        plaid_transaction_id: tx.transaction_id,
+        user_id: account.user_id,
+        account_id: account.id, // Use our internal Postgres UUID representation, not Plaid's string.
+        amount: tx.amount, // Plaid amounts are positive for outflows (expenses) and negative for inflows (income)
+        date: tx.date,
+        merchant_name: tx.merchant_name || tx.name || 'Unknown',
+        category: tx.personal_finance_category?.primary || tx.category?.[0] || 'Uncategorized',
+        pending: tx.pending
+      }));
 
-    // 5. Insert new transactions into Postgres
-    if (mappedTransactions.length > 0) {
+    // 5. Upsert transactions into Postgres
+    if (transactionsToUpsert.length > 0) {
       const { error: insertErr } = await supabaseAdmin
         .from('transactions')
-        .upsert(mappedTransactions, { onConflict: 'plaid_transaction_id' }); // Prevent duplicates
+        .upsert(transactionsToUpsert, { onConflict: 'plaid_transaction_id' }); // Prevent duplicates and strictly update modified statuses
 
       if (insertErr) {
-        throw new Error(`Error inserting transactions: ${insertErr.message}`);
+        throw new Error(`Error upserting transactions: ${insertErr.message}`);
+      }
+    }
+
+    // 5.5. Auto-Purge Removed Transactions continuously
+    if (removed.length > 0) {
+      const transactionIdsToRemove = removed.map(r => r.transaction_id);
+      const { error: deleteErr } = await supabaseAdmin
+        .from('transactions')
+        .delete()
+        .in('plaid_transaction_id', transactionIdsToRemove);
+
+      if (deleteErr) {
+        throw new Error(`Error deleting removed transactions: ${deleteErr.message}`);
       }
     }
 

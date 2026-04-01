@@ -13,6 +13,7 @@
 .summary-label {
     color: var(--text-secondary);
     font-size: 0.9rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 8px;

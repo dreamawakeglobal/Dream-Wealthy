@@ -71,6 +71,27 @@ export const FinancialProvider = ({ children }) => {
     const store = useStore();
     const [plaidBalances, setPlaidBalances] = useState({ checking: 0, savings: 0, total: 0 });
 
+    const forcePlaidRefresh = useCallback(async () => {
+        if (!user) return false;
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return false;
+            
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/force-plaid-refresh`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                }
+            });
+
+            return res.ok;
+        } catch (e) {
+            console.error("Force Plaid Refresh Error:", e);
+            return false;
+        }
+    }, [user]);
+
     const forceSyncPlaid = useCallback(async () => {
         if (!user) return false;
         try {
@@ -344,7 +365,8 @@ export const FinancialProvider = ({ children }) => {
         setSubscriptions: store.setSubscriptions,
 
         // Plaid Sync
-        forceSyncPlaid
+        forceSyncPlaid,
+        forcePlaidRefresh
     };
 
     return (

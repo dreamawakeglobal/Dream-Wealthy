@@ -5,11 +5,12 @@ import { useSound } from '../../SoundContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from './Button';
 
-const COOLDOWN_HOURS = 6;
+// TEMPORARY: 0 hours for live testing immediately. We will switch this back to 24 once confirmed.
+const COOLDOWN_HOURS = 0;
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
 
 export const SyncButton = () => {
-    const { forceSyncPlaid } = useFinancialContext();
+    const { forceSyncPlaid, forcePlaidRefresh } = useFinancialContext();
     const { playPop } = useSound();
     const { theme, expenseBorderColor } = useTheme();
     const [isSyncing, setIsSyncing] = useState(false);
@@ -58,7 +59,24 @@ export const SyncButton = () => {
         if (playPop) playPop();
         setIsSyncing(true);
         
-        const success = await forceSyncPlaid();
+        // 1. Instantly force Plaid to interrogate the bank bypassing 24hr cache entirely!
+        if (forcePlaidRefresh) {
+            await forcePlaidRefresh();
+        }
+        
+        // 2. Plaid's async extraction from banking servers takes 30-60 seconds.
+        // We will natively poll Supabase every 15 seconds for 45 seconds total!
+        let success = false;
+        
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            await new Promise(resolve => setTimeout(resolve, 15000));
+            success = await forceSyncPlaid();
+            
+            // If the Edge function returns true, it extracted data. Plaid finished!
+            if (success) {
+                break;
+            }
+        }
         
         if (success) {
             const now = Date.now();
@@ -101,7 +119,7 @@ export const SyncButton = () => {
                 }}
             />
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                {isSyncing ? 'Syncing...' : (timeRemaining || 'Update')}
+                {isSyncing ? 'Interrogating Bank...' : (timeRemaining || 'Instant Force Sync')}
             </span>
             <style>{`
                 @keyframes spin {

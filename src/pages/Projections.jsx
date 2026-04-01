@@ -282,7 +282,7 @@ const Projections = () => {
                 <div className="projection-visuals">
                     <AnimateOnScroll delay={0.1}>
                         <Card glass className={`chart-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                            <h3>Net Wealth Curve ({projectionYears * 12} Months)</h3>
+                            <h3 style={{ textAlign: 'center' }}>Net Wealth Curve ({projectionYears * 12} Months)</h3>
                             <div className="area-chart-wrapper">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
@@ -318,9 +318,10 @@ const Projections = () => {
 
                     <AnimateOnScroll delay={0.2} yOffset={40}>
                         <Card glass className={`table-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ margin: 0 }}>Month-by-Month Breakdown</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: '16px' }}>
+                                <div />
+                                <h3 style={{ margin: 0, textAlign: 'center' }}>Month-by-Month Breakdown</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
                                     <Button 
                                         onClick={() => { playPop(); setShowEngineModal(true); }} 
                                         variant="primary" 

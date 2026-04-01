@@ -4,15 +4,18 @@
     width: 144px;
     height: 144px;
     border-radius: 50%;
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: grab;
-    box-shadow: 0 0 30px 10px rgba(255, 215, 0, 0.4);
-    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 0 30px 10px rgba(var(--glow-rgb, 255, 215, 0), 0.4);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
     user-select: none;
     touch-action: none;
 }
@@ -20,10 +23,12 @@
 .floating-notes-btn:active {
     cursor: grabbing;
     transform: scale(1.1);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .floating-notes-btn:hover {
-    box-shadow: 0 0 40px 16px rgba(255, 215, 0, 0.6);
+    box-shadow: 0 0 40px 16px rgba(var(--glow-rgb, 255, 215, 0), 0.6);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .floating-notes-btn .note-indicator {
