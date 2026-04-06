@@ -6,8 +6,16 @@ import { Input } from './ui/Input';
 import { CurrencyInput } from './ui/CurrencyInput';
 import { AnimatedNumber } from './ui/AnimatedNumber';
 import { Button } from './ui/Button';
+import { useTheme } from '../contexts/ThemeContext';
 
 export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
+    const { expenseBorderColor, theme } = useTheme();
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
+
     const { name, monthlyContribution, annualReturnRate } = asset;
     const [projectionYears, setProjectionYears] = useState(1); // 1 or 2
 
@@ -108,21 +116,17 @@ export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
 
                     <div className="controls-group">
                         <label>Projection Timeline</label>
-                        <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                            <Button
-                                variant={projectionYears === 1 ? 'primary' : 'secondary'}
-                                onClick={() => setProjectionYears(1)}
-                                style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }}
-                            >
-                                1 Year
-                            </Button>
-                            <Button
-                                variant={projectionYears === 2 ? 'primary' : 'secondary'}
-                                onClick={() => setProjectionYears(2)}
-                                style={{ flex: 1, padding: '8px', fontSize: '0.85rem' }}
-                            >
-                                2 Years
-                            </Button>
+                        <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
+                            {[1, 2, 3, 4, 5].map(year => (
+                                <Button
+                                    key={year}
+                                    variant={projectionYears === year ? 'primary' : 'secondary'}
+                                    onClick={() => setProjectionYears(year)}
+                                    style={{ flex: 1, minWidth: '70px', padding: '8px', fontSize: '0.85rem' }}
+                                >
+                                    {year} {year === 1 ? 'Year' : 'Years'}
+                                </Button>
+                            ))}
                         </div>
                     </div>
                 </Card>

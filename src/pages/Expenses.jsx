@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +33,7 @@ export const getFilterLabel = (filterId) => {
     if (filterId === 'PSEUDO_RIDE_SHARE') return '🚗 Ride Share';
     if (filterId === 'PSEUDO_GROCERIES') return '🛒 Groceries';
     if (filterId === 'PSEUDO_HYGIENE_HOUSEHOLD') return '🧼 Hygiene & Household';
+    if (filterId === 'PSEUDO_SUBSCRIPTIONS') return '🔄 Subscriptions';
     if (filterId === 'All') return '🌎 All';
     
     // Format the backend string: replace underscores with spaces and title case
@@ -78,6 +79,9 @@ export const detectPseudoCategory = (tx) => {
     if (merchant.includes('cvs') || merchant.includes('walgreens') || merchant.includes('rite aid') || merchant.includes('sephora') || merchant.includes('ulta') || merchant.includes('bath & body') || merchant.includes('home depot') || merchant.includes("lowe's") || merchant.includes('ace hardware') || merchant.includes('ikea') || merchant.includes('bed bath') || merchant.includes('pharmacy') || merchant.includes('drugstore') || merchant.includes('sally beauty') || merchant.includes('mac cosmetics')) {
         return 'PSEUDO_HYGIENE_HOUSEHOLD';
     }
+    if (merchant.includes('netflix') || merchant.includes('spotify') || merchant.includes('hulu') || merchant.includes('disney+') || merchant.includes('apple') || merchant.includes('amazon prime') || merchant.includes('hbomax') || merchant.includes('peacock') || merchant.includes('paramount') || merchant.includes('gym')) {
+        return 'PSEUDO_SUBSCRIPTIONS';
+    }
     
     return tx.category || 'Uncategorized';
 };
@@ -121,9 +125,9 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -233,6 +237,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
                         <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
                         <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                        <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
                         {uniqueCategories.map(c => <option key={c} value={c}>{getFilterLabel(c)}</option>)}
                     </select>
                 </div>
@@ -303,11 +308,11 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const itemsPerPage = 6;
 
     // Derived Dynamic Colors
-    const activeColor = {
+    const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
     const badgeTextColor = (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white';
 
     const totalPages = Math.ceil(expenses.length / itemsPerPage);
@@ -347,11 +352,11 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                                 containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                                 title={(() => {
-                                    const activeColor = {
-                                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                        yellow: '#eab308', orange: '#f97316'
-                                    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                                    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                     return (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', background: activeColor, padding: '8px 16px', borderRadius: '12px', boxShadow: `0 4px 12px ${activeColor}40` }}>
                                             <Activity size={20} />
@@ -362,6 +367,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                             >
                                 <ExpenseForm
                                     initialData={expense}
+                                    showDueDate={showDueDate}
                                     onAdd={(updates) => {
                                         onEdit(expense.id, updates);
                                         setEditingId(null);
@@ -509,9 +515,9 @@ const Expenses = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -528,10 +534,13 @@ const Expenses = () => {
         const currentY = now.getFullYear();
         
         const expenseTxs = transactions.filter(tx => {
-            if (tx.amount <= 0) return false;
-            const txDate = new Date(tx.date);
-            // Must strictly use local month because Plaid returns YYYY-MM-DD
-            return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
+            if (tx.amount <= 0 || !tx.date) return false;
+            const [y, m] = tx.date.split('-');
+            const catLower = (tx.category || '').toLowerCase();
+            const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return false;
+
+            return parseInt(y) === currentY && (parseInt(m) - 1) === currentM;
         });
         
         if (expenseTxs.length === 0) return ['All'];
@@ -546,9 +555,13 @@ const Expenses = () => {
         const currentY = now.getFullYear();
 
         const expenseTxs = transactions.filter(tx => {
-            if (tx.amount <= 0) return false;
-            const txDate = new Date(tx.date);
-            return txDate.getMonth() === currentM && txDate.getFullYear() === currentY;
+            if (tx.amount <= 0 || !tx.date) return false;
+            const [y, m] = tx.date.split('-');
+            const catLower = (tx.category || '').toLowerCase();
+            const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return false;
+
+            return parseInt(y) === currentY && (parseInt(m) - 1) === currentM;
         });
         
         if (activityCategoryFilter === 'All') return expenseTxs;
@@ -573,16 +586,18 @@ const Expenses = () => {
         if (!transactions || !fixedExpenses) return fixedExpenses || [];
         
         const now = new Date();
-        const fortyDaysAgo = new Date();
-        fortyDaysAgo.setDate(now.getDate() - 40);
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
         
         const thisMonthMerchants = [];
         transactions.forEach(tx => {
-            if (tx.amount <= 0 || tx.pending) return;
-            const txDate = new Date(tx.date);
-            if (txDate >= fortyDaysAgo) {
-                const m = (tx.merchant_name || tx.name || '').trim();
-                if (m) thisMonthMerchants.push(m.toLowerCase());
+            if (tx.amount <= 0 || !tx.date) return;
+            const [y, m] = tx.date.split('-');
+            
+            // STRICTLY bind matched expenses to the current calendar month so they reset at exactly 11:59PM on the last day!
+            if (parseInt(y) === currentY && (parseInt(m) - 1) === currentM) {
+                const merchantName = (tx.merchant_name || tx.name || '').trim();
+                if (merchantName) thisMonthMerchants.push(merchantName.toLowerCase());
             }
         });
 
@@ -759,35 +774,74 @@ const Expenses = () => {
         { id: 'paramount', name: 'Paramount+', domain: 'paramountplus.com', cost: 11.99 },
         { id: 'peacock', name: 'Peacock', domain: 'peacocktv.com', cost: 7.99 },
     ];
-    const activeSubscriptions = subscriptions || [];
+    const activeSubscriptions = useMemo(() => {
+        if (!transactions || !subscriptions) return subscriptions || [];
+        
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+        
+        const thisMonthSubscriptionMerchants = [];
+        transactions.forEach(tx => {
+            if (tx.amount <= 0 || !tx.date) return;
+            const [y, m] = tx.date.split('-');
+            
+            if (parseInt(y) === currentY && (parseInt(m) - 1) === currentM) {
+                if (detectPseudoCategory(tx) === 'PSEUDO_SUBSCRIPTIONS') {
+                    const merchantName = (tx.merchant_name || tx.name || '').trim();
+                    if (merchantName) thisMonthSubscriptionMerchants.push(merchantName.toLowerCase());
+                }
+            }
+        });
+
+        return (subscriptions || []).map(sub => {
+            const searchTag = sub.name.toLowerCase();
+            const isPaid = thisMonthSubscriptionMerchants.some(m => m.includes(searchTag) || searchTag.includes(m));
+            if (isPaid) {
+                return { ...sub, isPaid: true };
+            }
+            return sub;
+        });
+    }, [subscriptions, transactions]);
     const [showAddSub, setShowAddSub] = useState(false);
     const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '', dueDate: '' });
 
     const toggleSubscription = (sub) => {
         playPop();
         const prev = subscriptions || [];
-        const exists = prev.find(s => s.id === sub.id);
+        const exists = prev.find(s => s.name === sub.name);
         if (exists) {
-            setSubscriptions(prev.filter(s => s.id !== sub.id));
+            setSubscriptions(prev.filter(s => s.name !== sub.name));
         } else {
-            setSubscriptions([...prev, sub]);
+            setSubscriptions([...prev, { ...sub, id: crypto.randomUUID() }]);
         }
     };
 
     const addCustomSubscription = (e) => {
         e.preventDefault();
         if (newSub.name && newSub.cost) {
-            const custom = {
-                id: `custom-${crypto.randomUUID()}`,
-                name: newSub.name,
-                domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
-                cost: parseFloat(newSub.cost),
-                dueDate: newSub.dueDate || null
-            };
             const prev = subscriptions || [];
-            setSubscriptions([...prev, custom]);
+            if (editingSubId) {
+                setSubscriptions(prev.map(s => String(s.id) === String(editingSubId) ? { 
+                    ...s, 
+                    name: newSub.name, 
+                    domain: newSub.domain,
+                    cost: parseFloat(newSub.cost), 
+                    dueDate: newSub.dueDate || null 
+                } : s));
+            } else {
+                const custom = {
+                    id: crypto.randomUUID(),
+                    name: newSub.name,
+                    domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
+                    cost: parseFloat(newSub.cost),
+                    dueDate: newSub.dueDate || null
+                };
+                setSubscriptions([...prev, custom]);
+            }
             setNewSub({ name: '', cost: '', domain: '', dueDate: '' });
             setShowAddSub(false);
+            setEditingSubId(null);
         }
     };
 
@@ -931,15 +985,15 @@ const Expenses = () => {
 
             <div className="expense-metrics-grid">
                 <AnimateOnScroll delay={0.1}>
-                    <Card glass className={`metric-box warning-border ${borderGlowClass}`}>
-                        <div className="metric-header">
+                    <Card glass className={`metric-box warning-border ${borderGlowClass}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <div className="metric-header" style={{ justifyContent: 'center', gap: '8px' }}>
                             <span className="metric-title">Total Monthly Expenses</span>
                             <TrendingDown size={20} className="text-danger" />
                         </div>
-                        <h2 className="metric-value">
+                        <h2 className="metric-value" style={{ color: 'var(--danger)' }}>
                             $<AnimatedNumber value={totalMonthlyExpenses} />
                         </h2>
-                        <div className="metric-breakdown">
+                        <div className="metric-breakdown" style={{ justifyContent: 'center' }}>
                             <span>Fixed: ${totalFixedExpenses.toLocaleString()}</span>
                             <span>Var: ${totalVariableExpenses.toLocaleString()}</span>
                             <span>Subs: ${totalSubscriptionCost.toFixed(0)}</span>
@@ -949,12 +1003,12 @@ const Expenses = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.2}>
-                    <Card glass className={`metric-box success-border ${borderGlowClass}`}>
-                        <div className="metric-header">
+                    <Card glass className={`metric-box success-border ${borderGlowClass}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <div className="metric-header" style={{ justifyContent: 'center', gap: '8px' }}>
                             <span className="metric-title">Net Cash Flow</span>
                             <Wallet size={20} className="text-success" />
                         </div>
-                        <h2 className={`metric-value ${netMonthlyCashFlow >= 0 ? 'positive' : 'negative'}`}>
+                        <h2 className="metric-value" style={{ color: netMonthlyCashFlow < 0 ? 'var(--danger)' : 'var(--success)' }}>
                             {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} />
                         </h2>
                         <p className="metric-subtext">Remaining for allocation</p>
@@ -962,12 +1016,12 @@ const Expenses = () => {
                 </AnimateOnScroll>
 
                 <AnimateOnScroll delay={0.3}>
-                    <Card glass className={`metric-box highlight-border ${borderGlowClass}`}>
-                        <div className="metric-header">
+                    <Card glass className={`metric-box highlight-border ${borderGlowClass}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                        <div className="metric-header" style={{ justifyContent: 'center', gap: '8px' }}>
                             <span className="metric-title">Savings Rate</span>
                             <Percent size={20} className="text-primary" />
                         </div>
-                        <h2 className="metric-value">
+                        <h2 className="metric-value" style={{ color: 'var(--warning)', textShadow: '0 0 16px rgba(245, 158, 11, 0.6)' }}>
                             <AnimatedNumber value={parseFloat(savingsRate)} />%
                         </h2>
                         <p className="metric-subtext">Target: {'>'}20%</p>
@@ -1004,8 +1058,7 @@ const Expenses = () => {
                                 if (playPop) playPop();
                                 setIsFixedModalOpen(true);
                             }}
-                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px' }}
-                            className={borderGlowClass}
+                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px', border: '1px solid var(--surface-border)' }}
                         >
                             <Plus size={16} style={{ marginRight: '6px' }} />
                             Add Bill
@@ -1021,11 +1074,11 @@ const Expenses = () => {
                         customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                         containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                         title={(() => {
-                            const activeColor = {
-                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                yellow: '#eab308', orange: '#f97316'
-                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                            const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <Home size={20} color={activeColor} /> 
@@ -1108,8 +1161,7 @@ const Expenses = () => {
                                     if (playPop) playPop();
                                     setIsVariableModalOpen(true);
                                 }}
-                                style={{ height: '32px', padding: '6px 14px' }}
-                                className={borderGlowClass}
+                                style={{ height: '32px', padding: '6px 14px', border: '1px solid var(--surface-border)' }}
                             >
                                 <Plus size={16} style={{ marginRight: '6px' }} />
                                 Add expense
@@ -1126,11 +1178,11 @@ const Expenses = () => {
                         customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                         containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                         title={(() => {
-                            const activeColor = {
-                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                yellow: '#eab308', orange: '#f97316'
-                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                            const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <CreditCard size={20} color={activeColor} /> 
@@ -1185,7 +1237,7 @@ const Expenses = () => {
 
                     <Modal
                         isOpen={showAddSub}
-                        onClose={() => setShowAddSub(false)}
+                        onClose={() => { setShowAddSub(false); setEditingSubId(null); setNewSub({ name: '', cost: '', domain: '', dueDate: '' }); }}
                         silent={true}
                         useNeonGlow={theme !== 'dark' || expenseBorderColor !== 'none'}
                         clearBlur={true}
@@ -1193,14 +1245,14 @@ const Expenses = () => {
                         customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                         containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                         title={(() => {
-                            const activeColor = {
-                                blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                yellow: '#eab308', orange: '#f97316'
-                            }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                            const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
-                                    Add <span style={{ color: activeColor }}>Custom Subscription</span>
+                                    {editingSubId ? 'Edit' : 'Add'} <span style={{ color: activeColor }}>{editingSubId ? 'Subscription' : 'Custom Subscription'}</span>
                                 </div>
                             );
                         })()}
@@ -1251,15 +1303,15 @@ const Expenses = () => {
                                 </div>
                             </div>
                             
-                            <Button type="submit" variant="primary" style={{ width: '100%', marginTop: '8px', padding: '14px', borderRadius: '12px', background: 'var(--accent-gradient)', border: 'none', color: '#fff', fontWeight: 600, fontSize: '1rem', boxShadow: '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
-                                <Plus size={20} style={{ marginRight: '8px' }}/> Add Subscription
+                            <Button type="submit" variant="primary" style={{ width: '100%', marginTop: '8px', padding: '14px', borderRadius: '12px', background: activeColor || 'var(--accent-gradient)', border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : '#fff', fontWeight: 600, fontSize: '1rem', boxShadow: activeColor ? `0 4px 12px ${activeColor}4d` : '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
+                                {editingSubId ? <><Save size={20} style={{ marginRight: '8px' }}/> Save Changes</> : <><Plus size={20} style={{ marginRight: '8px' }}/> Add Subscription</>}
                             </Button>
                         </form>
                     </Modal>
 
                     {/* Common Subscriptions Grid */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: activeSubscriptions.length > 0 ? '24px' : '0' }}>
-                        {COMMON_SUBSCRIPTIONS.filter(s => !activeSubscriptions.find(a => a.id === s.id)).map(sub => (
+                        {COMMON_SUBSCRIPTIONS.filter(s => !activeSubscriptions.find(a => a.name === s.name)).map(sub => (
                             <div
                                 key={sub.id}
                                 onClick={() => toggleSubscription(sub)}
@@ -1292,17 +1344,29 @@ const Expenses = () => {
                                 {activeSubscriptions.map(sub => (
                                     <div
                                         key={sub.id}
-                                        onDoubleClick={() => startEditingSub(sub)}
+                                        onDoubleClick={() => {
+                                            playPop();
+                                            setEditingSubId(sub.id);
+                                            setNewSub({ name: sub.name, cost: sub.cost, dueDate: sub.dueDate || '', domain: sub.domain || '' });
+                                            setShowAddSub(true);
+                                        }}
                                         style={{
                                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                                             padding: '16px 8px', borderRadius: '12px', position: 'relative',
-                                            border: '1px solid var(--primary)', background: 'rgba(79, 70, 229, 0.05)',
-                                            cursor: editingSubId === sub.id ? 'default' : 'pointer',
+                                            border: `1px solid ${sub.isPaid ? (activeColor || 'var(--success)') : 'var(--primary)'}`, 
+                                            background: sub.isPaid ? (activeColor ? activeColor + '10' : 'rgba(46, 204, 113, 0.05)') : 'rgba(79, 70, 229, 0.05)',
+                                            cursor: 'pointer',
+                                            overflow: 'hidden'
                                         }}
                                     >
+                                        {sub.isPaid && (
+                                            <div style={{ position: 'absolute', inset: 0, background: activeColor ? activeColor + '80' : 'rgba(46, 204, 113, 0.5)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}>
+                                                <span style={{ color: 'white', fontWeight: 900, fontSize: '1.25rem', letterSpacing: '4px', textShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '2px solid white', padding: '4px 12px', borderRadius: '6px' }}>PAID</span>
+                                            </div>
+                                        )}
                                         <button
-                                            onClick={() => removeSubscription(sub.id)}
-                                            style={{ position: 'absolute', top: '4px', right: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', fontSize: '0.7rem' }}
+                                            onClick={(e) => { e.stopPropagation(); removeSubscription(sub.id); }}
+                                            style={{ position: 'absolute', top: '4px', right: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', fontSize: '0.7rem', zIndex: 20 }}
                                             title="Remove"
                                         >
                                             <Trash2 size={12} />
@@ -1313,48 +1377,11 @@ const Expenses = () => {
                                             style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'contain', marginBottom: '8px', background: 'white', padding: '2px' }}
                                             onError={e => { e.target.style.display = 'none'; }}
                                         />
-                                        {editingSubId === sub.id ? (
-                                            <div 
-                                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}
-                                                onBlur={(e) => {
-                                                    // If the blur event is moving focus OUTSIDE of this container, save it.
-                                                    if (!e.currentTarget.contains(e.relatedTarget)) {
-                                                        saveSubEdit(sub.id);
-                                                    }
-                                                }}
-                                            >
-                                                <input
-                                                    autoFocus
-                                                    value={editSubName}
-                                                    onChange={e => setEditSubName(e.target.value)}
-                                                    onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
-                                                    style={{ width: '90%', fontSize: '0.8rem', fontWeight: 600, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px', outline: 'none' }}
-                                                />
-                                                <CurrencyInput
-                                                    raw
-                                                    value={editSubCost}
-                                                    onChange={e => setEditSubCost(e.target.value)}
-                                                    onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
-                                                    style={{ width: '70px', fontSize: '0.85rem', fontWeight: 700, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--danger)', padding: '4px', outline: 'none', marginTop: '4px' }}
-                                                />
-                                                <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                                                    <input
-                                                        type="number" min="1" max="31"
-                                                        placeholder="Due Day"
-                                                        value={editSubDueDate}
-                                                        onChange={e => setEditSubDueDate(e.target.value)}
-                                                        onKeyDown={e => { if (e.key === 'Enter') saveSubEdit(sub.id); if (e.key === 'Escape') setEditingSubId(null); }}
-                                                        style={{ width: '60px', fontSize: '0.75rem', fontWeight: 600, textAlign: 'center', background: 'var(--surface-hover)', border: '1px solid var(--primary)', borderRadius: '6px', color: 'var(--text-secondary)', padding: '4px', outline: 'none' }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <>
-                                                <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}>{sub.name}</span>
-                                                <span style={{ fontSize: '0.85rem', color: 'var(--danger)', fontWeight: 700, marginTop: '4px' }}>${sub.cost.toFixed(2)}</span>
-                                                {sub.dueDate && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Due: {sub.dueDate}{[11, 12, 13].includes(Number(sub.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(sub.dueDate) % 10) - 1] || 'th')}</span>}
-                                            </>
-                                        )}
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            {sub.name}
+                                        </span>
+                                        <span style={{ fontSize: '0.85rem', color: sub.isPaid ? (activeColor || 'var(--success)') : 'var(--danger)', fontWeight: 700, marginTop: '4px' }}>${sub.cost.toFixed(2)}</span>
+                                        {sub.dueDate && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Due: {sub.dueDate}{[11, 12, 13].includes(Number(sub.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(sub.dueDate) % 10) - 1] || 'th')}</span>}
                                     </div>
                                 ))}
                             </div>
@@ -1411,11 +1438,11 @@ const Expenses = () => {
                             customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                             title={(() => {
-                                const activeColor = {
-                                    blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                    red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                    yellow: '#eab308', orange: '#f97316'
-                                }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                                const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                 return (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
                                         Track <span style={{ color: activeColor }}>New Debt</span>
@@ -1519,7 +1546,7 @@ const Expenses = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                                     <Button type="button" variant="secondary" onClick={() => setShowAddTrackerForm(false)} style={{ background: 'transparent', border: '1px solid var(--surface-border)' }}>Cancel</Button>
-                                    <Button type="submit" variant="primary" style={{ padding: '0 24px' }}>Add Debt Pipeline</Button>
+                                    <Button type="submit" variant="primary" style={{ padding: '0 24px', background: activeColor || 'var(--accent-gradient)', border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : '#fff', boxShadow: activeColor ? `0 4px 12px ${activeColor}4d` : 'none' }}>Add Debt Pipeline</Button>
                                 </div>
                             </form>
                         </Modal>
@@ -1534,11 +1561,11 @@ const Expenses = () => {
                             customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                             title={(() => {
-                                const activeColor = {
-                                    blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                                    red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                                    yellow: '#eab308', orange: '#f97316'
-                                }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                                const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                 return (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
                                         Edit <span style={{ color: activeColor }}>Tracked Debt</span>
@@ -1630,7 +1657,7 @@ const Expenses = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '8px', paddingTop: '16px', borderTop: '1px solid var(--surface-border)' }}>
                                     <Button type="button" variant="secondary" onClick={() => setEditingDebtId(null)} style={{ background: 'transparent', border: '1px solid var(--surface-border)' }}>Cancel</Button>
-                                    <Button type="submit" variant="primary" style={{ padding: '0 24px' }}>Save Changes</Button>
+                                    <Button type="submit" variant="primary" style={{ padding: '0 24px', background: activeColor || 'var(--accent-gradient)', border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : '#fff', boxShadow: activeColor ? `0 4px 12px ${activeColor}4d` : 'none' }}>Save Changes</Button>
                                 </div>
                             </form>
                         </Modal>
@@ -2059,11 +2086,11 @@ const Expenses = () => {
                 transparentOverlay={true}
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 title={(() => {
-                    const activeColor = {
-                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                        yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                     return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2095,6 +2122,7 @@ const Expenses = () => {
                         { id: 'PSEUDO_RIDE_SHARE', label: getFilterLabel('PSEUDO_RIDE_SHARE') },
                         { id: 'PSEUDO_GROCERIES', label: getFilterLabel('PSEUDO_GROCERIES') },
                         { id: 'PSEUDO_HYGIENE_HOUSEHOLD', label: getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD') },
+                        { id: 'PSEUDO_SUBSCRIPTIONS', label: getFilterLabel('PSEUDO_SUBSCRIPTIONS') },
                         ...uniqueCategories.filter(c => c !== 'All').map(c => ({ id: c, label: getFilterLabel(c) }))
                     ].map(catObj => (
                         <button
@@ -2143,6 +2171,24 @@ const Expenses = () => {
                                                     if (newCat && newCat !== detectPseudoCategory(tx)) {
                                                         const overrideCat = newCat + ' ';
                                                         
+                                                        // ----------------------------------------------------
+                                                        // MAGICAL SUBSCRIPTIONS COMMUNICATION HOOK
+                                                        // The user requested that explicitly declaring a txn as a
+                                                        // Subscription in this UI dropdown automatically generates it!
+                                                        // ----------------------------------------------------
+                                                        if (newCat === 'PSEUDO_SUBSCRIPTIONS') {
+                                                            const newSub = {
+                                                                id: crypto.randomUUID(),
+                                                                user_id: tx.user_id,
+                                                                name: (tx.merchant_name || tx.name || 'New Subscription').trim(),
+                                                                cost: Math.abs(tx.amount),
+                                                                cycle: 'Monthly'
+                                                            };
+                                                            // Persists directly utilizing store.setSubscriptions mapped into FinancialContext
+                                                            setSubscriptions([...(subscriptions || []), newSub]);
+                                                            if (playCheck) playCheck();
+                                                        }
+
                                                         // Optimistic Update
                                                         useStore.setState(s => ({
                                                             transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
@@ -2161,6 +2207,7 @@ const Expenses = () => {
                                                 <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
                                                 <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
                                                 <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                                                <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
                                                 {uniqueCategories.filter(c => c !== 'All').map(c => (
                                                     <option key={c} value={c}>{getFilterLabel(c)}</option>
                                                 ))}
@@ -2227,11 +2274,11 @@ const Expenses = () => {
                 customClass={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                 containerStyle={{ maxWidth: '500px', borderRadius: '24px' }}
                 title={(() => {
-                    const activeColor = {
-                        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
-                        yellow: '#eab308', orange: '#f97316'
-                    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
+                    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                     return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <DollarSign size={20} color={activeColor} />
@@ -2255,7 +2302,7 @@ const Expenses = () => {
                     </div>
                     <Button 
                         variant="primary" 
-                        style={{ width: '100%', marginTop: '24px', padding: '12px' }}
+                        style={{ width: '100%', marginTop: '24px', padding: '12px', background: activeColor || 'var(--accent-gradient)', border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : '#fff', boxShadow: activeColor ? `0 4px 12px ${activeColor}4d` : 'none' }}
                         onClick={handleCustomPaymentSubmit}
                     >
                         Save Custom Payment

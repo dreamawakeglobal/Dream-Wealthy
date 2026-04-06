@@ -5,8 +5,8 @@ import { useSound } from '../../SoundContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Button } from './Button';
 
-// TEMPORARY: 0 hours for live testing immediately. We will switch this back to 24 once confirmed.
-const COOLDOWN_HOURS = 0;
+// Production: 24-hour cooldown lock to prevent Plaid API Rate Limiting.
+const COOLDOWN_HOURS = 24;
 const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
 
 export const SyncButton = () => {

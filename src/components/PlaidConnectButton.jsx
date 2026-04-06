@@ -107,7 +107,7 @@ const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedA
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Failed to exchange public token.");
+            if (!response.ok) throw new Error(data.error || data.message || `Raw Server Error: ${JSON.stringify(data)}`);
 
             setSuccessMessage(`Successfully connected to ${institutionName}!`);
             await fetchAllData(); // <--- Dynamically repaint the UI with the fresh data!

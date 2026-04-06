@@ -16,7 +16,7 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
         }
     };
 
-    const glowColor = theme === 'dark' ? '#9d4edd' : '#4FA3F7';
+    const glowColor = theme === 'dark' ? '#ffffff' : '#4FA3F7';
 
     const modalContent = (
         <div 

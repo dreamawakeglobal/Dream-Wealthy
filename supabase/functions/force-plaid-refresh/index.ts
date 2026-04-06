@@ -22,13 +22,22 @@ serve(async (req) => {
             throw new Error('Supabase environment variables are missing.');
         }
 
-        // 1. Authenticate User request
+        // 1. Authenticate User request statelessly
         const supabaseClient = createClient(supabaseUrl, supabaseKey, {
-            global: { headers: { Authorization: req.headers.get('Authorization')! } }
+            global: { headers: { Authorization: req.headers.get('Authorization')! } },
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
         });
 
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-        if (userError || !user) throw new Error('Unauthorized');
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) throw new Error("Missing Authorization header!");
+        
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError || !user) throw new Error(`Unauthorized API JWT verification failed: ${userError?.message || 'No user found'}`);
 
         // 2. Instantiate Admin Client
         const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);

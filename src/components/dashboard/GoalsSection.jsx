@@ -44,9 +44,9 @@ export const GoalsSection = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const [showForm, setShowForm] = useState(false);
     const [editingGoalId, setEditingGoalId] = useState(null);
@@ -169,7 +169,7 @@ export const GoalsSection = () => {
                 }}>
                     <Card glass className="savings-goal-popup" style={{ background: 'rgba(255, 255, 255, 0.05)', backgroundColor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: `3px solid ${newGoal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${newGoal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px' }}>
-                            <h3 style={{ margin: 0, fontSize: '1.5rem', color: '#fff' }}>
+                            <h3 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--text-primary)' }}>
                                 {editingGoalId ? 'Edit' : 'Create'} <span style={{ color: newGoal.color }}>{editingGoalId ? 'Goal Settings' : 'New Goal'}</span>
                             </h3>
                             <button onClick={() => setShowForm(false)} className="btn-icon">
@@ -277,7 +277,7 @@ export const GoalsSection = () => {
                                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pick a color for the orb's hologram effect</span>
                                 </div>
                             </div>
-                            <Button type="submit" variant="primary" style={{ padding: '16px', fontSize: '1.05rem', marginTop: '8px' }}>
+                            <Button type="submit" variant="primary" style={{ padding: '16px', fontSize: '1.05rem', marginTop: '8px', background: newGoal.color || 'var(--accent-gradient)', border: 'none', color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)', boxShadow: newGoal.color ? `0 4px 12px ${newGoal.color}66` : '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
                                 {editingGoalId ? 'Update Goal' : 'Save Goal to Dashboard'}
                             </Button>
                         </form>
@@ -308,7 +308,7 @@ export const GoalsSection = () => {
                         <Card glass className="savings-goal-popup details-popup" style={{ background: 'rgba(255, 255, 255, 0.05)', backgroundColor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', pointerEvents: 'auto', padding: '32px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: `3px solid ${goal.color}`, boxShadow: `0 20px 40px rgba(0,0,0,0.6), 0 0 40px ${goal.color}33`, animation: 'hologram-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                                 <div>
-                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.5rem', color: '#fff' }}>
+                                    <h3 style={{ margin: '0 0 4px 0', fontSize: '1.5rem', color: 'var(--text-primary)' }}>
                                         {goal.name} <span style={{ color: goal.color }}>Summary</span>
                                     </h3>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -339,7 +339,7 @@ export const GoalsSection = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
                                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Remaining Amount</div>
-                                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#fff' }}>${stats.remaining.toLocaleString()}</div>
+                                        <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>${stats.remaining.toLocaleString()}</div>
                                     </div>
                                     <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
                                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>Est. Completion</div>
@@ -348,14 +348,14 @@ export const GoalsSection = () => {
                                 </div>
 
                                 <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
-                                    <div style={{ fontSize: '0.95rem', color: '#fff', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span>Contribution Plan</span>
                                         <span className="badge" style={{ background: goal.color, color: '#000', fontWeight: 600 }}>${(goal.contributionAmount || 0).toLocaleString()} / {goal.contributionFrequency || 'monthly'}</span>
                                     </div>
                                     
                                     {stats.paymentsLeft !== '?' ? (
                                         <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5, marginTop: '12px' }}>
-                                            At this current velocity, it will take exactly <strong style={{color: '#fff', fontSize: '1rem'}}>{stats.paymentsLeft} more {(goal.contributionFrequency || 'monthly').replace('ly', ' payments')}</strong> to reach your target goal of ${goal.targetAmount.toLocaleString()}. 
+                                            At this current velocity, it will take exactly <strong style={{color: 'var(--text-primary)', fontSize: '1rem'}}>{stats.paymentsLeft} more {(goal.contributionFrequency || 'monthly').replace('ly', ' payments')}</strong> to reach your target goal of ${goal.targetAmount.toLocaleString()}. 
                                             Keep up the consistency!
                                         </div>
                                     ) : (

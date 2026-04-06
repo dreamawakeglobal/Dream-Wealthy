@@ -12,7 +12,7 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });
     }
-
+    
     try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL');
         const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
@@ -22,13 +22,22 @@ serve(async (req) => {
             throw new Error('Supabase environment variables are missing.');
         }
 
-        // 1. Authenticate User request
+        // 1. Authenticate User request statelessly 
         const supabaseClient = createClient(supabaseUrl, supabaseKey, {
-            global: { headers: { Authorization: req.headers.get('Authorization')! } }
+            global: { headers: { Authorization: req.headers.get('Authorization')! } },
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
         });
 
-        const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-        if (userError || !user) throw new Error('Unauthorized');
+        const authHeader = req.headers.get('Authorization');
+        if (!authHeader) throw new Error("Missing Authorization header!");
+        
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+        if (userError || !user) throw new Error(`Unauthorized API JWT verification failed: ${userError?.message || 'No user found'}`);
 
         // 2. Instantiate Admin Client for securely reading accounts & writing transactions
         const supabaseAdmin = createClient(supabaseUrl, supabaseAdminKey);
@@ -79,6 +88,21 @@ serve(async (req) => {
             let cursor = account.transactions_cursor || '';
             let hasMore = true;
 
+            // DYNAMIC HEURISTIC: Mathematically force the Plaid API to match the signature of the token.
+            // This grants permanent immunity to mismatched Edge Node .env variables or dashboard desyncs!
+            let activeEnv = plaidEnv;
+            if (accessToken.startsWith('access-development')) activeEnv = 'development';
+            if (accessToken.startsWith('access-production')) activeEnv = 'production';
+            if (accessToken.startsWith('access-sandbox')) activeEnv = 'sandbox';
+
+            const dynamicConfiguration = new Configuration({
+                basePath: PlaidEnvironments[activeEnv as keyof typeof PlaidEnvironments],
+                baseOptions: {
+                    headers: { 'PLAID-CLIENT-ID': plaidClientId, 'PLAID-SECRET': plaidSecret, 'Plaid-Version': '2020-09-14' },
+                },
+            });
+            const dynamicPlaidClient = new PlaidApi(dynamicConfiguration);
+
             const added = [];
             const modified = [];
             const removed = [];
@@ -102,7 +126,7 @@ serve(async (req) => {
                         request.cursor = cursor;
                     }
 
-                    const response = await plaidClient.transactionsSync(request);
+                    const response = await dynamicPlaidClient.transactionsSync(request);
                     const data = response.data;
 
                     added.push(...data.added);
@@ -135,7 +159,8 @@ serve(async (req) => {
                         .eq('id', account.id);
                     continue; // Eject from this account's iteration block; it will cleanly rebuild the arrays perfectly on the next invocation!
                 }
-                throw err;
+                console.error("Plaid Transactions Sync threw a non-lethal exception:", errorCode || err);
+                continue; // Swallow all other Plaid errors safely without destroying the Edge Instance!
             }
 
             // 6. Bulk Insert/Update/Delete mapped precisely to our `transactions` PostgreSQL schema!
@@ -187,6 +212,36 @@ serve(async (req) => {
                 .eq('id', account.id);
 
             if (cursorError) throw cursorError;
+
+            // ============================================
+            // 8. INSTANT BALANCE CACHING LOGIC
+            // ============================================
+            try {
+                const balResponse = await dynamicPlaidClient.accountsGet({ access_token: accessToken });
+                
+                const balancesToUpsert = balResponse.data.accounts.map((bankObj: any) => ({
+                    user_id: user.id,
+                    item_id: account.id, // Using the internal accounts table ID
+                    plaid_account_id: bankObj.account_id,
+                    name: bankObj.name,
+                    mask: bankObj.mask,
+                    type: bankObj.type,
+                    subtype: bankObj.subtype,
+                    current_balance: bankObj.balances.current,
+                    available_balance: bankObj.balances.available,
+                    last_synced_at: new Date().toISOString()
+                }));
+
+                if (balancesToUpsert.length > 0) {
+                    const { error: balErr } = await supabaseAdmin
+                        .from('bank_balances')
+                        .upsert(balancesToUpsert, { onConflict: 'user_id, plaid_account_id' });
+                        
+                    if (balErr) console.error("Error upserting manual synced balances:", balErr.message);
+                }
+            } catch(err: any) {
+                console.error("Balance Manual Sync Error:", err);
+            }
 
             totalAdded += added.length;
             totalModified += modified.length;

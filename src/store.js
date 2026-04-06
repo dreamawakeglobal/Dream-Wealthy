@@ -14,6 +14,11 @@ const mapToCamel = (item) => {
     if (mapped.api_id !== undefined) { mapped.apiId = mapped.api_id; delete mapped.api_id; }
     if (mapped.asset_class !== undefined) { mapped.assetClass = mapped.asset_class; delete mapped.asset_class; }
 
+    // Goal Contribution Fields
+    if (mapped.contribution_amount !== undefined) { mapped.contributionAmount = mapped.contribution_amount; delete mapped.contribution_amount; }
+    if (mapped.contribution_frequency !== undefined) { mapped.contributionFrequency = mapped.contribution_frequency; delete mapped.contribution_frequency; }
+    if (mapped.track_auto !== undefined) { mapped.trackAuto = mapped.track_auto; delete mapped.track_auto; }
+
     // Auto-Tracker Fields
     if (mapped.target_category !== undefined) { mapped.targetCategory = mapped.target_category; delete mapped.target_category; }
     if (mapped.manual_received !== undefined) { mapped.manualReceived = mapped.manual_received; delete mapped.manual_received; }
@@ -61,6 +66,11 @@ const mapToSnake = (item) => {
     if (snakeItem.dueDate !== undefined) { snakeItem.due_date = snakeItem.dueDate; delete snakeItem.dueDate; }
     if (snakeItem.customPayments !== undefined) { snakeItem.custom_payments = snakeItem.customPayments; delete snakeItem.customPayments; }
 
+    // Goal Contribution Fields
+    if (snakeItem.contributionAmount !== undefined) { snakeItem.contribution_amount = snakeItem.contributionAmount; delete snakeItem.contributionAmount; }
+    if (snakeItem.contributionFrequency !== undefined) { snakeItem.contribution_frequency = snakeItem.contributionFrequency; delete snakeItem.contributionFrequency; }
+    if (snakeItem.trackAuto !== undefined) { snakeItem.track_auto = snakeItem.trackAuto; delete snakeItem.trackAuto; }
+
     return snakeItem;
 }
 
@@ -82,7 +92,9 @@ export const useStore = create((set, get) => ({
     transactions: [], // Plaid Database Cache
     portfolio: [],     // User Investment Holdings
     subscriptions: [],
-    accounts: [],      // Plaid Bank Accounts
+    accounts: [],      // Plaid Bank Accounts (Items)
+    bankBalances: [],  // Cached Checked/Savings Balances
+
 
     // Profile Settings
     profileData: {
@@ -113,7 +125,8 @@ export const useStore = create((set, get) => ({
                 transactionsRes,
                 portfolioRes,
                 subscriptionsRes,
-                accountsRes
+                accountsRes,
+                bankBalancesRes
             ] = await Promise.all([
                 supabase.from('profiles').select('*').eq('user_id', user.id).single(),
                 supabase.from('income_streams').select('*').eq('user_id', user.id),
@@ -126,7 +139,8 @@ export const useStore = create((set, get) => ({
                 supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false }),
                 supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
                 supabase.from('subscriptions').select('*').eq('user_id', user.id),
-                supabase.from('accounts').select('*').eq('user_id', user.id)
+                supabase.from('accounts').select('*').eq('user_id', user.id),
+                supabase.from('bank_balances').select('*').eq('user_id', user.id)
             ]);
 
             const newProfileData = profileRes.data ? {
@@ -153,12 +167,35 @@ export const useStore = create((set, get) => ({
                 transactions: (transactionsRes.data || []),
                 portfolio: (portfolioRes.data || []).map(mapToCamel),
                 subscriptions: (subscriptionsRes.data || []).map(mapToCamel),
-                accounts: (accountsRes.data || [])
+                accounts: (accountsRes.data || []),
+                bankBalances: (bankBalancesRes.data || []).map(mapToCamel)
             });
 
             if (transactionsRes.error) {
                 alert("SUPABASE RLS SYSTEM ERROR: " + JSON.stringify(transactionsRes.error));
             }
+
+            // --- DATABASE CACHE WARMER ---
+            // If the user has linked accounts but their Supabase cache is completely empty,
+            // we secretly trigger the new Edge function to fetch their live numbers and lock them into the database cache!
+            const actData = accountsRes.data || [];
+            const balData = bankBalancesRes.data || [];
+            
+            if (actData.length > 0 && balData.length === 0 && !window.__cache_warming) {
+                window.__cache_warming = true; // Use transient window memory so it resets on hard refresh, guaranteeing a solid attempt
+                console.log("Database-First Cache is completely empty for this existing user! Executing background Cache Warmer Sequence...");
+                supabase.auth.getSession().then(({ data: { session } }) => {
+                    if (!session) return;
+                    fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-plaid-accounts`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }
+                    }).then(() => {
+                        console.log("Cache warmed successfully! Relocating data into UI natively.");
+                        get().fetchAllData(); // Refresh Zustand once the backend Edge Function completes the upsert
+                    });
+                });
+            }
+
         } catch (err) {
             console.error("Zustand fetchAllData failed:", err);
         }

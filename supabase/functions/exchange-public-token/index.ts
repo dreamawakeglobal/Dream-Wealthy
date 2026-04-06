@@ -77,7 +77,7 @@ serve(async (req) => {
     // 5. Store the sensitive Access Token in our Supabase `accounts` table securely.
     // We use the supabaseAdmin to bypass potentially strict RLS insert policies
     console.log(`Saving Item ${itemId} to database...`);
-    const { error: dbError } = await supabaseAdmin
+    const { data: dbData, error: dbError } = await supabaseAdmin
       .from('accounts')
       .upsert({
         user_id: user.id, // Explicitly linked to the verified user
@@ -91,6 +91,36 @@ serve(async (req) => {
 
     if (dbError) {
       throw new Error(`Failed to save account to database: ${dbError.message}`);
+    }
+
+    const internalAccountId = dbData?.[0]?.id;
+
+    // 5.5 PROACTIVE CACHE WARMER (Fire & Forget, wrapped defensively so it NEVER breaks Auth)
+    if (internalAccountId) {
+       try {
+           console.log(`Proactively extracting initial balances for Item ${itemId}...`);
+           const balResponse = await plaidClient.accountsGet({ access_token: accessToken });
+           const balancesToUpsert = balResponse.data.accounts.map((bankObj: any) => ({
+               user_id: user.id,
+               item_id: internalAccountId,
+               plaid_account_id: bankObj.account_id,
+               name: bankObj.name,
+               mask: bankObj.mask,
+               type: bankObj.type,
+               subtype: bankObj.subtype,
+               current_balance: bankObj.balances.current,
+               available_balance: bankObj.balances.available,
+               last_synced_at: new Date().toISOString()
+           }));
+
+           if (balancesToUpsert.length > 0) {
+              const { error: balErr } = await supabaseAdmin.from('bank_balances').upsert(balancesToUpsert, { onConflict: 'user_id, plaid_account_id' });
+              if (balErr) console.error("Initial Cache Warm Error:", balErr.message);
+              else console.log(`Successfully cached ${balancesToUpsert.length} initial balances instantly before UI reload!`);
+           }
+       } catch (syncErr: any) {
+           console.error("Proactive Balance extraction failed (ignoring to prevent Auth crash):", syncErr.message);
+       }
     }
 
     // 6. Return success to the frontend

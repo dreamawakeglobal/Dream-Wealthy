@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFinancialContext } from '../../FinancialContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { AnimatedNumber } from '../ui/AnimatedNumber';
+import { SyncButton } from '../ui/SyncButton';
 import './UserLevelBadge.css';
 
 const WEALTH_QUOTES = [
@@ -97,9 +98,12 @@ export const UserLevelBadge = () => {
                     <div className="networth-hero-card">
                         <div className="networth-header">
                             <h3 className="networth-title">Total Net Worth</h3>
-                            <div className={`status-indicator ${isPositive ? 'positive' : 'negative'}`}>
-                                <div className="status-dot" />
-                                {isPositive ? 'Accumulating' : 'Deficit'}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <SyncButton />
+                                <div className={`status-indicator ${isPositive ? 'positive' : 'negative'}`}>
+                                    <div className="status-dot" />
+                                    {isPositive ? 'Accumulating' : 'Deficit'}
+                                </div>
                             </div>
                         </div>
                         

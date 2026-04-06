@@ -22,16 +22,24 @@ const useRecentIncomeMerchants = (transactions) => {
         if (!transactions || transactions.length === 0) return [];
         
         const merchantMap = new Map();
-        const sixtyDaysAgo = new Date();
-        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        const now = new Date();
+        const currentM = now.getMonth();
+        const currentY = now.getFullYear();
+        const prevM = currentM === 0 ? 11 : currentM - 1;
+        const prevY = currentM === 0 ? currentY - 1 : currentY;
+        const cutOffDate = new Date(prevY, prevM, 25);
         
         for (const tx of transactions) {
             if (tx.amount >= 0) continue;
             const txDate = new Date(tx.date);
-            if (txDate < sixtyDaysAgo) continue;
-            
+            if (txDate < cutOffDate) continue;
+
             const rawM = (tx.merchant_name || tx.name || '').trim();
             if (!rawM) continue;
+
+            const catLower = (tx.category || '').toLowerCase();
+            const merchant = rawM.toLowerCase();
+            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) continue;
             
             if (!merchantMap.has(rawM)) {
                 merchantMap.set(rawM, Math.abs(tx.amount));
@@ -57,9 +65,9 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -227,9 +235,9 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                     title={(() => {
                         const activeColor = {
                             blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                            red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                            red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
                             yellow: '#eab308', orange: '#f97316'
-                        }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7');
+                        }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                         return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', background: activeColor, padding: '8px 16px', borderRadius: '12px', boxShadow: `0 4px 12px ${activeColor}40` }}>
                                 <Edit2 size={20} />
@@ -335,9 +343,9 @@ const Income = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
-    }[expenseBorderColor] || (theme === 'dark' ? '#9d4edd' : '#4FA3F7') : undefined;
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
     // --- Modal State ---
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
@@ -354,13 +362,19 @@ const Income = () => {
         const currentM = now.getMonth();
         const currentY = now.getFullYear();
 
-        const fortyDaysAgo = new Date();
-        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+        const prevM = currentM === 0 ? 11 : currentM - 1;
+        const prevY = currentM === 0 ? currentY - 1 : currentY;
+        const cutOffDate = new Date(prevY, prevM, 25);
 
         const cats = new Set(transactions.filter(tx => {
             if (tx.amount >= 0 || tx.pending) return false;
             const txDate = new Date(tx.date);
-            return txDate >= fortyDaysAgo;
+            
+            const catLower = (tx.category || '').toLowerCase();
+            const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return false;
+
+            return txDate >= cutOffDate;
         }).map(tx => tx.category || 'Uncategorized'));
         
         return ['All', ...cats].sort();
@@ -372,13 +386,19 @@ const Income = () => {
         const currentM = now.getMonth();
         const currentY = now.getFullYear();
 
-        const fortyDaysAgo = new Date();
-        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+        const prevM = currentM === 0 ? 11 : currentM - 1;
+        const prevY = currentM === 0 ? currentY - 1 : currentY;
+        const cutOffDate = new Date(prevY, prevM, 25);
 
         const incomeTxs = transactions.filter(tx => {
             if (tx.amount >= 0) return false;
             const txDate = new Date(tx.date);
-            return txDate >= fortyDaysAgo;
+
+            const catLower = (tx.category || '').toLowerCase();
+            const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return false;
+
+            return txDate >= cutOffDate;
         });
         
         if (activityCategoryFilter === 'All') return incomeTxs;
@@ -515,7 +535,7 @@ const Income = () => {
                                     Expected: ${totalMonthlyIncome.toLocaleString()}
                                 </span>
                                 <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
-                                    Received: <span className="text-success" style={{ marginLeft: '4px' }}>${currentIncome.reduce((sum, stream) => sum + (stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions)), 0).toLocaleString()}</span>
+                                    Received: <span className="text-success" style={{ marginLeft: '4px' }}>${Math.abs(filteredTotalIncomeAmount).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
                                 </span>
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -828,7 +848,7 @@ const Income = () => {
                 title={(() => {
                     const activeColor = {
                         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6',
+                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (

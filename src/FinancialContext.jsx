@@ -27,6 +27,9 @@ export const mapUserExpenseToPlaidCategory = (name) => {
     if (n.includes('hygiene') || n.includes('household') || n.includes('supplies') || n.includes('toiletr') || n.includes('cleaning')) {
         return 'PSEUDO_HYGIENE_HOUSEHOLD';
     }
+    if (n.includes('subscription') || n.includes('streaming') || n.includes('membership')) {
+        return 'PSEUDO_SUBSCRIPTIONS';
+    }
 
     // Food & Dining (Excluding Groceries!)
     if (n.includes('food') || n.includes('din') || n.includes('restaurant') || n.includes('coffee') || n.includes('snack') || n.includes('drink')) {
@@ -69,7 +72,19 @@ export const FinancialProvider = ({ children }) => {
 
     // Bind Zustand Store to Context to prevent breaking 15 existing pages
     const store = useStore();
-    const [plaidBalances, setPlaidBalances] = useState({ checking: 0, savings: 0, total: 0 });
+    const bankBalances = useStore(state => state.bankBalances) || [];
+    
+    // Database-First: Natively calculate checking and savings directly from the Supabase Cache!
+    const plaidBalances = useMemo(() => {
+        let checking = 0;
+        let savings = 0;
+        bankBalances.forEach(acc => {
+            const bal = acc.available_balance !== null ? acc.available_balance : acc.current_balance || 0;
+            if (acc.subtype === 'checking') checking += Number(bal);
+            else if (acc.subtype === 'savings') savings += Number(bal);
+        });
+        return { checking, savings, total: checking + savings };
+    }, [bankBalances]);
 
     const forcePlaidRefresh = useCallback(async () => {
         if (!user) return false;
@@ -111,7 +126,9 @@ export const FinancialProvider = ({ children }) => {
                     const txData = await resTx.json();
                     
                     if (!resTx.ok) {
-                        console.error("SUPABASE EDGE NODE ERROR PING:", txData.error || txData);
+                        const errorMsg = typeof txData === 'object' ? (txData.error || JSON.stringify(txData)) : txData;
+                        console.error("SUPABASE EDGE NODE ERROR PING:", errorMsg);
+                        alert(`CRITICAL EDGE CRASH: ${errorMsg}`);
                         resolve(false);
                         return;
                     }
@@ -119,8 +136,10 @@ export const FinancialProvider = ({ children }) => {
                     if (resTx.ok && !txData.error && txData.synced) {
                         if (txData.synced.added > 0 || txData.synced.modified > 0 || txData.synced.removed > 0) {
                             console.log(`Manual Plaid Sync Executed: Extracted ${txData.synced.added} unseen transactions natively!`);
-                            store.fetchAllData(); 
                         }
+                        // GUBUR: A critical fix. We MUST refresh all DOM data completely decoupled from transactions!
+                        // Even if 0 transactions occurred, Bank Balances mathematically drift on their own. We must capture the state.
+                        store.fetchAllData(); 
 
                         if (txData.synced.has_more) {
                             setTimeout(syncTransactionsPaginated, 1500);
@@ -144,35 +163,25 @@ export const FinancialProvider = ({ children }) => {
         store.setUser(user);
         if (user) {
             store.fetchAllData();
+            // Database-First Architecture: Plaid data is now instantly pulled through store.fetchAllData()
             
-            const fetchPlaid = async () => {
-                try {
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) return;
-                    
-                    // 1. Fetch live checking/savings balances
-                    const resAccounts = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-plaid-accounts`, {
-                        method: 'POST',
-                        headers: { 
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.access_token}`
-                        }
-                    });
-                    
-                    const accountData = await resAccounts.json();
-                    if (resAccounts.ok && !accountData.error) {
-                        setPlaidBalances(accountData);
+            // --- 4-Hour Automated Background Synchronizer ---
+            // Natively executes the exact same process as the 'Instant Force Sync' button every 4 hours!
+            const lastSyncKey = `last_auto_sync_${user.id}`;
+            const lastSync = localStorage.getItem(lastSyncKey);
+            const now = new Date().getTime();
+            const fourHours = 4 * 60 * 60 * 1000;
+            
+            if (!lastSync || (now - Number(lastSync) > fourHours)) {
+                // Defensively delay by 2 seconds to prioritize instantaneous UI mounting and Dashboard animations
+                setTimeout(async () => {
+                    console.log('Initiating automated 4-hour background sync sequence...');
+                    const success = await forceSyncPlaid();
+                    if (success) {
+                        localStorage.setItem(lastSyncKey, now.toString());
                     }
-
-                    // 2. Automatically sync transactions
-                    forceSyncPlaid();
-
-                } catch (e) {
-                    console.error("Plaid Boot Sync Error:", e);
-                }
-            };
-            
-            fetchPlaid();
+                }, 2000);
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user, store.setUser, store.fetchAllData]);
@@ -200,12 +209,15 @@ export const FinancialProvider = ({ children }) => {
 
         return store.transactions.reduce((acc, tx) => {
             // Only sum up expenses (positive Plaid amounts). Negative amounts are income/refunds.
-            if (tx.amount > 0 && !tx.pending) {
-                const txDate = new Date(tx.date);
-                if (txDate.getMonth() === currentM && txDate.getFullYear() === currentY) {
+            if (tx.amount > 0 && tx.date) {
+                const [y, m, d] = tx.date.split('-');
+                if (parseInt(y) === currentY && parseInt(m) - 1 === currentM) {
+                    const catLower = (tx.category || '').toLowerCase();
+                    const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+                    if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return acc;
+
                     const isManual = tx.category && tx.category.endsWith(' ');
                     const category = tx.category ? tx.category.trim() : 'Uncategorized';
-                    const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
                     
                     // 1. Standard Macro Category aggregation
                     acc[category] = (acc[category] || 0) + tx.amount;
@@ -230,6 +242,11 @@ export const FinancialProvider = ({ children }) => {
                         if (merchant.includes('cvs') || merchant.includes('walgreens') || merchant.includes('rite aid') || merchant.includes('sephora') || merchant.includes('ulta') || merchant.includes('bath & body') || merchant.includes('home depot') || merchant.includes('lowe\'s') || merchant.includes('ace hardware') || merchant.includes('ikea') || merchant.includes('bed bath') || merchant.includes('pharmacy') || merchant.includes('drugstore') || merchant.includes('sally beauty') || merchant.includes('mac cosmetics')) {
                             acc['PSEUDO_HYGIENE_HOUSEHOLD'] = (acc['PSEUDO_HYGIENE_HOUSEHOLD'] || 0) + tx.amount;
                         }
+
+                        // 6. Virtual Pseudo-Category: SUBSCRIPTIONS
+                        if (merchant.includes('netflix') || merchant.includes('spotify') || merchant.includes('hulu') || merchant.includes('disney+') || merchant.includes('apple') || merchant.includes('amazon prime') || merchant.includes('hbomax') || merchant.includes('peacock') || merchant.includes('paramount') || merchant.includes('gym')) {
+                            acc['PSEUDO_SUBSCRIPTIONS'] = (acc['PSEUDO_SUBSCRIPTIONS'] || 0) + tx.amount;
+                        }
                     }
                 }
             }
@@ -245,12 +262,21 @@ export const FinancialProvider = ({ children }) => {
         const currentY = now.getFullYear();
 
         return store.transactions.reduce((acc, tx) => {
-            // Only sum up income (negative Plaid amounts).
-            if (tx.amount < 0 && !tx.pending) {
-                const txDate = new Date(tx.date);
-                const fortyDaysAgo = new Date();
-                fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
-                if (txDate >= fortyDaysAgo) {
+            // Only sum up income (negative Plaid amounts). We want to include pending checks too!
+            if (tx.amount < 0 && tx.date) {
+                const [year, month, day] = tx.date.split('-');
+                const txDate = new Date(year, parseInt(month) - 1, day);
+                const prevM = currentM === 0 ? 11 : currentM - 1;
+                const prevY = currentM === 0 ? currentY - 1 : currentY;
+                const cutOffDate = new Date(prevY, prevM, 25);
+                
+                if (txDate >= cutOffDate) {
+                    const catLower = (tx.category || '').toLowerCase();
+                    const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+                    
+                    // Exclude internal transfers, savings, and checking from counting as legitimate Income
+                    if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return acc;
+
                     const category = tx.category ? tx.category.trim() : 'Uncategorized';
                     // Plaid returns income as negative, so we use Math.abs() to make it positive for our tracker UI
                     acc[category] = (acc[category] || 0) + Math.abs(tx.amount);

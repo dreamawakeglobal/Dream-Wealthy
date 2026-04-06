@@ -37,7 +37,7 @@ const Home = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#10B981', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#ff3b30', green: '#10B981', purple: '#8b5cf6', pink: '#ec4899', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
@@ -219,8 +219,8 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 500 }} tickMargin={12} minTickGap={20} />
-                                        <YAxis orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 500 }} tickFormatter={(value) => value >= 1000 ? `$${(value / 1000).toFixed(0)}k` : `$${value}`} width={40} tickMargin={8} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
+                                        <YAxis orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickFormatter={(value) => value >= 1000 ? `$${(value / 1000).toFixed(0)}k` : `$${value}`} width={40} tickMargin={8} />
                                         <Tooltip content={<DualLineTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="income" name="Income" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIncome)" activeDot={{ r: 5, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowIncome)" />
                                         <Area type="linear" dataKey="expenses" name="Expenses" stroke="#F43F5E" strokeWidth={2.5} fillOpacity={1} fill="url(#colorExpenses)" activeDot={{ r: 5, fill: '#F43F5E', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowExpenses)" />
@@ -228,7 +228,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/income'); }}>
+                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/income'); }}>
                                     Manage Entries
                                 </Button>
                             </div>
@@ -255,14 +255,14 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#4FA3F7" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 500 }} tickMargin={12} minTickGap={20} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="value" stroke="#4FA3F7" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPortfolio)" activeDot={{ r: 5, fill: '#4FA3F7', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowPortfolio)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
+                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
                             </div>
                         </Card>
                     </AnimateOnScroll>
@@ -290,14 +290,14 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#10B981" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 11, fontWeight: 500 }} tickMargin={12} minTickGap={20} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="value" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFuture)" activeDot={{ r: 5, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowFuture)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" onClick={() => { playPop && playPop(); navigate('/projections'); }}>
+                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/projections'); }}>
                                     Run Projections
                                 </Button>
                             </div>

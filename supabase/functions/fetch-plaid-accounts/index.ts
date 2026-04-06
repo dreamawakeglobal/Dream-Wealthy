@@ -77,6 +77,7 @@ serve(async (req) => {
     const plaidClient = getPlaidClient();
     let totalChecking = 0;
     let totalSavings = 0;
+    const balancesToUpsert: any[] = [];
 
     for (const acc of accounts) {
        if (!acc.plaid_access_token) continue;
@@ -87,7 +88,7 @@ serve(async (req) => {
            
            const data = response.data.accounts;
            
-           data.forEach((bankObj) => {
+           data.forEach((bankObj: any) => {
                // Safely parse balance properties
                const balance = bankObj.balances?.available !== null 
                                 ? bankObj.balances.available 
@@ -98,11 +99,35 @@ serve(async (req) => {
                } else if (bankObj.subtype === 'savings') {
                    totalSavings += balance;
                }
+
+               // Push to UPSERT Pipeline
+               balancesToUpsert.push({
+                   user_id: user.id,
+                   item_id: acc.id, // Using our internal accounts (Item) table UUID
+                   plaid_account_id: bankObj.account_id,
+                   name: bankObj.name,
+                   mask: bankObj.mask,
+                   type: bankObj.type,
+                   subtype: bankObj.subtype,
+                   current_balance: bankObj.balances.current,
+                   available_balance: bankObj.balances.available,
+                   last_synced_at: new Date().toISOString()
+               });
            });
        } catch(plaidErr) {
            console.error("Failed to sync bank item:", plaidErr);
            // We intentionally swallow isolated institution errors so the rest of the accounts load!
        }
+    }
+
+    // 4.5. CACHE WARMER: Instantly push the data into the Database-First architecture
+    if (balancesToUpsert.length > 0) {
+        const { error: upsertErr } = await supabaseAdmin
+            .from('bank_balances')
+            .upsert(balancesToUpsert, { onConflict: 'user_id, plaid_account_id' });
+        
+        if (upsertErr) console.error("Cache Warmer Error:", upsertErr);
+        else console.log(`Successfully warmed cache with ${balancesToUpsert.length} balances.`);
     }
 
     // 5. Send the mathematical output natively back to the React Front-End
