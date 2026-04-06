@@ -8,7 +8,6 @@ import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
-import { SyncButton } from '../components/ui/SyncButton';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
@@ -857,7 +856,6 @@ const Income = () => {
                                 <Wallet size={20} color={activeColor} /> 
                                 <span style={{ color: activeColor }}>Recent Income Activity</span>
                             </div>
-                            <SyncButton />
                         </div>
                     );
                 })()}

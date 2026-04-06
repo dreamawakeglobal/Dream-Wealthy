@@ -14,7 +14,6 @@ import {
 } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { SyncButton } from '../components/ui/SyncButton';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
@@ -2097,7 +2096,6 @@ const Expenses = () => {
                                 <Wallet size={20} color={activeColor} /> 
                                 <span style={{ color: activeColor }}>Recent Bank Activity</span>
                             </div>
-                            <SyncButton />
                         </div>
                     );
                 })()}
