@@ -59,7 +59,8 @@
 .metric-breakdown {
     display: flex;
     gap: 16px;
-    color: var(--text-muted);
+    color: #000000;
+    font-weight: 600;
     font-size: 0.85rem;
     border-top: 1px solid var(--surface-border);
     padding-top: 12px;
@@ -67,7 +68,8 @@
 }
 
 .metric-subtext {
-    color: var(--text-muted);
+    color: #000000;
+    font-weight: 600;
     font-size: 0.85rem;
     margin-top: auto;
 }

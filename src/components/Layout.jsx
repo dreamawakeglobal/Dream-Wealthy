@@ -9,6 +9,7 @@ import { LogOut, User, Settings, CreditCard } from 'lucide-react';
 import { NotificationBell } from './NotificationBell';
 import AiAdvisorWidget from './AiAdvisorWidget';
 import BrokenConnectionModal from './BrokenConnectionModal';
+import { AICoachModal } from './dashboard/AICoachModal';
 import './Layout.css';
 
 const Layout = () => {
@@ -88,6 +89,8 @@ const Layout = () => {
                 </Suspense>
             </main>
             {location.pathname !== '/' && <Footer />}
+            
+            <AICoachModal />
         </div>
     );
 };

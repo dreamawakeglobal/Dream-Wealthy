@@ -33,7 +33,8 @@
 }
 
 .summary-subtext {
-    color: var(--text-muted);
+    color: #000000;
+    font-weight: 600;
     font-size: 0.9rem;
 }
 
@@ -148,6 +149,7 @@
     font-weight: 600;
     margin-bottom: 8px;
 }
+
 
 .income-badge {
     color: var(--text-secondary);

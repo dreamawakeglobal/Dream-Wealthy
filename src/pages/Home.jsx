@@ -174,7 +174,6 @@ const Home = () => {
             <section id="dashboard" className="dashboard-section">
                 <h2 className="section-title">Financial Overview</h2>
 
-
                 {/* Ultra Premium Profile Badge Engine */}
                 <AnimateOnScroll delay={0.4}>
                     <UserLevelBadge />

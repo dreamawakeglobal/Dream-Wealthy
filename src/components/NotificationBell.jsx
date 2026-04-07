@@ -1,17 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, AlertTriangle, AlertCircle, Calendar, Trophy, X, CheckCircle2 } from 'lucide-react';
+import { Bell, AlertTriangle, AlertCircle, Calendar, Trophy, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
+import { useStore } from '../store';
 import './NotificationBell.css';
 
 const IconMap = {
     AlertTriangle: AlertTriangle,
     AlertCircle: AlertCircle,
     Calendar: Calendar,
-    Trophy: Trophy
+    Trophy: Trophy,
+    Sparkles: Sparkles
 };
 
 export const NotificationBell = () => {
     const { notifications, dismiss, clearAll, unreadCount } = useNotifications();
+    const { setIsCoachModalOpen } = useStore();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -55,21 +58,38 @@ export const NotificationBell = () => {
                             </div>
                         ) : (
                             notifications.map(notif => {
-                                const IconComp = IconMap[notif.icon] || Bell;
-                                return (
-                                    <div key={notif.id} className={`notification-item ${notif.type}`}>
-                                        <div className="notification-icon-wrapper">
-                                            <IconComp size={18} />
-                                        </div>
-                                        <div className="notification-content">
-                                            <h4>{notif.title}</h4>
-                                            <p>{notif.message}</p>
-                                        </div>
-                                        <button className="dismiss-btn" onClick={() => dismiss(notif.id)}>
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                );
+                                        const IconComp = IconMap[notif.icon] || Bell;
+                                        
+                                        const handleItemClick = () => {
+                                            if (notif.action === 'OPEN_COACH') {
+                                                setIsCoachModalOpen(true);
+                                                setIsOpen(false); // Close the dropdown
+                                                dismiss(notif.id); 
+                                            }
+                                        };
+
+                                        return (
+                                            <div 
+                                                key={notif.id} 
+                                                className={`notification-item ${notif.type} ${notif.action ? 'actionable' : ''}`}
+                                                onClick={notif.action ? handleItemClick : undefined}
+                                                style={notif.action ? { cursor: 'pointer' } : {}}
+                                            >
+                                                <div className="notification-icon-wrapper">
+                                                    <IconComp size={18} />
+                                                </div>
+                                                <div className="notification-content">
+                                                    <h4>{notif.title}</h4>
+                                                    <p>{notif.message}</p>
+                                                </div>
+                                                <button 
+                                                    className="dismiss-btn" 
+                                                    onClick={(e) => { e.stopPropagation(); dismiss(notif.id); }}
+                                                >
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        );
                             })
                         )}
                     </div>

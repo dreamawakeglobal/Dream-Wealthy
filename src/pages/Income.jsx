@@ -214,6 +214,7 @@ export const getStreamAutoReceivedAmount = (stream, incomeTransactionsByCategory
 
 const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, incomeTransactionsByCategory = {}, filteredIncomeTransactions = [] }) => {
     const { theme, expenseBorderColor } = useTheme();
+    const { playPop } = useSound();
     const [isEditing, setIsEditing] = useState(false);
 
     const handleCancel = () => {
@@ -221,7 +222,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
     };
 
     return (
-        <div className="stream-item glass">
+        <div className="stream-item glass" onDoubleClick={() => { if (playPop) playPop(); setIsEditing(true); }}>
             {isEditing && (
                 <Modal 
                     isOpen={true} 
@@ -592,7 +593,7 @@ const Income = () => {
                     <AnimateOnScroll delay={0.2} className="income-column">
                         <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <h2 style={{ margin: 0 }}>Manifesting / Future</h2>
+                                <h2 style={{ margin: 0 }}>Future dreams</h2>
                                 <span className="badge gold" style={{ marginLeft: '12px' }}>${projectedFutureIncome.toLocaleString()}</span>
                             </div>
                             <Button

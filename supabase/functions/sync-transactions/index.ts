@@ -114,7 +114,31 @@ serve(async (req) => {
           pending: tx.pending
         }));
 
-      // 5. Upsert transactions into Postgres
+      // 5. Category Overwrite Shield: Look up existing transactions to prevent Plaid from resetting custom UI buckets
+      if (transactionsToUpsert.length > 0) {
+        const plaidIds = transactionsToUpsert.map((t: any) => t.plaid_transaction_id);
+        const { data: existingTxs } = await supabaseAdmin
+          .from('transactions')
+          .select('plaid_transaction_id, category')
+          .in('plaid_transaction_id', plaidIds);
+
+        if (existingTxs && existingTxs.length > 0) {
+          const categoryDict = Object.fromEntries(
+            existingTxs.map((t: any) => [t.plaid_transaction_id, t.category])
+          );
+
+          transactionsToUpsert.forEach((tx: any) => {
+            const oldCategory = categoryDict[tx.plaid_transaction_id];
+            // If the transaction has already been established in our DB and has a functional category, 
+            // lock it immediately. This protects manual overrides.
+            if (oldCategory && oldCategory !== 'Uncategorized') {
+              tx.category = oldCategory;
+            }
+          });
+        }
+      }
+
+      // 6. Upsert transactions into Postgres
       if (transactionsToUpsert.length > 0) {
         const { error: insertErr } = await supabaseAdmin
           .from('transactions')

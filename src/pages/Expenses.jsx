@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save, Edit2 } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -296,7 +296,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
 };
 
 const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = false, transactionsByCategory = {}, mapUserExpenseToPlaidCategory, showDueDate = true, uniqueCategories = [], recentMerchants = [] }) => {
-    const { playCheck } = useSound();
+    const { playCheck, playPop } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState('');
@@ -340,7 +340,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
         <div className="stream-list">
             {currentExpenses.map((expense) => (
                 <AnimateOnScroll key={expense.id} delay={0.05} yOffset={20}>
-                    <div className={`stream-item ${expense.isPaid ? 'paid' : ''} glass`}>
+                    <div className={`stream-item ${expense.isPaid ? 'paid' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); startEditing(expense); }}>
                         {editingId === expense.id && (
                             <Modal 
                                 isOpen={true} 
@@ -409,7 +409,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <p className="stream-name" style={{ margin: 0 }}>{expense.name}</p>
                                             {expense.apiId && (
-                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }} title={`Linked to ${expense.apiId}`}>
+                                                <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: '#000000' }} title={`Linked to ${expense.apiId}`}>
                                                     🔗
                                                 </span>
                                             )}
@@ -460,7 +460,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
 
                                 <div className="stream-actions">
                                     <span className="stream-amount negative" style={{ minWidth: '80px', textAlign: 'right' }}>${expense.amount.toLocaleString()}</span>
-                                    <Button size="sm" variant="secondary" onClick={() => startEditing(expense)}>Edit</Button>
+                                    <button className="btn-icon" onClick={() => { if(playPop) playPop(); startEditing(expense); }}><Edit2 size={16} /></button>
                                     <button onClick={() => onRemove(expense.id)} className="btn-icon danger">
                                         <Trash2 size={16} />
                                     </button>
@@ -1040,7 +1040,7 @@ const Expenses = () => {
                                 const left = totalFixedExpenses - paid;
                                 return (
                                     <>
-                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
+                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
                                             Paid: ${paid.toLocaleString()}
                                         </span>
                                         <span className="badge success-badge">
@@ -1111,7 +1111,7 @@ const Expenses = () => {
                             <span className="badge warning-badge" style={{ marginLeft: '12px' }}>
                                 Budget: ${totalVariableExpenses.toLocaleString()}
                             </span>
-                            <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: 'var(--text-secondary)', border: '1px solid var(--surface-border)' }}>
+                            <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
                                 Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
                             </span>
                             {(() => {
@@ -1675,8 +1675,11 @@ const Expenses = () => {
                                     const currentDay = today.getDate();
                                     
                                     const sortedDebts = [...(trackedDebts || [])].sort((a, b) => {
+                                        const aPaidThisMonth = a.isPaid || (a.paidCircles && a.paidCircles.includes(0));
+                                        const bPaidThisMonth = b.isPaid || (b.paidCircles && b.paidCircles.includes(0));
+
                                         // 1. Paid items always go to the very bottom
-                                        if (a.isPaid !== b.isPaid) return a.isPaid ? 1 : -1;
+                                        if (aPaidThisMonth !== bPaidThisMonth) return aPaidThisMonth ? 1 : -1;
                                         
                                         // 2. Sort unpaid items by due date urgency
                                         const dueA = Number(a.dueDate) || 31;
@@ -1706,8 +1709,12 @@ const Expenses = () => {
                                     return sortedDebts.map(debt => {
                                         let urgencyClass = 'badge';
                                         let statusText = debt.dueDate ? `Due: ${debt.dueDate}` : 'No due date';
+                                        const isPaidForThisMonth = debt.paidCircles && debt.paidCircles.includes(0);
                                         
                                         if (debt.isPaid) {
+                                            urgencyClass = 'badge success-badge';
+                                            statusText = 'Paid Off';
+                                        } else if (isPaidForThisMonth) {
                                             urgencyClass = 'badge success-badge';
                                             statusText = 'Paid';
                                         } else if (debt.dueDate) {
@@ -1825,7 +1832,7 @@ const Expenses = () => {
                                         };
 
                                         return (
-                                            <div key={debt.id} className={`debt-item glass stream-item ${debt.isPaid ? 'paid' : ''} ${isJustPaid ? 'just-paid' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', transition: 'all 0.3s ease' }}>
+                                            <div key={debt.id} className={`debt-item glass stream-item ${debt.isPaid ? 'paid' : ''} ${isJustPaid ? 'just-paid' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', transition: 'all 0.3s ease' }} onDoubleClick={() => { if (playPop) playPop(); startEditingDebt(debt); }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: '16px' }}>
                                                     <div className="checkbox-wrapper" style={{ margin: 0 }}>
                                                         <input
@@ -1893,18 +1900,28 @@ const Expenses = () => {
                                                 </div>
                                                 <div className="stream-actions" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: '90px' }}>
-                                                            <span className="stream-amount text-warning" style={{ fontWeight: 'bold', margin: '0 0 4px 0', lineHeight: 1 }}>
+                                                        <div style={{ 
+                                                            display: 'flex', 
+                                                            flexDirection: 'column', 
+                                                            alignItems: 'flex-end', 
+                                                            minWidth: '90px',
+                                                            padding: '6px 10px',
+                                                            background: 'var(--surface-hover)',
+                                                            borderRadius: '12px',
+                                                            border: '1px solid var(--surface-border)',
+                                                            boxShadow: 'inset 0 1px 2px rgba(255, 255, 255, 0.4), inset 0 -1px 2px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.1)'
+                                                        }}>
+                                                            <span className="stream-amount text-warning" style={{ fontWeight: 'bold', margin: '0 0 2px 0', lineHeight: 1 }}>
                                                                 ${debt.balance.toLocaleString()} left
                                                             </span>
                                                             {!debt.isPaid && payoffDateStr !== 'N/A' && (
-                                                                <span style={{ fontSize: '0.75rem', color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : 'var(--text-secondary)', fontWeight: 500, lineHeight: 1 }}>
-                                                                    Free by: <span style={{ color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : 'var(--text-primary)', fontWeight: 600 }}>{payoffDateStr}</span>
+                                                                <span style={{ fontSize: '0.7rem', color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : '#000000', fontWeight: 500, lineHeight: 1 }}>
+                                                                    Free by: <span style={{ color: payoffDateStr === 'Payment too low' ? 'var(--danger)' : '#000000', fontWeight: 600 }}>{payoffDateStr}</span>
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-                                                            <Button size="sm" variant="secondary" style={{ padding: '4px 12px', fontSize: '0.75rem', height: '28px', minWidth: '55px' }} onClick={() => startEditingDebt(debt)}>Edit</Button>
+                                                            <button className="btn-icon" style={{ padding: '4px' }} onClick={() => { if(playPop) playPop(); startEditingDebt(debt); }}><Edit2 size={16} /></button>
                                                             <button 
                                                                 onClick={() => handleRemoveTrackedDebt(debt.id)} 
                                                                 className="btn-icon danger"

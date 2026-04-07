@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Target, Plus, X } from 'lucide-react';
+import { Target, Plus, X, Trash2, GripHorizontal } from 'lucide-react';
 import { useFinancialContext } from '../../FinancialContext';
 import { useSound } from '../../SoundContext';
 import { GoalOrb } from './GoalOrb';
@@ -9,6 +9,7 @@ import { Input } from '../ui/Input';
 import { CurrencyInput } from '../ui/CurrencyInput';
 import { Card } from '../ui/Card';
 import { useTheme } from '../../contexts/ThemeContext';
+import { Reorder } from 'framer-motion';
 import '../ui/Modal.css';
 
 const getGoalStats = (goal) => {
@@ -37,6 +38,87 @@ const getGoalStats = (goal) => {
     };
 };
 
+const calculateGoalProjections = (goals) => {
+    let projections = {};
+    const MAX_MONTHS = 1200; // 100 years max loop
+    
+    let state = goals.map(g => {
+        let normalizedMonthly = g.contributionAmount || 0;
+        if (g.contributionFrequency === 'weekly') normalizedMonthly *= 4.3333;
+        else if (g.contributionFrequency === 'biweekly') normalizedMonthly *= 2.1666;
+        else if (g.contributionFrequency === 'yearly') normalizedMonthly /= 12;
+
+        return {
+            id: g.id,
+            remaining: Math.max(0, g.targetAmount - (g.currentAmount || 0)),
+            monthly: normalizedMonthly,
+            finished: false,
+            hitMonth: null
+        };
+    });
+
+    let activeGoalIndex = 0;
+
+    for (let month = 1; month <= MAX_MONTHS; month++) {
+        // Skip ahead to first unfinished goal in case some naturally start as 0
+        while (activeGoalIndex < state.length && state[activeGoalIndex].remaining <= 0) {
+            if (!state[activeGoalIndex].finished) {
+                state[activeGoalIndex].finished = true;
+                state[activeGoalIndex].hitMonth = month - 1;
+            }
+            activeGoalIndex++;
+        }
+
+        if (activeGoalIndex >= state.length) {
+            break; // All goals finished!
+        }
+
+        let g = state[activeGoalIndex];
+        if (g.monthly <= 0) {
+            // This goal is blocking the sequence because it has 0 contribution and isn't finished!
+            // We lock the cascade. Nothing further can project accurately.
+            break; 
+        }
+
+        g.remaining -= g.monthly;
+
+        if (g.remaining <= 0) {
+            g.finished = true;
+            g.hitMonth = month;
+            
+            // Apply leftover cash to the next goal in line immediately!
+            let leftover = Math.abs(g.remaining);
+            if (leftover > 0) {
+                let nextIdx = activeGoalIndex + 1;
+                while (nextIdx < state.length && leftover > 0) {
+                    state[nextIdx].remaining -= leftover;
+                    if (state[nextIdx].remaining <= 0) {
+                        state[nextIdx].finished = true;
+                        state[nextIdx].hitMonth = month;
+                        leftover = Math.abs(state[nextIdx].remaining);
+                        nextIdx++;
+                    } else {
+                        leftover = 0;
+                    }
+                }
+            }
+            activeGoalIndex++;
+        }
+    }
+
+    state.forEach(g => {
+        if (g.hitMonth === null || g.hitMonth === 0) {
+             projections[g.id] = g.remaining <= 0 ? 'Reached 🎉' : 'N/A';
+        } else {
+             const d = new Date();
+             d.setMonth(d.getMonth() + g.hitMonth);
+             projections[g.id] = 'Hit by ' + d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        }
+    });
+
+    return projections;
+};
+
 export const GoalsSection = () => {
     const { goals, setGoals } = useFinancialContext();
     const { playPop, playChime, playCrunch } = useSound();
@@ -54,8 +136,15 @@ export const GoalsSection = () => {
     const [newGoal, setNewGoal] = useState({ 
         name: '', targetAmount: '', currentAmount: '', color: '#4FA3F7',
         contributionAmount: '', contributionFrequency: 'monthly',
-        trackAuto: false
+        trackAuto: false, orderIndex: '1'
     });
+
+    const handleReorderGoals = (newOrderedGoals) => {
+        const updated = newOrderedGoals.map((g, idx) => ({ ...g, orderIndex: idx }));
+        setGoals(updated);
+    };
+
+    const goalProjections = useMemo(() => calculateGoalProjections(goals), [goals]);
 
     const handleOpenDetails = (id) => {
         playPop();
@@ -68,6 +157,7 @@ export const GoalsSection = () => {
         if (id) {
             const goalToEdit = goals.find(g => g.id === id);
             if (goalToEdit) {
+                const currentRank = goals.findIndex(g => g.id === id) + 1;
                 setNewGoal({
                     name: goalToEdit.name,
                     targetAmount: goalToEdit.targetAmount.toString(),
@@ -75,7 +165,8 @@ export const GoalsSection = () => {
                     color: goalToEdit.color,
                     contributionAmount: goalToEdit.contributionAmount ? goalToEdit.contributionAmount.toString() : '',
                     contributionFrequency: goalToEdit.contributionFrequency || 'monthly',
-                    trackAuto: goalToEdit.trackAuto || false
+                    trackAuto: goalToEdit.trackAuto || false,
+                    orderIndex: currentRank.toString()
                 });
                 setEditingGoalId(id);
             }
@@ -83,7 +174,7 @@ export const GoalsSection = () => {
             setNewGoal({ 
                 name: '', targetAmount: '', currentAmount: '', color: '#4FA3F7',
                 contributionAmount: '', contributionFrequency: 'monthly',
-                trackAuto: false
+                trackAuto: false, orderIndex: (goals.length + 1).toString()
             });
             setEditingGoalId(null);
         }
@@ -94,9 +185,14 @@ export const GoalsSection = () => {
         e.preventDefault();
         if (newGoal.name && newGoal.targetAmount) {
             playChime();
+            const requestedRank = Math.max(1, Number(newGoal.orderIndex) || goals.length + (editingGoalId ? 0 : 1));
+            const newOrderScore = requestedRank - 1.5; 
+            
+            let draftGoals = [];
+
             if (editingGoalId) {
                 // Update existing
-                setGoals(goals.map(g => g.id === editingGoalId ? {
+                draftGoals = goals.map(g => g.id === editingGoalId ? {
                     ...g,
                     name: newGoal.name,
                     targetAmount: Number(newGoal.targetAmount),
@@ -104,11 +200,12 @@ export const GoalsSection = () => {
                     color: newGoal.color,
                     contributionAmount: Number(newGoal.contributionAmount || 0),
                     contributionFrequency: newGoal.contributionFrequency,
-                    trackAuto: newGoal.trackAuto
-                } : g));
+                    trackAuto: newGoal.trackAuto,
+                    orderIndex: newOrderScore
+                } : { ...g });
             } else {
                 // Create new
-                setGoals([...goals, {
+                draftGoals = [...goals, {
                     id: crypto.randomUUID(),
                     name: newGoal.name,
                     targetAmount: Number(newGoal.targetAmount),
@@ -116,9 +213,16 @@ export const GoalsSection = () => {
                     color: newGoal.color,
                     contributionAmount: Number(newGoal.contributionAmount || 0),
                     contributionFrequency: newGoal.contributionFrequency,
-                    trackAuto: newGoal.trackAuto
-                }]);
+                    trackAuto: newGoal.trackAuto,
+                    orderIndex: newOrderScore
+                }];
             }
+            
+            // Re-normalize array layout
+            draftGoals.sort((a, b) => a.orderIndex - b.orderIndex);
+            const finalNormalized = draftGoals.map((g, idx) => ({ ...g, orderIndex: idx }));
+            setGoals(finalNormalized);
+
             setShowForm(false);
             setEditingGoalId(null);
         }
@@ -177,15 +281,31 @@ export const GoalsSection = () => {
                             </button>
                         </div>
                         <form onSubmit={handleSaveGoal} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Goal Name</label>
-                                <Input
-                                    placeholder="e.g. Dream Car"
-                                    value={newGoal.name}
-                                    onChange={e => setNewGoal({ ...newGoal, name: e.target.value })}
-                                    required
-                                    style={{ width: '100%' }}
-                                />
+                            <div style={{ display: 'flex', gap: '16px' }}>
+                                <div style={{ flex: 3 }}>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 8px 4px' }}>Goal Name</label>
+                                    <Input
+                                        placeholder="e.g. Dream Car"
+                                        value={newGoal.name}
+                                        onChange={e => setNewGoal({ ...newGoal, name: e.target.value })}
+                                        required
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 8px 4px' }}>Priority #</label>
+                                    <Input
+                                        type="number"
+                                        min="1"
+                                        max={goals.length + (editingGoalId ? 0 : 1)}
+                                        placeholder="1"
+                                        value={newGoal.orderIndex}
+                                        onChange={e => setNewGoal({ ...newGoal, orderIndex: e.target.value })}
+                                        required
+                                        style={{ width: '100%' }}
+                                        title="1 is Highest Priority"
+                                    />
+                                </div>
                             </div>
                             <div style={{ display: 'flex', gap: '16px' }}>
                                 <div style={{ flex: 1 }}>
@@ -377,38 +497,65 @@ export const GoalsSection = () => {
             })()}
 
             {/* Orbs List */}
-            <div style={{ display: 'flex', gap: '24px', overflowX: 'auto', paddingBottom: '16px', margin: '0 -16px', padding: '16px' }}>
+            <div style={{ display: 'flex', overflowX: 'auto', paddingBottom: '16px', margin: '0 -16px', padding: '16px' }}>
                 {goals.length === 0 && !showForm ? (
                     <div className="text-muted" style={{ padding: '40px', textAlign: 'center', width: '100%', border: '1px dashed var(--surface-border)', borderRadius: '24px' }}>
                         No savings goals defined yet. Click "Add Goal" to start tracking.
                     </div>
                 ) : (
-                    goals.map(goal => (
-                        <div key={goal.id} style={{ position: 'relative' }}>
-                            <GoalOrb goal={goal} onDoubleClick={handleOpenDetails} />
-                            <button
-                                onClick={() => handleRemoveGoal(goal.id)}
-                                className="btn-icon danger"
-                                style={{
-                                    position: 'absolute',
-                                    top: '8px',
-                                    right: '8px',
-                                    background: 'var(--surface)',
-                                    border: '1px solid var(--surface-border)',
-                                    borderRadius: '50%',
-                                    padding: '4px',
-                                    opacity: 0,
-                                    transition: 'opacity 0.2s',
-                                    boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                    <Reorder.Group 
+                        axis="x" 
+                        values={goals} 
+                        onReorder={handleReorderGoals} 
+                        style={{ display: 'flex', gap: '24px', listStyleType: 'none', margin: 0, padding: 0 }}
+                    >
+                        {goals.map((goal) => (
+                            <Reorder.Item 
+                                key={goal.id} 
+                                value={goal}
+                                style={{ position: 'relative', cursor: 'grab' }}
+                                whileDrag={{ scale: 1.05, zIndex: 99 }}
+                                onMouseEnter={(e) => {
+                                    const btn = e.currentTarget.querySelector('.delete-goal-btn');
+                                    if (btn) btn.style.opacity = '1';
                                 }}
-                                title="Delete Goal"
-                                onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                                onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
+                                onMouseLeave={(e) => {
+                                    const btn = e.currentTarget.querySelector('.delete-goal-btn');
+                                    if (btn) btn.style.opacity = '0';
+                                }}
                             >
-                                <X size={14} />
-                            </button>
-                        </div>
-                    ))
+                                <GoalOrb goal={goal} onDoubleClick={handleOpenDetails} />
+                                <div style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                                    {goalProjections[goal.id]}
+                                </div>
+                                <div 
+                                    style={{ position: 'absolute', top: '8px', left: '8px', background: 'var(--surface)', border: '1px solid var(--surface-border)', borderRadius: '50%', padding: '4px', opacity: 0.5 }}
+                                    title="Drag to rank priority"
+                                >
+                                    <GripHorizontal size={14} />
+                                </div>
+                                <button
+                                    onClick={() => handleRemoveGoal(goal.id)}
+                                    className="btn-icon danger delete-goal-btn"
+                                    style={{
+                                        position: 'absolute',
+                                        top: '8px',
+                                        right: '8px',
+                                        background: 'var(--surface)',
+                                        border: '1px solid var(--surface-border)',
+                                        borderRadius: '50%',
+                                        padding: '4px',
+                                        opacity: 0,
+                                        transition: 'opacity 0.2s',
+                                        boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+                                    }}
+                                    title="Delete Goal"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            </Reorder.Item>
+                        ))}
+                    </Reorder.Group>
                 )}
             </div>
             </Card>

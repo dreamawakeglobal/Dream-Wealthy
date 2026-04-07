@@ -151,6 +151,23 @@ export const useNotifications = () => {
             }
         });
 
+        // 5. Wealthy Insights Weekly Action
+        const startOfYear = new Date(currentYear, 0, 1);
+        const pastDaysOfYear = (todayDate - startOfYear) / 86400000;
+        const currentWeekNumber = Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+        
+        // Weekly Insight Alert matches the calendar week. This allows the persistent cache to track if the user has dismissed it this week.
+        const coachAlertId = `coach_alert_${currentYear}_w${currentWeekNumber}`;
+        
+        alerts.push({
+            id: coachAlertId,
+            type: 'info', 
+            title: 'Weekly Insight Ready',
+            message: 'Wealthy Insights has completely analyzed your financial trajectory. Click to view.',
+            icon: 'Sparkles',
+            action: 'OPEN_COACH'
+        });
+
         // Add timestamps to them so we can sort (newest created first? We don't have created, so let's just sort by severity)
         const severityOrder = { danger: 1, warning: 2, info: 3, success: 4 };
         alerts.sort((a, b) => severityOrder[a.type] - severityOrder[b.type]);

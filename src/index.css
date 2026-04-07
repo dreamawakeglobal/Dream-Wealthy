@@ -5,9 +5,9 @@
   /* Sky / Cloud Theme */
   --bg-color: #e0f2fe;
   --bg-gradient: linear-gradient(to bottom, #87CEEB 0%, #e0f2fe 100%);
-  --surface: rgba(255, 255, 255, 0.6);
-  --surface-hover: rgba(255, 255, 255, 0.9);
-  --surface-border: rgba(255, 255, 255, 0.8);
+  --surface: rgba(255, 255, 255, 0.15);
+  --surface-hover: rgba(255, 255, 255, 0.25);
+  --surface-border: rgba(255, 255, 255, 0.3);
   --shadow-light: 0 8px 32px rgba(135, 206, 235, 0.15);
   --shadow-float: 0 12px 48px rgba(135, 206, 235, 0.25);
 
@@ -46,8 +46,8 @@
   /* Night Theme */
   --bg-color: #020617;
   --bg-gradient: linear-gradient(to bottom, #020617 0%, #0f172a 100%);
-  --surface: rgba(15, 23, 42, 0.6);
-  --surface-hover: rgba(30, 41, 59, 0.8);
+  --surface: rgba(15, 23, 42, 0.2);
+  --surface-hover: rgba(30, 41, 59, 0.35);
   --surface-border: rgba(255, 255, 255, 0.15);
   --shadow-light: 0 8px 32px rgba(2, 6, 23, 0.6);
   --shadow-float: 0 12px 48px rgba(2, 6, 23, 0.8);
@@ -337,12 +337,35 @@ a {
   background: var(--surface);
   border: 1px solid var(--surface-border);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.05),
+    0 8px 16px rgba(0, 0, 0, 0.3);
+  transform: perspective(1000px) translateZ(0);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+[data-theme='dark'] .stream-item {
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.08),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.4),
+    0 8px 16px rgba(0, 0, 0, 0.5);
 }
 
 .stream-item:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: perspective(1000px) translateY(-4px) translateZ(10px);
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.6),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.02),
+    0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .stream-item:hover {
+  box-shadow: 
+    inset 0 2px 4px rgba(255, 255, 255, 0.15),
+    inset 0 -2px 6px rgba(0, 0, 0, 0.3),
+    0 16px 32px rgba(0, 0, 0, 0.7);
 }
 
 .stream-info {
@@ -356,8 +379,13 @@ a {
 }
 
 .stream-freq {
-  color: var(--text-muted);
+  color: #000000;
+  font-weight: 600;
   font-size: 0.8rem;
+}
+
+[data-theme='dark'] .stream-freq {
+  color: #ffffff;
 }
 
 .stream-actions {
@@ -448,8 +476,8 @@ a {
 /* Default / Dark Mode (Purple) */
 .auto-tracker-input,
 .light-accent-input {
-    background: rgba(79, 70, 229, 0.05) !important;
-    border: none !important;
+    background: #ffffff !important;
+    border: 2px solid rgba(79, 70, 229, 0.3) !important;
     border-radius: 50px !important;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
@@ -470,8 +498,8 @@ a {
 
 .auto-tracker-input:focus,
 .light-accent-input:focus {
-    border: none !important;
-    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(79, 70, 229, 0.8) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
 [data-theme='dark'] .auto-tracker-input:focus {
@@ -482,16 +510,16 @@ a {
 /* Light Mode (Sky Blue) */
 [data-theme='light'] .auto-tracker-input,
 [data-theme='light'] .light-accent-input {
-    background: rgba(14, 165, 233, 0.08) !important;
-    border: none !important;
+    background: #ffffff !important;
+    border: 2px solid rgba(14, 165, 233, 0.3) !important;
     border-radius: 50px !important;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 [data-theme='light'] .auto-tracker-input:focus,
 [data-theme='light'] .light-accent-input:focus {
-    border: none !important;
-    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+    border-color: rgba(14, 165, 233, 0.8) !important;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2), inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Global Customizable Glowing Borders (Synced from ThemeContext Settings) */

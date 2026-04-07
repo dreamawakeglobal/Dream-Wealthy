@@ -15,6 +15,7 @@ const mapToCamel = (item) => {
     if (mapped.asset_class !== undefined) { mapped.assetClass = mapped.asset_class; delete mapped.asset_class; }
 
     // Goal Contribution Fields
+    if (mapped.order_index !== undefined) { mapped.orderIndex = mapped.order_index; delete mapped.order_index; }
     if (mapped.contribution_amount !== undefined) { mapped.contributionAmount = mapped.contribution_amount; delete mapped.contribution_amount; }
     if (mapped.contribution_frequency !== undefined) { mapped.contributionFrequency = mapped.contribution_frequency; delete mapped.contribution_frequency; }
     if (mapped.track_auto !== undefined) { mapped.trackAuto = mapped.track_auto; delete mapped.track_auto; }
@@ -67,6 +68,7 @@ const mapToSnake = (item) => {
     if (snakeItem.customPayments !== undefined) { snakeItem.custom_payments = snakeItem.customPayments; delete snakeItem.customPayments; }
 
     // Goal Contribution Fields
+    if (snakeItem.orderIndex !== undefined) { snakeItem.order_index = snakeItem.orderIndex; delete snakeItem.orderIndex; }
     if (snakeItem.contributionAmount !== undefined) { snakeItem.contribution_amount = snakeItem.contributionAmount; delete snakeItem.contributionAmount; }
     if (snakeItem.contributionFrequency !== undefined) { snakeItem.contribution_frequency = snakeItem.contributionFrequency; delete snakeItem.contributionFrequency; }
     if (snakeItem.trackAuto !== undefined) { snakeItem.track_auto = snakeItem.trackAuto; delete snakeItem.trackAuto; }
@@ -95,6 +97,11 @@ export const useStore = create((set, get) => ({
     accounts: [],      // Plaid Bank Accounts (Items)
     bankBalances: [],  // Cached Checked/Savings Balances
 
+    aiCoachingInsight: null,
+    aiCoachingLoading: false,
+    isCoachModalOpen: false,
+
+    setIsCoachModalOpen: (val) => set({ isCoachModalOpen: val }),
 
     // Profile Settings
     profileData: {
@@ -162,7 +169,7 @@ export const useStore = create((set, get) => ({
                 allocations: (allocationsRes.data || []).map(mapToCamel),
                 debts: (debtsRes.data || []).map(mapToCamel),
                 trackedDebts: (trackedDebtsRes.data || []).map(mapToCamel),
-                goals: (goalsRes.data || []).map(mapToCamel),
+                goals: (goalsRes.data || []).map(mapToCamel).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0)),
                 customProjections: (projectionsRes.data || []).map(mapToCamel),
                 transactions: (transactionsRes.data || []),
                 portfolio: (portfolioRes.data || []).map(mapToCamel),
@@ -308,4 +315,47 @@ export const useStore = create((set, get) => ({
     setExpenseInflationRate: (val) => get().updateProfileField('expenseInflationRate', val),
     setCellOverrides: (val) => get().updateProfileField('cellOverrides', val),
     setExtraColumns: (val) => get().updateProfileField('extraColumns', val),
+
+    fetchCoachingInsight: async (trackerContext = null) => {
+        set({ aiCoachingLoading: true });
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("No active session");
+            
+            // Build the Omniscience Payload
+            const state = get();
+            const omnisciencePayload = {
+                profile: state.profileData,
+                transactions: state.transactions.slice(0, 30), // Only send latest 30 to stay within limits
+                incomeStreams: state.currentIncome,
+                fixedExpenses: state.fixedExpenses,
+                debts: state.debts, // Plaid parsed debts
+                trackedDebts: state.trackedDebts, // User manual debts
+                bankBalances: state.bankBalances,
+                portfolio: state.portfolio,
+                goals: state.goals,
+                subscriptions: state.subscriptions,
+                trackerContext: trackerContext || { variableExpenses: state.variableExpenses }
+            };
+            
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/antigravity-coach`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ omnisciencePayload })
+            });
+
+            if (!res.ok) throw new Error("Failed to fetch coach insight");
+            // The new God-Tier architecture returns { message, action }
+            const data = await res.json();
+            set({ aiCoachingInsight: data });
+        } catch (error) {
+            console.error("AI Coach Error:", error);
+            set({ aiCoachingInsight: { message: "Unable to reach the coaching node at this time. Keep crushing it!" } });
+        } finally {
+            set({ aiCoachingLoading: false });
+        }
+    }
 }));
