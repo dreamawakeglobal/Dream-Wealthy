@@ -169,7 +169,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        style={{ color: 'black', marginBottom: 0 }}
+                        style={{ color: 'black', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 </div>
                 {showEmojiPicker && (
@@ -210,7 +210,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                                 }
                             }
                         }}
-                        style={{ color: 'var(--text-primary)', marginBottom: 0 }}
+                        style={{ color: 'var(--text-primary)', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                     {recentMerchants && recentMerchants.length > 0 && (
                         <datalist id="recent-merchants">
@@ -229,7 +229,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                     <select 
                         value={category} 
                         onChange={e => setCategory(e.target.value)}
-                        style={{ background: 'var(--surface)', border: `1px solid var(--surface-border)`, color: category ? 'var(--text-primary)' : 'var(--text-muted)', outline: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}
+                        style={{ background: 'var(--surface)', border: `2px solid ${activeColor || 'var(--surface-border)'}`, color: category ? 'var(--text-primary)' : 'var(--text-muted)', outline: 'none', padding: '10px 16px', borderRadius: '50px', cursor: 'pointer', flex: 1 }}
                     >
                         <option value="">Category</option>
                         <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
@@ -250,7 +250,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     min="0"
-                    style={{ color: 'black', flex: 1.5 }}
+                    style={{ color: 'black', flex: 1.5, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                 />
                 {showDueDate && (
                     <Input
@@ -260,7 +260,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         placeholder="Day (1-31)"
                         value={dueDate}
                         onChange={(e) => setDueDate(e.target.value)}
-                        style={{ color: 'black', flex: 1 }}
+                        style={{ color: 'black', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 )}
                 <Button 
@@ -426,7 +426,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                 </div>
 
                                 {showTracking && (
-                                    <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--surface-hover)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--surface-border)', gap: '8px', margin: '0 8px', flex: 1 }}>
+                                    <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '4px 10px', gap: '8px', margin: '0 8px', flex: 1 }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: </span>
                                             <CurrencyInput
@@ -437,9 +437,9 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                                     const val = e.target.value;
                                                     onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
                                                 }}
-                                                style={{ width: '80px', background: 'transparent', border: '1px solid var(--surface-border)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
-                                                onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-                                                onBlur={(e) => e.target.style.borderColor = 'var(--surface-border)'}
+                                                style={{ width: '80px', background: 'transparent', border: '1px solid', borderColor: activeColor || 'var(--primary)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
+                                                onFocus={(e) => e.target.style.borderColor = activeColor || 'var(--primary)'}
+                                                onBlur={(e) => e.target.style.borderColor = activeColor || 'var(--primary)'}
                                             />
                                         </div>
                                         <div style={{
@@ -992,7 +992,7 @@ const Expenses = () => {
                         <h2 className="metric-value" style={{ color: 'var(--danger)' }}>
                             $<AnimatedNumber value={totalMonthlyExpenses} />
                         </h2>
-                        <div className="metric-breakdown" style={{ justifyContent: 'center' }}>
+                        <div className="metric-breakdown" style={{ justifyContent: 'center', color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                             <span>Fixed: ${totalFixedExpenses.toLocaleString()}</span>
                             <span>Var: ${totalVariableExpenses.toLocaleString()}</span>
                             <span>Subs: ${totalSubscriptionCost.toFixed(0)}</span>
@@ -1010,7 +1010,7 @@ const Expenses = () => {
                         <h2 className="metric-value" style={{ color: netMonthlyCashFlow < 0 ? 'var(--danger)' : 'var(--success)' }}>
                             {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} />
                         </h2>
-                        <p className="metric-subtext">Remaining for allocation</p>
+                        <p className="metric-subtext" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>Remaining for allocation</p>
                     </Card>
                 </AnimateOnScroll>
 
@@ -1023,7 +1023,7 @@ const Expenses = () => {
                         <h2 className="metric-value" style={{ color: 'var(--warning)', textShadow: '0 0 16px rgba(245, 158, 11, 0.6)' }}>
                             <AnimatedNumber value={parseFloat(savingsRate)} />%
                         </h2>
-                        <p className="metric-subtext">Target: {'>'}20%</p>
+                        <p className="metric-subtext" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>Target: {'>'}20%</p>
                     </Card>
                 </AnimateOnScroll>
             </div>

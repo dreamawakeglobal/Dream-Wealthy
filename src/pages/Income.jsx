@@ -105,7 +105,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
                             }
                         }
                     }}
-                    style={{ color: 'var(--text-primary)', marginBottom: 0 }}
+                    style={{ color: 'var(--text-primary)', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                 />
                 {recentMerchants && recentMerchants.length > 0 && (
                     <datalist id="recent-income-merchants">
@@ -134,7 +134,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            style={{ color: 'black', marginBottom: 0 }}
+                            style={{ color: 'black', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                         />
                     </div>
                     {showEmojiPicker && (
@@ -165,7 +165,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
                         onChange={(e) => setAmount(e.target.value)}
                         required
                         min="0"
-                        style={{ color: 'black', flex: 1 }}
+                        style={{ color: 'black', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                     <Button 
                         type="submit" 

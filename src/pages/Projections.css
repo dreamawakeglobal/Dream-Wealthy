@@ -8,13 +8,9 @@
 /* Editable Cell Geometries */
 .editable-cell-input {
     width: 100%;
-    padding: 4px;
+    padding: 6px 12px;
     margin: -5px -5px;
-    background: var(--surface-hover);
-    border: 1px solid var(--accent-primary);
-    color: var(--text-primary);
     outline: none;
-    border-radius: 4px;
     text-align: right;
     font-family: inherit;
     font-size: inherit;
@@ -43,10 +39,14 @@
 }
 
 .editable-cell-display:hover {
-    color: var(--text-primary);
+    color: #000000;
     text-shadow: 0 0 12px rgba(255, 255, 255, 0.8), 0 0 24px rgba(255, 255, 255, 0.4);
     transform: scale(1.03);
     transform-origin: right center;
+}
+
+[data-theme='dark'] .editable-cell-display:hover {
+    color: #ffffff;
 }
 
 .projection-controls {
@@ -81,10 +81,18 @@
 
 .controls-group label {
     font-size: 0.85rem;
-    color: var(--text-secondary);
-    font-weight: 500;
+    color: #000000;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+[data-theme='dark'] .controls-group label {
+    color: #ffffff;
+}
+
+.controls-group input {
+    font-weight: bold !important;
 }
 
 .controls-divider {
@@ -230,8 +238,12 @@
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: var(--text-muted);
+    color: #000000;
     border-bottom: 1px solid var(--surface-border);
+}
+
+[data-theme='dark'] .projection-table th {
+    color: #ffffff;
 }
 
 .projection-table th:first-child,

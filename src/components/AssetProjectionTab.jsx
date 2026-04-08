@@ -122,7 +122,10 @@ export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
                                     key={year}
                                     variant={projectionYears === year ? 'primary' : 'secondary'}
                                     onClick={() => setProjectionYears(year)}
-                                    style={{ flex: 1, minWidth: '70px', padding: '8px', fontSize: '0.85rem' }}
+                                    style={{ 
+                                        flex: 1, minWidth: '70px', padding: '8px', fontSize: '0.85rem',
+                                        ...(projectionYears === year && activeColor ? { background: activeColor, borderColor: activeColor, color: '#ffffff' } : {})
+                                    }}
                                 >
                                     {year} {year === 1 ? 'Year' : 'Years'}
                                 </Button>

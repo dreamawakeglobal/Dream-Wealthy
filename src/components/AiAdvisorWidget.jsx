@@ -241,10 +241,9 @@ const AiAdvisorWidget = () => {
 
             {/* The Floating Action Button */}
             <button 
-                className="ai-fab-button" 
+                className="ai-fab-button glass" 
                 onClick={handleOpenToggle}
                 style={{ 
-                    background: theme === 'dark' ? 'var(--surface)' : '#ffffff', 
                     boxShadow: `0 4px 20px ${activeColor}44`,
                     borderColor: `${activeColor}88`
                 }}

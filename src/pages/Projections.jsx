@@ -17,6 +17,13 @@ import './Projections.css';
 
 // Component for editable table cells
 const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
+    const { theme, expenseBorderColor } = useTheme();
+    const activeColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7', white: '#ffffff', black: '#000000',
+        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        yellow: '#eab308', orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : 'var(--accent-primary)';
+
     const [isEditing, setIsEditing] = useState(false);
     const [editValue, setEditValue] = useState(value);
 
@@ -41,13 +48,23 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
     if (isEditing) {
         return (
             <CurrencyInput
+                raw
                 autoFocus
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 className="editable-cell-input"
-                style={{ background: 'transparent' }}
+                style={{ 
+                    background: theme === 'dark' ? 'rgba(0, 0, 0, 0.4)' : '#ffffff',
+                    color: theme === 'dark' ? '#ffffff' : '#000000',
+                    border: '2px solid',
+                    borderColor: activeColor,
+                    borderRadius: '50px',
+                    fontWeight: 'bold',
+                    transition: 'border-color 0.2s',
+                    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.05)'
+                }}
             />
         );
     }
@@ -185,7 +202,7 @@ const Projections = () => {
                             <div className="controls-divider" />
 
                             <div className="controls-header" style={{ justifyContent: 'space-between', display: 'flex', width: '100%', alignItems: 'center', marginBottom: '8px' }}>
-                                <label style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Extra Monthly Flows</label>
+                                <label style={{ margin: 0, fontSize: '0.9rem', color: theme === 'dark' ? '#ffffff' : '#000000', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Extra Monthly Flows</label>
                                 <button className="add-tab-btn" onClick={() => {
                                     setExtraColumns([...extraColumns, { id: crypto.randomUUID(), name: 'New Flow', amount: 0 }]);
                                 }} style={{ padding: '4px 8px', fontSize: '0.8rem' }}><Plus size={14} /> Add</button>
@@ -219,8 +236,8 @@ const Projections = () => {
                                                 </button>
                                             </div>
                                         ) : (
-                                            <div key={col.id} className="flow-bubble animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-hover)', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--surface-border)', fontSize: '0.85rem', color: 'var(--text-primary)' }}>
-                                                <span>{col.name}: <span className={col.amount >= 0 ? 'text-success' : 'text-danger'}>${Math.abs(col.amount).toLocaleString()}</span></span>
+                                            <div key={col.id} className="flow-bubble animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-hover)', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--surface-border)', fontSize: '0.85rem', color: theme === 'dark' ? '#ffffff' : '#000000' }}>
+                                                <span style={{ fontWeight: 'bold' }}>{col.name}: <span className={col.amount >= 0 ? 'text-success' : 'text-danger'}>${Math.abs(col.amount).toLocaleString()}</span></span>
                                                 <button
                                                     onClick={() => setEditingFlowId(col.id)}
                                                     style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px', marginLeft: '4px' }}
@@ -263,8 +280,8 @@ const Projections = () => {
                                                 borderRadius: '8px',
                                                 border: 'none',
                                                 fontWeight: 600,
-                                                background: projectionYears === year ? 'var(--accent-primary)' : 'transparent',
-                                                color: projectionYears === year ? '#fff' : 'var(--text-secondary)',
+                                                background: projectionYears === year ? activeColor : 'transparent',
+                                                color: projectionYears === year ? '#fff' : (theme === 'dark' ? '#ffffff' : '#000000'),
                                                 transition: 'all 0.2s ease',
                                                 cursor: 'pointer'
                                             }}
@@ -375,14 +392,14 @@ const Projections = () => {
                                         {paginatedData.map((row) => (
                                             <tr key={row.monthIndex}>
                                                 <td>{row.month}</td>
-                                                <td className="text-secondary">
+                                                <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                                                     <EditableCell
                                                         value={row.Income}
                                                         sign="+"
                                                         onSave={(val) => handleCellEdit(row.monthIndex, 'Income', val)}
                                                     />
                                                 </td>
-                                                <td className="text-secondary">
+                                                <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                                                     <EditableCell
                                                         value={row.Expenses}
                                                         sign="-"
@@ -390,7 +407,7 @@ const Projections = () => {
                                                     />
                                                 </td>
                                                 {extraColumns.map(c => (
-                                                    <td key={c.id} className="text-secondary">
+                                                    <td key={c.id} style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                                                         <EditableCell
                                                             value={row[c.name] || 0}
                                                             sign="-"
