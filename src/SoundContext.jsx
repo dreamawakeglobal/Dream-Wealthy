@@ -5,12 +5,33 @@ const SoundContext = createContext();
 
 export const useSound = () => useContext(SoundContext);
 
+// Pre-load all MP3/M4A assets. cloneNode() keeps it lightweight and allows overlapping overlapping.
+const SOUND_FILES = {
+    whoosh: '/sounds/swoosh.mp3',
+    kaching: '/sounds/chaching.m4a',
+    navClick: '/sounds/nav_click_custom.mp3',
+    receiptTear: '/sounds/expense_add.mp3',
+    check: '/sounds/expense_check.mp3'
+};
+
+const preloadedAudios = {};
+if (typeof window !== 'undefined') {
+    Object.entries(SOUND_FILES).forEach(([key, src]) => {
+        const audio = new Audio(src);
+        audio.preload = 'auto'; // Force browser to cache it immediately
+        preloadedAudios[key] = audio;
+    });
+}
+
 export const SoundProvider = ({ children }) => {
     const [isMuted, setIsMuted] = useState(() => {
         const stored = localStorage.getItem('dream_wealthy_muted');
         return stored ? JSON.parse(stored) : false;
     });
     
+    // Use a ref so callbacks never have stale closure states for isMuted
+    const isMutedRef = useRef(isMuted);
+
     // Web Audio Context reference
     const audioCtxRef = useRef(null);
 
@@ -23,23 +44,43 @@ export const SoundProvider = ({ children }) => {
                     audioCtxRef.current = new AudioContext();
                 }
             }
+            // Ensure context state matches mute settings
+            if (audioCtxRef.current) {
+                if (isMutedRef.current && audioCtxRef.current.state === 'running') {
+                    audioCtxRef.current.suspend();
+                } else if (!isMutedRef.current && audioCtxRef.current.state === 'suspended') {
+                    audioCtxRef.current.resume();
+                }
+            }
         };
         
         window.addEventListener('click', initAudio, { once: true });
         window.addEventListener('keydown', initAudio, { once: true });
+        window.addEventListener('touchstart', initAudio, { once: true });
         
         return () => {
             window.removeEventListener('click', initAudio);
             window.removeEventListener('keydown', initAudio);
+            window.removeEventListener('touchstart', initAudio);
         };
     }, []);
 
     useEffect(() => {
+        isMutedRef.current = isMuted;
         localStorage.setItem('dream_wealthy_muted', JSON.stringify(isMuted));
+        
+        // Immediately enforce AudioContext stop/start when toggling mute
+        if (audioCtxRef.current) {
+            if (isMuted && audioCtxRef.current.state === 'running') {
+                audioCtxRef.current.suspend();
+            } else if (!isMuted && audioCtxRef.current.state === 'suspended') {
+                audioCtxRef.current.resume();
+            }
+        }
     }, [isMuted]);
 
     const playTone = useCallback(async (type, frequency, duration, volume = 0.1, slideFreq = null) => {
-        if (isMuted) return;
+        if (isMutedRef.current) return;
         
         // Ensure initialized on demand
         if (!audioCtxRef.current) {
@@ -53,8 +94,8 @@ export const SoundProvider = ({ children }) => {
         
         const ctx = audioCtxRef.current;
         
-        // Resume if suspended
-        if (ctx.state === 'suspended') {
+        // Resume if suspended and NOT muted
+        if (ctx.state === 'suspended' && !isMutedRef.current) {
             await ctx.resume();
         }
         
@@ -71,83 +112,49 @@ export const SoundProvider = ({ children }) => {
             oscillator.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
         }
         
-        gainNode.gain.setValueAtTime(volume, now);
+        // Anti-click volume fade-in to prevent "popping" and drops
+        gainNode.gain.setValueAtTime(0, now);
+        gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
         gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
         
         oscillator.start(now);
-        oscillator.stop(now + duration);
-    }, [isMuted]);
+        oscillator.stop(now + duration + 0.01); // Add a tiny bit of tail for ramp
+    }, []);
+
+    const playFile = useCallback((key, volume = 0.15) => {
+        if (isMutedRef.current) return;
+        try {
+            if (preloadedAudios[key]) {
+                const audio = preloadedAudios[key].cloneNode(); // Clone ensures overlapping plays instantly
+                audio.volume = volume;
+                audio.play().catch(e => console.warn(`Failed to play ${key} audio:`, e));
+            }
+        } catch (err) {
+            console.error("Audio playback error:", err);
+        }
+    }, []);
 
     const playPop = useCallback(() => {
         playTone('sine', 400, 0.1, 0.12, 200);
     }, [playTone]);
 
-    const playWhoosh = useCallback(() => {
-        if (isMuted) return;
-        try {
-            const audio = new Audio('/sounds/swoosh.mp3');
-            audio.volume = 0.15; // Normalized volume
-            audio.play().catch(e => console.error("Failed to play swoosh audio:", e));
-        } catch (err) {
-            console.error("Audio playback error:", err);
-        }
-    }, [isMuted]);
+    const playWhoosh = useCallback(() => playFile('whoosh', 0.15), [playFile]);
+    const playKaChing = useCallback(() => playFile('kaching', 0.15), [playFile]);
+    const playNavClick = useCallback(() => playFile('navClick', 0.15), [playFile]);
+    const playReceiptTear = useCallback(() => playFile('receiptTear', 0.15), [playFile]);
+    const playCheck = useCallback(() => playFile('check', 0.15), [playFile]);
 
     const playChime = useCallback(() => {
-        if (isMuted || !audioCtxRef.current) return;
+        if (isMutedRef.current || !audioCtxRef.current) return;
         // Play a major chord arpeggio for positive reinforcement
         playTone('sine', 523.25, 0.4, 0.06); // C5
         setTimeout(() => playTone('sine', 659.25, 0.4, 0.06), 50); // E5
         setTimeout(() => playTone('sine', 783.99, 0.6, 0.048), 100); // G5
-    }, [playTone, isMuted]);
+    }, [playTone]);
     
     const playCrunch = useCallback(() => {
         playTone('square', 100, 0.2, 0.03, 50);
     }, [playTone]);
-
-    const playKaChing = useCallback(() => {
-        if (isMuted) return;
-        try {
-            const audio = new Audio('/sounds/chaching.m4a');
-            audio.volume = 0.15; // Normalized volume
-            audio.play().catch(e => console.error("Failed to play cha-ching audio:", e));
-        } catch (err) {
-            console.error("Audio playback error:", err);
-        }
-    }, [isMuted]);
-
-    const playNavClick = useCallback(() => {
-        if (isMuted) return;
-        try {
-            const audio = new Audio('/sounds/nav_click_custom.mp3');
-            audio.volume = 0.15; // Normalized volume
-            audio.play().catch(e => console.error("Failed to play nav click audio:", e));
-        } catch (err) {
-            console.error("Audio playback error:", err);
-        }
-    }, [isMuted]);
-
-    const playReceiptTear = useCallback(() => {
-        if (isMuted) return;
-        try {
-            const audio = new Audio('/sounds/expense_add.mp3');
-            audio.volume = 0.15; // Normalized volume
-            audio.play().catch(e => console.error("Failed to play receipt tear audio:", e));
-        } catch (err) {
-            console.error("Audio playback error:", err);
-        }
-    }, [isMuted]);
-
-    const playCheck = useCallback(() => {
-        if (isMuted) return;
-        try {
-            const audio = new Audio('/sounds/expense_check.mp3');
-            audio.volume = 0.15; // Normalized volume
-            audio.play().catch(e => console.error("Failed to play check audio:", e));
-        } catch (err) {
-            console.error("Audio playback error:", err);
-        }
-    }, [isMuted]);
 
     const toggleMute = () => setIsMuted(prev => !prev);
 

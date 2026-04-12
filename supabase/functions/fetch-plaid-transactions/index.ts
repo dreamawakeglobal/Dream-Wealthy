@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { Configuration, PlaidApi, PlaidEnvironments } from 'npm:plaid';
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': 'https://dreamwealthyco.com',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 

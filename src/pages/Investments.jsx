@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '../components/ui/Card';
+import { SkeletonLoader } from '../components/ui/SkeletonLoader';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { Button } from '../components/ui/Button';
@@ -658,8 +659,8 @@ const Investments = () => {
 
                         <div className="asset-list">
                             {isLoadingData ? (
-                                <div className="text-muted text-center" style={{ padding: '24px 0' }}>
-                                    Fetching live data...
+                                <div style={{ padding: '8px' }}>
+                                    <SkeletonLoader type="list" count={5} />
                                 </div>
                             ) : (
                                 assetClasses[selectedClass].map(asset => (

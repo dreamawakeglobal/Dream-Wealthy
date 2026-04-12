@@ -1,13 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import EmojiPicker from 'emoji-picker-react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircle, Wallet, Smile } from 'lucide-react';
+import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircle, Wallet, Smile, CheckCircle2, TrendingUp, RefreshCw, Layers, PieChart, Star, Activity, ArrowRight, Scissors } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { Modal } from '../components/ui/Modal';
+import { SplitTransactionModal } from '../components/SplitTransactionModal';
 import { useFinancialContext } from '../FinancialContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
@@ -221,8 +222,12 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
         setIsEditing(false);
     };
 
+    const received = stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions);
+    const diff = stream.amount - received;
+    const isTargetMet = showTracking && diff <= 0;
+
     return (
-        <div className="stream-item glass" onDoubleClick={() => { if (playPop) playPop(); setIsEditing(true); }}>
+        <div className={`stream-item ${isTargetMet ? 'paid' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); setIsEditing(true); }}>
             {isEditing && (
                 <Modal 
                     isOpen={true} 
@@ -352,6 +357,7 @@ const Income = () => {
     const [isCurrentStreamModalOpen, setIsCurrentStreamModalOpen] = useState(false);
     const [isFutureStreamModalOpen, setIsFutureStreamModalOpen] = useState(false);
     const [activityCategoryFilter, setActivityCategoryFilter] = useState('All');
+    const [splittingTransaction, setSplittingTransaction] = useState(null);
     const [activityPage, setActivityPage] = useState(1);
     const activityItemsPerPage = 6;
 
@@ -902,7 +908,7 @@ const Income = () => {
                         </div>
                     ) : (
                         paginatedIncomeTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
+                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
                                 <div className="tx-merchant" style={{ fontWeight: 600 }}>
                                     {tx.merchant_name || 'Income Source'}
                                     {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}
@@ -912,11 +918,21 @@ const Income = () => {
                                 </div>
                                 <div className="tx-category">
                                     <span className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}>
-                                        {getFilterLabel(tx.category || 'Uncategorized')}
+                                        {getFilterLabel(tx.category ? tx.category.trim() : 'Uncategorized')}
                                     </span>
                                 </div>
                                 <div className="tx-amount text-success" style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                    +${Math.abs(tx.amount).toLocaleString()}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                                        +${Math.abs(tx.amount).toLocaleString()}
+                                        <button 
+                                            onClick={() => setSplittingTransaction(tx)}
+                                            className="btn-icon" 
+                                            style={{ opacity: 0.5, padding: '4px' }}
+                                            title="Split Transaction"
+                                        >
+                                            <Scissors size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -980,6 +996,14 @@ const Income = () => {
                     />
                 </div>
             </Modal>
+
+            {splittingTransaction && (
+                <SplitTransactionModal 
+                    tx={splittingTransaction} 
+                    onClose={() => setSplittingTransaction(null)} 
+                    uniqueCategories={uniqueIncomeCategories}
+                />
+            )}
         </div>
     );
 };

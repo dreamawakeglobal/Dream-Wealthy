@@ -3,6 +3,7 @@ import { ShieldAlert, ShieldCheck, ArrowUpRight, ArrowDownRight, Activity, Brain
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinancialContext } from '../../FinancialContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useXP } from '../../contexts/XPContext';
 import { AnimatedNumber } from '../ui/AnimatedNumber';
 import { SyncButton } from '../ui/SyncButton';
 import './UserLevelBadge.css';
@@ -20,6 +21,7 @@ const WEALTH_QUOTES = [
 export const UserLevelBadge = () => {
     const { user } = useAuth();
     const { expenseBorderColor } = useTheme();
+    const { level, title, xpPercentage, xpProgress } = useXP();
     const financialContext = useFinancialContext();
     const {
         portfolio,
@@ -69,24 +71,56 @@ export const UserLevelBadge = () => {
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     return (
-        <div className={`ultra-badge-container ${borderGlowClass}`}>
+        <div className={`ultra-badge-container glass ${borderGlowClass}`}>
             <div className="ultra-badge-grid">
                 
                 {/* LEFT PANE: Identity Profile */}
                 <div className="identity-pane">
-                    <div className="shield-glow-ring" />
-                    <div className="shield-wrapper" style={{ filter: isPositive ? 'drop-shadow(0 0 24px var(--accent-primary))' : 'drop-shadow(0 0 24px var(--danger))' }}>
+                    <div className="shield-glow-ring" style={{ position: 'absolute', width: '130px', height: '130px', zIndex: 0 }}>
+                        <svg width="130" height="130" viewBox="0 0 130 130">
+                            <circle cx="65" cy="65" r="60" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                            <circle 
+                                cx="65" cy="65" r="60" 
+                                fill="none" 
+                                stroke={isPositive ? "var(--accent-primary)" : "var(--danger)"} 
+                                strokeWidth="6" 
+                                strokeDasharray="377" 
+                                strokeDashoffset={377 - (377 * xpPercentage) / 100}
+                                strokeLinecap="round"
+                                style={{ transition: 'stroke-dashoffset 1s ease-out, stroke 0.5s', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
+                            />
+                        </svg>
+                    </div>
+                    <div className="shield-wrapper" style={{ filter: isPositive ? 'drop-shadow(0 0 24px var(--accent-primary))' : 'drop-shadow(0 0 24px var(--danger))', zIndex: 1 }}>
                         {isPositive ? (
                             <ShieldCheck size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
                         ) : (
                             <ShieldAlert size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
                         )}
                     </div>
-                    <div className="identity-text-stack">
+                    <div className="identity-text-stack" style={{ zIndex: 1 }}>
                         <h2 className="identity-name">{fullName}</h2>
-                        <div className="level-badge-pill">
-                            <span className="level-text">LEVEL 1</span>
-                            <span className="level-title">Initiate</span>
+                        <div className="level-badge-pill" style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
+                            <span className="level-text" style={{ fontWeight: 'bold' }}>LEVEL {level}</span>
+                            <span className="level-title">{title}</span>
+                        </div>
+                        <div className="xp-progress-container">
+                            <div className="xp-progress-text-row">
+                                <span className="xp-progress-current" style={{ color: isPositive ? 'var(--accent-primary)' : 'var(--danger)' }}>
+                                    {xpProgress.toLocaleString()} XP
+                                </span>
+                                <span>{(5000 - xpProgress).toLocaleString()} to Next Lvl</span>
+                            </div>
+                            <div className="xp-progress-track">
+                                <div 
+                                    className="xp-progress-fill" 
+                                    style={{ 
+                                        width: `${Math.max(xpPercentage, 2)}%`, 
+                                        background: isPositive ? 'var(--accent-primary)' : 'var(--danger)',
+                                        boxShadow: isPositive ? '0 0 15px var(--accent-primary)' : '0 0 15px var(--danger)'
+                                    }} 
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -95,7 +129,7 @@ export const UserLevelBadge = () => {
                 <div className="metrics-pane">
                     
                     {/* Top Section: Net Worth Hero */}
-                    <div className="networth-hero-card">
+                    <div className="networth-hero-card glass">
                         <div className="networth-header">
                             <h3 className="networth-title">Total Net Worth</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -138,7 +172,7 @@ export const UserLevelBadge = () => {
                             })()}
                         </div>
 
-                        <div className="networth-breakdown-bar">
+                        <div className="networth-breakdown-bar glass">
                             <div className="breakdown-item">
                                 <span className="breakdown-label">Gross Assets</span>
                                 <span className="breakdown-value asset-text">${totalAssets.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
@@ -169,7 +203,7 @@ export const UserLevelBadge = () => {
 
                     {/* Bottom Section: Monthly Flow Grid */}
                     <div className="monthly-flow-grid">
-                        <div className="flow-micro-card">
+                        <div className="flow-micro-card glass">
                             <div className="flow-icon-wrapper success-bg">
                                 <ArrowUpRight size={18} color="var(--success)" />
                             </div>
@@ -179,7 +213,7 @@ export const UserLevelBadge = () => {
                             </div>
                         </div>
 
-                        <div className="flow-micro-card">
+                        <div className="flow-micro-card glass">
                             <div className="flow-icon-wrapper danger-bg">
                                 <ArrowDownRight size={18} color="var(--danger)" />
                             </div>
@@ -189,7 +223,7 @@ export const UserLevelBadge = () => {
                             </div>
                         </div>
 
-                        <div className="flow-micro-card highlight-card">
+                        <div className={`flow-micro-card highlight-card glass ${borderGlowClass}`}>
                             <div className={`flow-icon-wrapper ${netMonthlyCashFlow >= 0 ? 'accent-bg' : 'danger-bg'}`}>
                                 <Activity size={18} color={netMonthlyCashFlow >= 0 ? "var(--accent-primary)" : "var(--danger)"} />
                             </div>

@@ -10,6 +10,7 @@ import { useFinancialContext } from '../FinancialContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
+import { useXP } from '../contexts/XPContext';
 import {
     AreaChart,
     Area,
@@ -27,6 +28,7 @@ const Home = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
     const { playPop } = useSound();
+    const { addXP } = useXP();
     const { theme, expenseBorderColor } = useTheme();
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const contextData = useFinancialContext();
@@ -50,7 +52,16 @@ const Home = () => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 0.65;
         }
-    }, []);
+
+        // Gamification Daily Login Check
+        const lastLogin = localStorage.getItem('dream_wealthy_last_login');
+        const today = new Date().toDateString();
+        
+        if (lastLogin !== today) {
+            localStorage.setItem('dream_wealthy_last_login', today);
+            setTimeout(() => addXP(10, 'Daily Check-in'), 1500); // Slight delay for dramatic effect
+        }
+    }, [addXP]);
 
 
     // Fetch 6-month projection data starting from the current month
@@ -158,10 +169,10 @@ const Home = () => {
                     <div className="fade-in-up" style={{ width: '100%', maxWidth: '480px', margin: '0 auto', marginTop: 'calc(40vh + 8px)' }}>
                         <Card glass className="hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', '--hero-border-color': activeColor, '--hero-shadow-color': `${activeColor}33` }}>
                             <div className="hero-actions" style={{ display: 'flex', gap: '20px', width: '100%' }}>
-                                <Button style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', background: activeColor, color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? '#000000' : '#ffffff', border: `1px solid ${activeColor}` }} onClick={() => { playPop(); document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' }); }}>
+                                <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto' }} className={borderGlowClass} onClick={() => { playPop(); document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' }); }}>
                                     Enter Dashboard
                                 </Button>
-                                <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto', color: 'black' }} onClick={() => { playPop(); navigate(user ? '/income' : '/signup'); }}>
+                                <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto' }} onClick={() => { playPop(); navigate(user ? '/income' : '/signup'); }}>
                                     Start Planning <ArrowRight size={18} style={{ marginLeft: '8px' }} />
                                 </Button>
                             </div>
@@ -227,7 +238,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/income'); }}>
+                                <Button variant="secondary" className={`full-width-btn ${borderGlowClass}`} onClick={() => { playPop && playPop(); navigate('/income'); }}>
                                     Manage Entries
                                 </Button>
                             </div>
@@ -261,7 +272,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
+                                <Button variant="secondary" className={`full-width-btn ${borderGlowClass}`} onClick={() => { playPop && playPop(); navigate('/investments'); }}>View Investments</Button>
                             </div>
                         </Card>
                     </AnimateOnScroll>
@@ -296,7 +307,7 @@ const Home = () => {
                                 </ResponsiveContainer>
                             </div>
                             <div className="panel-footer">
-                                <Button className="full-width-btn" style={expenseBorderColor !== 'none' ? { background: activeColor, border: 'none', color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white', boxShadow: `0 4px 12px ${activeColor}40` } : {}} onClick={() => { playPop && playPop(); navigate('/projections'); }}>
+                                <Button variant="secondary" className={`full-width-btn ${borderGlowClass}`} onClick={() => { playPop && playPop(); navigate('/projections'); }}>
                                     Run Projections
                                 </Button>
                             </div>

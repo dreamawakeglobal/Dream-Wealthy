@@ -110,6 +110,8 @@ export const useStore = create((set, get) => ({
         expenseInflationRate: 0,
         cellOverrides: {},
         extraColumns: [],
+        dismissedNotifications: [],
+        transactionSplits: [],
         subscriptionTier: 'none'
     },
 
@@ -143,7 +145,7 @@ export const useStore = create((set, get) => ({
                 supabase.from('tracked_debts').select('*').eq('user_id', user.id),
                 supabase.from('goals').select('*').eq('user_id', user.id),
                 supabase.from('custom_projections').select('*').eq('user_id', user.id),
-                supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false }),
+                supabase.from('transactions').select('*').eq('user_id', user.id).gte('date', new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]).order('date', { ascending: false }),
                 supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
                 supabase.from('subscriptions').select('*').eq('user_id', user.id),
                 supabase.from('accounts').select('*').eq('user_id', user.id),
@@ -157,6 +159,7 @@ export const useStore = create((set, get) => ({
                 cellOverrides: profileRes.data.cell_overrides?.overrides || {},
                 extraColumns: profileRes.data.cell_overrides?.extraColumns || [],
                 dismissedNotifications: profileRes.data.cell_overrides?.dismissedNotifications || [],
+                transactionSplits: profileRes.data.cell_overrides?.transactionSplits || [],
                 subscriptionTier: profileRes.data.subscription_tier || 'none'
             } : get().profileData;
 
@@ -190,14 +193,14 @@ export const useStore = create((set, get) => ({
             
             if (actData.length > 0 && balData.length === 0 && !window.__cache_warming) {
                 window.__cache_warming = true; // Use transient window memory so it resets on hard refresh, guaranteeing a solid attempt
-                console.log("Database-First Cache is completely empty for this existing user! Executing background Cache Warmer Sequence...");
+                // Cache warmer sequence initiated
                 supabase.auth.getSession().then(({ data: { session } }) => {
                     if (!session) return;
                     fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-plaid-accounts`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }
                     }).then(() => {
-                        console.log("Cache warmed successfully! Relocating data into UI natively.");
+                        // Cache warmed successfully
                         get().fetchAllData(); // Refresh Zustand once the backend Edge Function completes the upsert
                     });
                 });
@@ -296,12 +299,13 @@ export const useStore = create((set, get) => ({
             if (key === 'startingSavings') column = 'starting_savings';
             if (key === 'incomeGrowthRate') column = 'income_growth_rate';
             if (key === 'expenseInflationRate') column = 'expense_inflation_rate';
-            if (key === 'cellOverrides' || key === 'extraColumns' || key === 'dismissedNotifications') {
+            if (key === 'cellOverrides' || key === 'extraColumns' || key === 'dismissedNotifications' || key === 'transactionSplits') {
                 column = 'cell_overrides';
                 valToSave = {
                     overrides: key === 'cellOverrides' ? newValue : profileData.cellOverrides,
                     extraColumns: key === 'extraColumns' ? newValue : profileData.extraColumns,
-                    dismissedNotifications: key === 'dismissedNotifications' ? newValue : profileData.dismissedNotifications
+                    dismissedNotifications: key === 'dismissedNotifications' ? newValue : profileData.dismissedNotifications,
+                    transactionSplits: key === 'transactionSplits' ? newValue : profileData.transactionSplits
                 };
             }
             if (column) {
@@ -315,6 +319,7 @@ export const useStore = create((set, get) => ({
     setExpenseInflationRate: (val) => get().updateProfileField('expenseInflationRate', val),
     setCellOverrides: (val) => get().updateProfileField('cellOverrides', val),
     setExtraColumns: (val) => get().updateProfileField('extraColumns', val),
+    setTransactionSplits: (val) => get().updateProfileField('transactionSplits', val),
 
     fetchCoachingInsight: async (trackerContext = null) => {
         set({ aiCoachingLoading: true });

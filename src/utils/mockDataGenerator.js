@@ -224,5 +224,5 @@ export const injectDemoData = async (store) => {
         }
     ]);
 
-    console.log("✅ Synthetic Demo Data Payload Successfully Injected.");
+    // Synthetic Demo Data Payload Successfully Injected
 };

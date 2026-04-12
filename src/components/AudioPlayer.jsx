@@ -63,7 +63,7 @@ const AudioPlayer = () => {
                 playPromise.then(() => {
                     setIsPlaying(true);
                 }).catch(() => {
-                    console.log("Autoplay prevented by browser. User interaction required.");
+                    // Autoplay prevented
                     setIsPlaying(false);
                 });
             }

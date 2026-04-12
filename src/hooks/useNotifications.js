@@ -173,7 +173,7 @@ export const useNotifications = () => {
         alerts.sort((a, b) => severityOrder[a.type] - severityOrder[b.type]);
 
         // Filter out dismissed notifications
-        console.log("NATIVE DEBUG - generated alerts:", alerts.map(a => a.id), "cached dismissedIds:", dismissedIds);
+        // Native debug removed
         return alerts.filter(alert => !dismissedIds.includes(alert.id));
     }, [store.trackedDebts, store.fixedExpenses, store.subscriptions, totalMonthlyIncome, netMonthlyCashFlow, dismissedIds]);
 

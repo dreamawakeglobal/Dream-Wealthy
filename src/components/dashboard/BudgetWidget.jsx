@@ -68,7 +68,7 @@ export const BudgetWidget = () => {
                     <span style={{ fontSize: '2rem', fontWeight: 'bold', color: isOverBudget ? 'var(--danger)' : 'var(--text-primary)' }}>
                         ${spentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                    <span style={{ color: '#000000', fontSize: '0.9rem', fontWeight: 'bold' }}>
                         of ${totalMonthlyExpenses.toLocaleString(undefined, { maximumFractionDigits: 0 })} budgeted
                     </span>
                 </div>

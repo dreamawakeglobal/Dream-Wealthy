@@ -5,7 +5,8 @@ import Footer from './Footer';
 import { Button } from './ui/Button';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
-import { LogOut, User, Settings, CreditCard } from 'lucide-react';
+import { LogOut, Volume2, VolumeX, User, ChevronDown, Settings, CreditCard } from 'lucide-react';
+import { SkeletonLoader } from './ui/SkeletonLoader';
 import { NotificationBell } from './NotificationBell';
 import AiAdvisorWidget from './AiAdvisorWidget';
 import BrokenConnectionModal from './BrokenConnectionModal';
@@ -84,7 +85,15 @@ const Layout = () => {
             </div>
             <Navigation />
             <main className={`main-content ${location.pathname === '/' ? 'waitlist-main' : ''}`}>
-                <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', color: 'var(--text-primary)' }}>Loading application...</div>}>
+                <Suspense fallback={
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '40px', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+                        <div style={{ display: 'flex', gap: '24px' }}>
+                            <SkeletonLoader type="card" count={1} style={{ flex: 1, height: '180px' }} />
+                            <SkeletonLoader type="card" count={1} style={{ flex: 1, height: '180px' }} />
+                        </div>
+                        <SkeletonLoader type="card" count={1} style={{ height: '400px' }} />
+                    </div>
+                }>
                     <Outlet />
                 </Suspense>
             </main>

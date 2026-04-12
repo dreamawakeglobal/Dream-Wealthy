@@ -18,11 +18,15 @@
 }
 
 .metric-title {
-    color: var(--text-secondary);
+    color: #000000;
     font-size: 0.9rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+[data-theme='dark'] .metric-title {
+    color: var(--text-secondary);
 }
 
 .metric-box .metric-value {

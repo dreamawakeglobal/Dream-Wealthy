@@ -135,7 +135,7 @@ export const FinancialProvider = ({ children }) => {
 
                     if (resTx.ok && !txData.error && txData.synced) {
                         if (txData.synced.added > 0 || txData.synced.modified > 0 || txData.synced.removed > 0) {
-                            console.log(`Manual Plaid Sync Executed: Extracted ${txData.synced.added} unseen transactions natively!`);
+                            // Sync Executed silently
                         }
                         // GUBUR: A critical fix. We MUST refresh all DOM data completely decoupled from transactions!
                         // Even if 0 transactions occurred, Bank Balances mathematically drift on their own. We must capture the state.
@@ -175,7 +175,6 @@ export const FinancialProvider = ({ children }) => {
             if (!lastSync || (now - Number(lastSync) > fourHours)) {
                 // Defensively delay by 2 seconds to prioritize instantaneous UI mounting and Dashboard animations
                 setTimeout(async () => {
-                    console.log('Initiating automated 4-hour background sync sequence...');
                     const success = await forceSyncPlaid();
                     if (success) {
                         localStorage.setItem(lastSyncKey, now.toString());
@@ -199,15 +198,43 @@ export const FinancialProvider = ({ children }) => {
         return store.variableExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
     }, [store.variableExpenses]);
 
+    const processedTransactions = useMemo(() => {
+        if (!store.transactions) return [];
+        let txs = [...store.transactions];
+        const splits = store.profileData?.transactionSplits || [];
+        
+        for (let splitConfig of splits) {
+            const idx = txs.findIndex(t => String(t.id) === String(splitConfig.originalTxId));
+            if (idx !== -1) {
+                const originalTx = txs[idx];
+                txs.splice(idx, 1); // Remove original
+                splitConfig.splits.forEach(s => {
+                    txs.push({
+                        ...originalTx,
+                        id: s.id, 
+                        amount: Number(s.amount), 
+                        category: (s.category || originalTx.category).trim() + ' ', // Trailing space forces isManual true!
+                        merchant_name: s.merchant || originalTx.merchant_name,
+                        name: s.merchant || originalTx.name,
+                        isSplitChild: true,
+                        originalTxId: originalTx.id,
+                        originalAmount: originalTx.amount
+                    });
+                });
+            }
+        }
+        return txs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }, [store.transactions, store.profileData.transactionSplits]);
+
     // --- RULES ENGINE: Auto-Categorize Plaid Transactions strictly within the Current Month ---
     const transactionsByCategory = useMemo(() => {
-        if (!store.transactions || store.transactions.length === 0) return {};
+        if (!processedTransactions || processedTransactions.length === 0) return {};
 
         const now = new Date();
         const currentM = now.getMonth();
         const currentY = now.getFullYear();
 
-        return store.transactions.reduce((acc, tx) => {
+        return processedTransactions.reduce((acc, tx) => {
             // Only sum up expenses (positive Plaid amounts). Negative amounts are income/refunds.
             if (tx.amount > 0 && tx.date) {
                 const [y, m, d] = tx.date.split('-');
@@ -252,16 +279,16 @@ export const FinancialProvider = ({ children }) => {
             }
             return acc;
         }, {});
-    }, [store.transactions]);
+    }, [processedTransactions]);
 
     const incomeTransactionsByCategory = useMemo(() => {
-        if (!store.transactions || store.transactions.length === 0) return {};
+        if (!processedTransactions || processedTransactions.length === 0) return {};
 
         const now = new Date();
         const currentM = now.getMonth();
         const currentY = now.getFullYear();
 
-        return store.transactions.reduce((acc, tx) => {
+        return processedTransactions.reduce((acc, tx) => {
             // Only sum up income (negative Plaid amounts). We want to include pending checks too!
             if (tx.amount < 0 && tx.date) {
                 const [year, month, day] = tx.date.split('-');
@@ -284,7 +311,7 @@ export const FinancialProvider = ({ children }) => {
             }
             return acc;
         }, {});
-    }, [store.transactions]);
+    }, [processedTransactions]);
 
     const totalSubscriptionCost = (store.subscriptions || []).reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
     const totalTrackedMonthlyPayments = (store.trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
@@ -379,7 +406,7 @@ export const FinancialProvider = ({ children }) => {
         // Auto-Categorized Data for UI
         transactionsByCategory,
         incomeTransactionsByCategory,
-        transactions: store.transactions,
+        transactions: processedTransactions,
         mapUserExpenseToPlaidCategory,
 
         // Monthly Debt Tracker

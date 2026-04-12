@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save, Edit2 } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save, Edit2, Scissors } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,8 +23,10 @@ import { useSound } from '../SoundContext';
 import { Modal } from '../components/ui/Modal';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { useStore } from '../store';
+import { useXP } from '../contexts/XPContext';
 import { supabase } from '../supabaseClient';
 import './Expenses.css';
+import { SplitTransactionModal } from '../components/SplitTransactionModal';
 
 export const getFilterLabel = (filterId) => {
     if (!filterId) return '🏷️ Uncategorized';
@@ -431,15 +433,19 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: </span>
                                             <CurrencyInput
                                                 raw
-                                                className="auto-tracker-input"
+                                                className={`auto-tracker-input ${expenseBorderColor === 'none' ? 'no-border' : ''}`}
                                                 value={expense.manualSpent != null ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
                                                 onChange={(e) => {
                                                     const val = e.target.value;
                                                     onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
                                                 }}
-                                                style={{ width: '80px', background: 'transparent', border: '1px solid', borderColor: activeColor || 'var(--primary)', borderRadius: '6px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
-                                                onFocus={(e) => e.target.style.borderColor = activeColor || 'var(--primary)'}
-                                                onBlur={(e) => e.target.style.borderColor = activeColor || 'var(--primary)'}
+                                                style={{ width: '80px', background: 'transparent', border: expenseBorderColor === 'none' ? 'none' : '2px solid', borderColor: expenseBorderColor === 'none' ? 'transparent' : (activeColor || 'var(--primary)'), borderRadius: '50px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
+                                                onFocus={(e) => {
+                                                    if (expenseBorderColor !== 'none') e.target.style.borderColor = activeColor || 'var(--primary)';
+                                                }}
+                                                onBlur={(e) => {
+                                                    if (expenseBorderColor !== 'none') e.target.style.borderColor = activeColor || 'var(--primary)';
+                                                }}
                                             />
                                         </div>
                                         <div style={{
@@ -507,6 +513,7 @@ const Expenses = () => {
         subscriptions, setSubscriptions
     } = useFinancialContext();
     const { playCheck, playPop } = useSound();
+    const { addXP } = useXP();
     const { expenseBorderColor, theme } = useTheme();
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const [isFixedModalOpen, setIsFixedModalOpen] = useState(false);
@@ -522,6 +529,7 @@ const Expenses = () => {
     const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
     const [activityCategoryFilter, setActivityCategoryFilter] = useState('All');
     const [editingTransactionId, setEditingTransactionId] = useState(null);
+    const [splittingTransaction, setSplittingTransaction] = useState(null);
     const [activityPage, setActivityPage] = useState(1);
     const activityItemsPerPage = 6;
 
@@ -693,6 +701,7 @@ const Expenses = () => {
     const handleEditTrackedDebt = (id, updatedFields) => {
         if (updatedFields.isPaid) {
             setJustPaidId(id);
+            addXP(100, 'Monthly Debt Paid');
             setTimeout(() => setJustPaidId(null), 600);
         }
         setTrackedDebts(prev => prev.map(d => String(d.id) === String(id) ? { ...d, ...updatedFields } : d));
@@ -1217,9 +1226,23 @@ const Expenses = () => {
             <AnimateOnScroll yOffset={40} delay={0.1} className="subscription-box">
                 <Card glass className={borderGlowClass} style={{ marginTop: '32px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                             <h2 style={{ margin: 0 }}>Subscriptions</h2>
-                            <span className="badge danger-badge">${totalSubscriptionCost.toFixed(2)}/mo</span>
+                            <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalSubscriptionCost.toFixed(2)}/mo</span>
+                            {(() => {
+                                const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + Number(sub.cost), 0);
+                                const left = totalSubscriptionCost - paid;
+                                return (
+                                    <>
+                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
+                                            Paid: ${paid.toFixed(2)}
+                                        </span>
+                                        <span className="badge success-badge">
+                                            Left: ${left.toFixed(2)}
+                                        </span>
+                                    </>
+                                );
+                            })()}
                         </div>
                         <Button 
                             size="sm" 
@@ -1311,18 +1334,19 @@ const Expenses = () => {
                     {/* Common Subscriptions Grid */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '12px', marginBottom: activeSubscriptions.length > 0 ? '24px' : '0' }}>
                         {COMMON_SUBSCRIPTIONS.filter(s => !activeSubscriptions.find(a => a.name === s.name)).map(sub => (
-                            <div
-                                key={sub.id}
-                                onClick={() => toggleSubscription(sub)}
-                                style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                    padding: '16px 8px', borderRadius: '12px', cursor: 'pointer',
-                                    border: '1px dashed var(--surface-border)', background: 'transparent',
-                                    transition: 'all 0.2s ease', opacity: 0.5
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
-                            >
+                                <div
+                                    key={sub.id}
+                                    onClick={() => toggleSubscription(sub)}
+                                    className="stream-item glass"
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                        padding: '16px 8px', cursor: 'pointer',
+                                        border: '1px dashed var(--surface-border)', background: 'transparent',
+                                        opacity: 0.5
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.borderStyle = 'solid'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.borderStyle = 'dashed'; e.currentTarget.style.borderColor = 'var(--surface-border)'; }}
+                                >
                                 <img
                                     src={`https://www.google.com/s2/favicons?domain=${sub.domain}&sz=128`}
                                     alt={sub.name}
@@ -1349,11 +1373,10 @@ const Expenses = () => {
                                             setNewSub({ name: sub.name, cost: sub.cost, dueDate: sub.dueDate || '', domain: sub.domain || '' });
                                             setShowAddSub(true);
                                         }}
+                                        className={`stream-item ${sub.isPaid ? 'paid' : ''} glass`}
                                         style={{
                                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                            padding: '16px 8px', borderRadius: '12px', position: 'relative',
-                                            border: `1px solid ${sub.isPaid ? (activeColor || 'var(--success)') : 'var(--primary)'}`, 
-                                            background: sub.isPaid ? (activeColor ? activeColor + '10' : 'rgba(46, 204, 113, 0.05)') : 'rgba(79, 70, 229, 0.05)',
+                                            padding: '16px 8px', position: 'relative',
                                             cursor: 'pointer',
                                             overflow: 'hidden'
                                         }}
@@ -1395,9 +1418,25 @@ const Expenses = () => {
                     <Card glass className={`debt-tracker-card ${borderGlowClass}`} style={{ height: '100%' }}>
                         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div>
-                                <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontWeight: 'bold' }}>
-                                    Monthly Debt Tracker
-                                </h2>
+                                <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, fontWeight: 'bold' }}>
+                                        Monthly Debt Tracker
+                                    </h2>
+                                    {(trackedDebts || []).length > 0 && (() => {
+                                        const paid = (trackedDebts || []).filter(d => d.isPaid || (d.paidCircles && d.paidCircles.includes(0))).reduce((sum, d) => sum + (d.minimumPayment || 0) + (d.extraPayment || 0), 0);
+                                        const left = totalTrackedMonthlyPayments - paid;
+                                        return (
+                                            <>
+                                                <span className="badge" style={{ background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)', marginLeft: '4px' }}>
+                                                    Paid: ${paid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                </span>
+                                                <span className="badge success-badge">
+                                                    Left: ${Math.max(0, left).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                                                </span>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
                                 {(trackedDebts || []).length > 0 ? (
                                     <div style={{ display: 'flex', gap: '16px', marginTop: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -2175,7 +2214,7 @@ const Expenses = () => {
                                     {new Date(tx.date).toLocaleDateString()}
                                 </div>
                                 <div className="tx-category">
-                                    {editingTransactionId === tx.id ? (
+                                    {editingTransactionId === tx.id && !tx.isSplitChild ? (
                                             <select
                                                 autoFocus
                                                 defaultValue={detectPseudoCategory(tx)}
@@ -2229,17 +2268,29 @@ const Expenses = () => {
                                             </select>
                                     ) : (
                                         <span 
-                                            onClick={() => setEditingTransactionId(tx.id)}
+                                            onClick={() => {
+                                                if (!tx.isSplitChild) setEditingTransactionId(tx.id);
+                                            }}
                                             className="badge badge-hover" 
-                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: 'pointer', transition: '0.2s', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}
-                                            title="Click to edit category"
+                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: tx.isSplitChild ? 'default' : 'pointer', transition: '0.2s', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}
+                                            title={tx.isSplitChild ? "Edit category via the split menu" : "Click to edit category"}
                                         >
                                             {getFilterLabel(detectPseudoCategory(tx))}
                                         </span>
                                     )}
                                 </div>
                                 <div className={`tx-amount ${tx.amount > 0 ? 'text-danger' : 'text-success'}`} style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                    {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString()}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                                        {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString()}
+                                        <button 
+                                            onClick={() => setSplittingTransaction(tx)}
+                                            className="btn-icon" 
+                                            style={{ opacity: 0.5, padding: '4px' }}
+                                            title="Split Transaction"
+                                        >
+                                            <Scissors size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -2279,6 +2330,15 @@ const Expenses = () => {
                     </div>
                 )}
             </Modal>
+
+
+            {splittingTransaction && (
+                <SplitTransactionModal 
+                    tx={splittingTransaction} 
+                    onClose={() => setSplittingTransaction(null)} 
+                    uniqueCategories={uniqueCategories}
+                />
+            )}
 
             <Modal
                 isOpen={showCustomPaymentModal}
