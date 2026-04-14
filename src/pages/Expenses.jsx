@@ -171,7 +171,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        style={{ color: 'black', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                        style={{ color: 'var(--text-primary)', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 </div>
                 {showEmojiPicker && (
@@ -252,7 +252,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     min="0"
-                    style={{ color: 'black', flex: 1.5, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                    style={{ color: 'var(--text-primary)', flex: 1.5, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                 />
                 {showDueDate && (
                     <Input
@@ -262,7 +262,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         placeholder="Day (1-31)"
                         value={dueDate}
                         onChange={(e) => setDueDate(e.target.value)}
-                        style={{ color: 'black', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                        style={{ color: 'var(--text-primary)', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 )}
                 <Button 
