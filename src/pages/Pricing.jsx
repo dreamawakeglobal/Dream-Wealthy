@@ -33,7 +33,7 @@ const getPlans = (isYearly) => [
         name: 'Premium',
         price: isYearly ? '$10.00' : '$12.99',
         period: '/month',
-        billedAs: isYearly ? 'Billed $120 annually',
+        billedAs: isYearly ? 'Billed $120 annually' : 'Billed monthly',
         description: 'Full automation. Everything seamlessly syncs in the background.',
         icon: Sparkles,
         color: 'var(--primary)',
