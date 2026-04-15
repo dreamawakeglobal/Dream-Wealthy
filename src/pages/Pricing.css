@@ -40,6 +40,56 @@
     margin-inline: auto;
 }
 
+/* Pricing Toggle */
+.pricing-toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.pricing-toggle {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--surface-border);
+    border-radius: 100px;
+    padding: 6px;
+    gap: 4px;
+}
+
+.toggle-option {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.toggle-option.active {
+    background: var(--surface-card);
+    color: var(--text-primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.save-badge {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 800;
+}
+
 /* Plans Grid */
 .plans-grid {
     display: grid;
@@ -148,6 +198,14 @@
     font-size: 0.95rem;
     margin: 0 0 28px 0;
     line-height: 1.5;
+}
+
+.price-billed {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 24px;
+    margin-top: -4px;
 }
 
 /* Features List */

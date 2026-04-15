@@ -8,13 +8,14 @@ import { supabase } from '../supabaseClient';
 import { useSound } from '../SoundContext';
 import './Pricing.css';
 
-const PLANS = [
+const getPlans = (isYearly) => [
     {
-        id: 'basic',
+        id: isYearly ? 'basic-yearly' : 'basic-monthly',
         name: 'Basic',
-        price: '$4.99',
+        price: isYearly ? '$4.00' : '$6.99',
         period: '/month',
-        description: 'Everything you need to take control of your money.',
+        billedAs: isYearly ? 'Billed $48 annually' : 'Billed monthly',
+        description: 'Take control of your money manually without automated syncing.',
         icon: Shield,
         color: '#0ea5e9',
         features: [
@@ -22,30 +23,30 @@ const PLANS = [
             { text: '12-Month Financial Projections', included: true },
             { text: 'Debt Destroyer Strategies', included: true },
             { text: 'Savings Goals Tracker', included: true },
-            { text: 'Manual Investment Portfolio', included: true },
-            { text: 'Plaid Bank Auto-Sync', included: false },
-            { text: 'Live Market Data', included: false },
-            { text: 'Rules Engine Auto-Categorization', included: false },
+            { text: 'AI Advisor & Automation', included: false },
+            { text: 'Active Investments Tracking', included: false },
+            { text: 'Auto Tracking for Income & Expenses', included: false },
         ],
     },
     {
-        id: 'premium',
+        id: isYearly ? 'premium-yearly' : 'premium-monthly',
         name: 'Premium',
-        price: '$14.99',
+        price: isYearly ? '$10.00' : '$12.99',
         period: '/month',
-        description: 'Full automation. Your finances run themselves.',
+        billedAs: isYearly ? 'Billed $120 annually',
+        description: 'Full automation. Everything seamlessly syncs in the background.',
         icon: Sparkles,
         color: 'var(--primary)',
         popular: true,
         features: [
             { text: 'Everything in Basic', included: true },
             { text: 'Plaid Bank Auto-Sync', included: true },
+            { text: 'AI Advisor & Automation', included: true },
+            { text: 'Active Investments Tracking', included: true },
+            { text: 'Auto Tracking for Income & Expenses', included: true },
             { text: 'Live Market Data (Stocks & Crypto)', included: true },
             { text: 'Rules Engine Auto-Categorization', included: true },
-            { text: 'Income Stream Auto-Tracker', included: true },
-            { text: 'Real-Time Transaction Feed', included: true },
-            { text: 'Priority Support', included: true },
-            { text: 'Early Access to New Features', included: true },
+            { text: 'Priority Chat Support', included: true },
         ],
     },
 ];
@@ -55,7 +56,9 @@ const Pricing = () => {
     const { user } = useAuth();
     const { playPop } = useSound();
     const [isLoading, setIsLoading] = useState(null);
+    const [isYearly, setIsYearly] = useState(true);
     const currentTier = profileData?.subscriptionTier || 'none';
+    const currentPlans = getPlans(isYearly);
 
     const handleCheckout = async (tier) => {
         if (!user) return;
@@ -98,10 +101,27 @@ const Pricing = () => {
                 <p className="pricing-subtitle">
                     Choose the plan that fits your goals. Cancel anytime.
                 </p>
+
+                <div className="pricing-toggle-container">
+                    <div className="pricing-toggle">
+                        <button 
+                            className={`toggle-option ${!isYearly ? 'active' : ''}`}
+                            onClick={() => { if(playPop) playPop(); setIsYearly(false); }}
+                        >
+                            Monthly
+                        </button>
+                        <button 
+                            className={`toggle-option ${isYearly ? 'active' : ''}`}
+                            onClick={() => { if(playPop) playPop(); setIsYearly(true); }}
+                        >
+                            Yearly <span className="save-badge">Save up to 40%</span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div className="plans-grid">
-                {PLANS.map(plan => {
+                {currentPlans.map(plan => {
                     const Icon = plan.icon;
                     const isActive = currentTier === plan.id;
 
@@ -129,6 +149,7 @@ const Pricing = () => {
                                 <span className="price-amount">{plan.price}</span>
                                 <span className="price-period">{plan.period}</span>
                             </div>
+                            {plan.billedAs && <div className="price-billed">{plan.billedAs}</div>}
                             <p className="plan-desc">{plan.description}</p>
 
                             <div className="plan-features">
