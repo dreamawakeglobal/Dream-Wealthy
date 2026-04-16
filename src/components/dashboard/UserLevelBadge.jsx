@@ -92,7 +92,20 @@ export const UserLevelBadge = () => {
                         </svg>
                     </div>
                     <div className="shield-wrapper" style={{ filter: isPositive ? 'drop-shadow(0 0 24px var(--accent-primary))' : 'drop-shadow(0 0 24px var(--danger))', zIndex: 1 }}>
-                        {isPositive ? (
+                        {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                            <img 
+                                src={user.user_metadata.avatar_url || user.user_metadata.picture} 
+                                alt="Profile Avatar" 
+                                style={{ 
+                                    width: 96, 
+                                    height: 96, 
+                                    borderRadius: '50%', 
+                                    objectFit: 'cover',
+                                    border: '2px solid var(--text-primary)',
+                                    filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' 
+                                }} 
+                            />
+                        ) : isPositive ? (
                             <ShieldCheck size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
                         ) : (
                             <ShieldAlert size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
