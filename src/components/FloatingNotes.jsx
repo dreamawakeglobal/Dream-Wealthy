@@ -68,7 +68,7 @@ const FloatingNotes = () => {
     }, [allNotes, user]);
 
     // Dragging state
-    const [position, setPosition] = useState({ x: 20, y: 100 });
+    const [position, setPosition] = useState({ x: typeof window !== 'undefined' ? window.innerWidth * 0.08 : 100, y: typeof window !== 'undefined' ? window.innerHeight * 0.45 : 400 });
     const isDragging = useRef(false);
     const dragStart = useRef({ x: 0, y: 0 });
     const hasMoved = useRef(false);
