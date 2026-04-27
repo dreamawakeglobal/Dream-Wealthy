@@ -14,7 +14,8 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
         'west.terrion@yahoo.com'.trim().toLowerCase(),
         'kamvaughn1@gmail.com'.toLowerCase(),
         'artisaangel@gmail.com'.toLowerCase(),
-        'keltonreed16@gmail.com'.trim().toLowerCase()
+        'keltonreed16@gmail.com'.trim().toLowerCase(),
+        'boniernick01@gmail.com'.toLowerCase()
     ]; // We can add more here if needed later
 
     const userEmail = user?.email?.trim().toLowerCase() || '';
