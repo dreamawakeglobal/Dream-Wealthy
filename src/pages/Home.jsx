@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { generateInsights } from '../utils/insightsEngine';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
+import { MonthlyReportGenerator } from '../components/MonthlyReportGenerator';
 import './Home.css';
 
 const Home = () => {
@@ -183,7 +184,10 @@ const Home = () => {
 
             {/* Overview Dashboard */}
             <section id="dashboard" className="dashboard-section">
-                <h2 className="section-title">Financial Overview</h2>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h2 className="section-title" style={{ margin: 0 }}>Financial Overview</h2>
+                    <MonthlyReportGenerator className={borderGlowClass} />
+                </div>
 
                 {/* Ultra Premium Profile Badge Engine */}
                 <AnimateOnScroll delay={0.4}>

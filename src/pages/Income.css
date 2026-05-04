@@ -94,7 +94,8 @@
 }
 
 [data-theme='dark'] .income-form .dream-input {
-    color: #000000 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
 }
 
 @media (max-width: 768px) {

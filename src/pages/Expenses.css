@@ -124,7 +124,8 @@
 
 
 [data-theme='dark'] .expense-form .dream-input {
-    color: #000000 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
 }
 
 @media (max-width: 768px) {
@@ -293,13 +294,15 @@
 
 /* Force dark mode font colors for inputs inside specific popups to maintain contrast over white glass */
 [data-theme='dark'] .dark-mode-black-text .dream-input {
-    color: #000000 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
 }
 
 /* Edit Debt Form Inputs - Hard Override for Dark Mode */
 [data-theme='dark'] .edit-debt-input .dream-input,
 [data-theme='dark'] select.edit-debt-input {
-    color: #000000 !important;
+    color: #ffffff !important;
+    font-weight: bold !important;
 }
 
 [data-theme='dark'] .edit-debt-input .dream-input::placeholder,

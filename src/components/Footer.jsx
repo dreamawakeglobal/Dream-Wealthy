@@ -39,13 +39,13 @@ const Footer = () => {
                     </div>
                     <div className="footer-column">
                         <h4>Socials</h4>
-                        <a href="https://instagram.com" target="_blank" rel="noreferrer" className="social-link">
+                        <a href="https://www.instagram.com/dreamwealthyco?igsh=MW1yOXlsdzFhOTJrNQ%3D%3D&utm_source=qr" target="_blank" rel="noreferrer" className="social-link">
                             <Instagram size={18} /> Instagram
                         </a>
                         <a href="https://x.com" target="_blank" rel="noreferrer" className="social-link">
                             <XIcon size={18} /> X.com
                         </a>
-                        <a href="https://tiktok.com" target="_blank" rel="noreferrer" className="social-link">
+                        <a href="https://www.tiktok.com/@dreamwealthyco?_r=1&_t=ZT-95TzBqekKGE" target="_blank" rel="noreferrer" className="social-link">
                             <TikTokIcon size={18} /> TikTok
                         </a>
                     </div>

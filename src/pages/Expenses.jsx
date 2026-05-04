@@ -171,7 +171,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        style={{ color: 'var(--text-primary)', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                        style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 </div>
                 {showEmojiPicker && (
@@ -212,7 +212,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                                 }
                             }
                         }}
-                        style={{ color: 'var(--text-primary)', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                        style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                     {recentMerchants && recentMerchants.length > 0 && (
                         <datalist id="recent-merchants">
@@ -231,7 +231,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                     <select 
                         value={category} 
                         onChange={e => setCategory(e.target.value)}
-                        style={{ background: 'var(--surface)', border: `2px solid ${activeColor || 'var(--surface-border)'}`, color: category ? 'var(--text-primary)' : 'var(--text-muted)', outline: 'none', padding: '10px 16px', borderRadius: '50px', cursor: 'pointer', flex: 1 }}
+                        style={{ background: 'var(--surface)', border: `2px solid ${activeColor || 'var(--surface-border)'}`, color: category ? (theme === 'dark' ? '#ffffff' : 'var(--text-primary)') : 'var(--text-muted)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor && category ? `0 0 8px ${activeColor}` : 'none', outline: 'none', padding: '10px 16px', borderRadius: '50px', cursor: 'pointer', flex: 1 }}
                     >
                         <option value="">Category</option>
                         <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
@@ -252,7 +252,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                     onChange={(e) => setAmount(e.target.value)}
                     required
                     min="0"
-                    style={{ color: 'var(--text-primary)', flex: 1.5, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                    style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', flex: 1.5, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                 />
                 {showDueDate && (
                     <Input
@@ -262,7 +262,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
                         placeholder="Day (1-31)"
                         value={dueDate}
                         onChange={(e) => setDueDate(e.target.value)}
-                        style={{ color: 'var(--text-primary)', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                        style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', flex: 1, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
                     />
                 )}
                 <Button 
@@ -1066,7 +1066,8 @@ const Expenses = () => {
                                 if (playPop) playPop();
                                 setIsFixedModalOpen(true);
                             }}
-                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px', border: '1px solid var(--surface-border)' }}
+                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px' }}
+                            className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                         >
                             <Plus size={16} style={{ marginRight: '6px' }} />
                             Add Bill
@@ -1169,7 +1170,8 @@ const Expenses = () => {
                                     if (playPop) playPop();
                                     setIsVariableModalOpen(true);
                                 }}
-                                style={{ height: '32px', padding: '6px 14px', border: '1px solid var(--surface-border)' }}
+                                style={{ height: '32px', padding: '6px 14px' }}
+                                className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             >
                                 <Plus size={16} style={{ marginRight: '6px' }} />
                                 Add expense

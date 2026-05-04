@@ -136,13 +136,15 @@ const Projections = () => {
     const pageTotals = useMemo(() => {
         return paginatedData.reduce((acc, row) => {
             acc.Income += row.Income || 0;
+            acc.ActualIncome += row.ActualIncome || 0;
             acc.Expenses += row.Expenses || 0;
+            acc.ActualExpenses += row.ActualExpenses || 0;
             acc.Net += row.Net || 0;
             extraColumns.forEach(c => {
                 acc[c.name] = (acc[c.name] || 0) + (row[c.name] || 0);
             });
             return acc;
-        }, { Income: 0, Expenses: 0, Net: 0 });
+        }, { Income: 0, ActualIncome: 0, Expenses: 0, ActualExpenses: 0, Net: 0 });
     }, [paginatedData, extraColumns]);
 
     const finalTotal = projectionData[projectionData.length - 1]?.Cumulative || 0;
@@ -313,7 +315,7 @@ const Projections = () => {
                                             dataKey="month" 
                                             stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
                                             tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
-                                            tickFormatter={(val) => typeof val === 'string' ? val.substring(0, 3) : val} 
+                                            tickFormatter={(val) => typeof val === 'string' ? (val.split(" ").length === 2 ? `${val.split(" ")[0].substring(0, 3)} ${val.split(" ")[1]}` : val.substring(0, 3)) : val} 
                                         />
                                         <YAxis 
                                             stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
@@ -393,18 +395,24 @@ const Projections = () => {
                                             <tr key={row.monthIndex}>
                                                 <td>{row.month}</td>
                                                 <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                                                    <EditableCell
-                                                        value={row.Income}
-                                                        sign="+"
-                                                        onSave={(val) => handleCellEdit(row.monthIndex, 'Income', val)}
-                                                    />
+                                                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                        <EditableCell
+                                                            value={row.Income}
+                                                            sign="+"
+                                                            onSave={(val) => handleCellEdit(row.monthIndex, 'Income', val)}
+                                                        />
+                                                        <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${(row.ActualIncome || 0).toLocaleString()}</span>
+                                                    </div>
                                                 </td>
                                                 <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                                                    <EditableCell
-                                                        value={row.Expenses}
-                                                        sign="-"
-                                                        onSave={(val) => handleCellEdit(row.monthIndex, 'Expenses', val)}
-                                                    />
+                                                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                        <EditableCell
+                                                            value={row.Expenses}
+                                                            sign="-"
+                                                            onSave={(val) => handleCellEdit(row.monthIndex, 'Expenses', val)}
+                                                        />
+                                                        <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
+                                                    </div>
                                                 </td>
                                                 {extraColumns.map(c => (
                                                     <td key={c.id} style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
@@ -424,8 +432,18 @@ const Projections = () => {
                                         {/* Totals Row */}
                                         <tr style={{ background: 'rgba(255,255,255,0.05)', fontWeight: 'bold' }}>
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>Year {currentPage + 1} Total</td>
-                                            <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>+${pageTotals.Income.toLocaleString()}</td>
-                                            <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>-${pageTotals.Expenses.toLocaleString()}</td>
+                                            <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                    <span>+${pageTotals.Income.toLocaleString()}</span>
+                                                    <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${pageTotals.ActualIncome.toLocaleString()}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                    <span>-${pageTotals.Expenses.toLocaleString()}</span>
+                                                    <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
+                                                </div>
+                                            </td>
                                             {extraColumns.map(c => (
                                                 <td key={`total-${c.id}`} style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
                                                     -${(pageTotals[c.name] || 0).toLocaleString()}

@@ -471,9 +471,13 @@ a {
 /* Force specific colors in dark mode for savings popup */
 [data-theme='dark'] .savings-goal-popup h3,
 [data-theme='dark'] .savings-goal-popup label,
-[data-theme='dark'] .savings-goal-popup span,
+[data-theme='dark'] .savings-goal-popup span {
+  color: #ffffff !important;
+}
+
 [data-theme='dark'] .savings-goal-popup input {
-  color: #000000 !important;
+  color: #ffffff !important;
+  font-weight: bold !important;
 }
 
 /* Accent Inputs (Auto-Tracker, Subscriptions, Debt Tracker) */

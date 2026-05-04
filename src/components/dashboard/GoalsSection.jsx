@@ -289,7 +289,7 @@ export const GoalsSection = () => {
                                         value={newGoal.name}
                                         onChange={e => setNewGoal({ ...newGoal, name: e.target.value })}
                                         required
-                                        style={{ width: '100%' }}
+                                        style={{ width: '100%', textShadow: theme === 'dark' ? `0 0 8px ${newGoal.color}` : 'none' }}
                                     />
                                 </div>
                                 <div style={{ flex: 1 }}>
@@ -302,7 +302,7 @@ export const GoalsSection = () => {
                                         value={newGoal.orderIndex}
                                         onChange={e => setNewGoal({ ...newGoal, orderIndex: e.target.value })}
                                         required
-                                        style={{ width: '100%' }}
+                                        style={{ width: '100%', textShadow: theme === 'dark' ? `0 0 8px ${newGoal.color}` : 'none' }}
                                         title="1 is Highest Priority"
                                     />
                                 </div>
@@ -315,7 +315,7 @@ export const GoalsSection = () => {
                                         value={newGoal.targetAmount}
                                         onChange={e => setNewGoal({ ...newGoal, targetAmount: e.target.value })}
                                         required
-                                        style={{ width: '100%' }}
+                                        style={{ width: '100%', textShadow: theme === 'dark' ? `0 0 8px ${newGoal.color}` : 'none' }}
                                     />
                                 </div>
                                 <div style={{ flex: 1 }}>
@@ -324,7 +324,7 @@ export const GoalsSection = () => {
                                         placeholder="0"
                                         value={newGoal.currentAmount}
                                         onChange={e => setNewGoal({ ...newGoal, currentAmount: e.target.value })}
-                                        style={{ width: '100%' }}
+                                        style={{ width: '100%', textShadow: theme === 'dark' ? `0 0 8px ${newGoal.color}` : 'none' }}
                                     />
                                 </div>
                             </div>
@@ -339,7 +339,7 @@ export const GoalsSection = () => {
                                             placeholder="e.g. 200"
                                             value={newGoal.contributionAmount}
                                             onChange={e => setNewGoal({ ...newGoal, contributionAmount: e.target.value })}
-                                            style={{ width: '100%' }}
+                                            style={{ width: '100%', textShadow: theme === 'dark' ? `0 0 8px ${newGoal.color}` : 'none' }}
                                         />
                                     </div>
                                     <div style={{ flex: 1 }}>

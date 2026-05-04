@@ -336,11 +336,12 @@ export const FinancialProvider = ({ children }) => {
         const monthlyExpenseInflation = 0; // Fixed at 0%
 
         let currentMonthIndex = startMonthIndex;
+        let currentYear = new Date().getFullYear();
 
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
         for (let month = 1; month <= totalMonths; month++) {
-            const displayMonth = `${monthNames[currentMonthIndex]}`;
+            const displayMonth = `${monthNames[currentMonthIndex]} '${currentYear.toString().slice(-2)}`;
             const monthOverrides = store.profileData.cellOverrides[month - 1] || {};
 
             const actualIncome = monthOverrides.Income !== undefined ? Number(monthOverrides.Income) : income;
@@ -358,11 +359,37 @@ export const FinancialProvider = ({ children }) => {
             let net = actualIncome - actualExpenses - monthExtraExpenses;
             cumulative += net;
 
+            // Calculate Actuals from Plaid for this specific month/year
+            let actualPlaidIncome = 0;
+            let actualPlaidExpenses = 0;
+            if (processedTransactions) {
+                processedTransactions.forEach(tx => {
+                    if (tx.date) {
+                        const [txY, txM] = tx.date.split('-');
+                        if (parseInt(txY) === currentYear && parseInt(txM) - 1 === currentMonthIndex) {
+                            const catLower = (tx.category || '').toLowerCase();
+                            const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
+                            if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return;
+                            
+                            if (tx.amount > 0) { // Expense
+                                actualPlaidExpenses += tx.amount;
+                            } else if (tx.amount < 0) { // Income (Negative in Plaid)
+                                if (!merchant.includes('savings') && !merchant.includes('checking')) {
+                                    actualPlaidIncome += Math.abs(tx.amount);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
             data.push({
                 monthIndex: month - 1,
                 month: displayMonth,
                 Income: Math.round(actualIncome),
+                ActualIncome: Math.round(actualPlaidIncome),
                 Expenses: Math.round(actualExpenses),
+                ActualExpenses: Math.round(actualPlaidExpenses),
                 ...actualExtraData,
                 Net: Math.round(net),
                 Cumulative: Math.round(cumulative)
@@ -374,6 +401,7 @@ export const FinancialProvider = ({ children }) => {
             currentMonthIndex++;
             if (currentMonthIndex > 11) {
                 currentMonthIndex = 0;
+                currentYear++;
             }
         }
 
