@@ -15,7 +15,7 @@ export const BudgetWidget = () => {
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || 'var(--accent-primary)' : 'var(--accent-primary)';
 
@@ -65,7 +65,7 @@ export const BudgetWidget = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: isOverBudget ? 'var(--danger)' : 'var(--text-primary)' }}>
+                    <span style={{ fontSize: '2rem', fontWeight: 'bold', color: isOverBudget ? activeColor : 'var(--text-primary)', textShadow: isOverBudget && expenseBorderColor !== 'none' ? `0 0 12px ${activeColor}` : 'none' }}>
                         ${spentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
                     <span style={{ color: '#000000', fontSize: '0.9rem', fontWeight: 'bold' }}>
@@ -80,9 +80,10 @@ export const BudgetWidget = () => {
                             position: 'absolute', 
                             top: 0, left: 0, height: '100%', 
                             width: `${progressPercentage}%`, 
-                            background: isOverBudget ? 'var(--danger)' : activeColor,
+                            background: activeColor,
                             transition: 'width 1s cubic-bezier(0.4, 0, 0.2, 1)',
-                            borderRadius: '6px'
+                            borderRadius: '6px',
+                            boxShadow: isOverBudget && expenseBorderColor !== 'none' ? `0 0 12px ${activeColor}` : 'none'
                         }} 
                     />
                 </div>

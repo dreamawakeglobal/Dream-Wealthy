@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { MonthlyReportDocument } from './MonthlyReportDocument';
@@ -10,6 +10,15 @@ export const MonthlyReportGenerator = ({ variant = "secondary", style = {}, clas
     const reportRef = useRef(null);
     const { playPop } = useSound();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [hasDownloaded, setHasDownloaded] = useState(false);
+
+    useEffect(() => {
+        const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+        const lastDownloaded = localStorage.getItem('last_report_downloaded');
+        if (lastDownloaded === currentMonth) {
+            setHasDownloaded(true);
+        }
+    }, []);
 
     const handleDownload = async () => {
         if (playPop) playPop();
@@ -54,6 +63,9 @@ export const MonthlyReportGenerator = ({ variant = "secondary", style = {}, clas
             
             const monthLabel = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
             pdf.save(`DreamWealthy_Report_${monthLabel}.pdf`);
+            
+            localStorage.setItem('last_report_downloaded', monthLabel);
+            setHasDownloaded(true);
 
             // Hide it again
             element.style.display = 'none';
@@ -72,14 +84,14 @@ export const MonthlyReportGenerator = ({ variant = "secondary", style = {}, clas
                 size="sm" 
                 style={style}
                 className={className}
-                disabled={isGenerating}
+                disabled={isGenerating || hasDownloaded}
             >
                 {isGenerating ? (
                     <FileText size={16} style={{ marginRight: '8px', animation: 'pulse 1.5s infinite' }} />
                 ) : (
                     <Download size={16} style={{ marginRight: '8px' }} />
                 )}
-                {isGenerating ? 'Generating...' : 'Download Report'}
+                {isGenerating ? 'Generating...' : (hasDownloaded ? 'Report Downloaded' : 'Download Report')}
             </Button>
 
             <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', overflow: 'hidden' }}>

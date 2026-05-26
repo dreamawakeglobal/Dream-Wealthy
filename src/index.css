@@ -24,8 +24,8 @@
 
   --success: #10B981;
   --success-glow: rgba(16, 185, 129, 0.15);
-  --danger: #F43F5E;
-  --danger-glow: rgba(244, 63, 94, 0.15);
+  --danger: #FF0000;
+  --danger-glow: rgba(255, 0, 0, 0.15);
 
   --sunlight: #FBBF24;
   --sunlight-glow: rgba(251, 191, 36, 0.3);
@@ -561,9 +561,9 @@ a {
     box-shadow: 0 0 28px var(--success) !important;
 }
 .glow-color-purple, html[data-theme] .glow-color-purple {
-    border: 3px solid #818CF8 !important;
-    border-color: #818CF8 !important;
-    box-shadow: 0 0 28px #818CF8 !important;
+    border: 3px solid #8b5cf6 !important;
+    border-color: #8b5cf6 !important;
+    box-shadow: 0 0 28px #8b5cf6 !important;
 }
 .glow-color-pink, html[data-theme] .glow-color-pink {
     border: 3px solid #ec4899 !important;

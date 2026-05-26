@@ -126,7 +126,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
@@ -283,7 +283,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
     if (isModal) {
         return (
             <div style={{ position: 'relative', zIndex: 99 }}>
-                {title && <h3 className="form-title" style={{ marginBottom: '16px' }}>{title}</h3>}
+                {title && <h3 className="form-title" style={{ marginBottom: '16px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>{title}</h3>}
                 {formContent}
             </div>
         );
@@ -291,7 +291,7 @@ const ExpenseForm = ({ onAdd, title, placeholder, showDueDate = true, showCatego
 
     return (
         <Card glass className={`expense-form-card ${borderGlowClass}`} style={{ position: 'relative', zIndex: 99 }}>
-            {title && <h3 className="form-title">{title}</h3>}
+            {title && <h3 className="form-title" style={{ textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>{title}</h3>}
             {formContent}
         </Card>
     );
@@ -311,7 +311,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     // Derived Dynamic Colors
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
     const badgeTextColor = (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white';
@@ -355,7 +355,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                 title={(() => {
                                     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                     return (
@@ -521,7 +521,7 @@ const Expenses = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
@@ -1085,7 +1085,7 @@ const Expenses = () => {
                         title={(() => {
                             const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
@@ -1190,7 +1190,7 @@ const Expenses = () => {
                         title={(() => {
                             const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
@@ -1271,11 +1271,11 @@ const Expenses = () => {
                         title={(() => {
                             const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                             return (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>
                                     {editingSubId ? 'Edit' : 'Add'} <span style={{ color: activeColor }}>{editingSubId ? 'Subscription' : 'Custom Subscription'}</span>
                                 </div>
                             );
@@ -1284,7 +1284,7 @@ const Expenses = () => {
                         <form onSubmit={addCustomSubscription} className="debt-form animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '8px' }}>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Service Name</label>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Service Name</label>
                                     <Input 
                                         className="dark-mode-black-text"
                                         placeholder="e.g. Netflix, Spotify" 
@@ -1295,7 +1295,7 @@ const Expenses = () => {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Cost</label>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Monthly Cost</label>
                                         <CurrencyInput 
                                             className="dark-mode-black-text"
                                             placeholder="0.00" 
@@ -1306,7 +1306,7 @@ const Expenses = () => {
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Domain (Optional)</label>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Domain (Optional)</label>
                                         <Input 
                                             className="dark-mode-black-text"
                                             placeholder="e.g. netflix.com" 
@@ -1315,7 +1315,7 @@ const Expenses = () => {
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', gridColumn: 'span 2' }}>
-                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Day (Optional)</label>
+                                        <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Due Day (Optional)</label>
                                         <Input 
                                             className="dark-mode-black-text"
                                             type="number" min="1" max="31"
@@ -1480,11 +1480,11 @@ const Expenses = () => {
                             title={(() => {
                                 const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                 return (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>
                                         Track <span style={{ color: activeColor }}>New Debt</span>
                                     </div>
                                 );
@@ -1495,7 +1495,7 @@ const Expenses = () => {
                                     {/* Name and Type Row */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Debt Name / Creditor</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Debt Name / Creditor</label>
                                             <Input
                                                 className="light-accent-input"
                                                 placeholder="e.g. Chase Sapphire"
@@ -1505,7 +1505,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Category</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Category</label>
                                             <select 
                                                 value={newTrackedDebt.type}
                                                 onChange={e => setNewTrackedDebt({...newTrackedDebt, type: e.target.value})}
@@ -1527,7 +1527,7 @@ const Expenses = () => {
                                     {/* Numbers Row 1 */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Total Balance</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Total Balance</label>
                                             <CurrencyInput
                                                 className="light-accent-input"
                                                 leftIcon={Wallet}
@@ -1538,7 +1538,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Interest Rate</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Interest Rate</label>
                                             <Input
                                                 className="light-accent-input"
                                                 leftIcon={Percent}
@@ -1554,7 +1554,7 @@ const Expenses = () => {
                                     {/* Numbers Row 2 */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Min</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Monthly Min</label>
                                             <CurrencyInput
                                                 className="light-accent-input"
                                                 placeholder="$"
@@ -1564,7 +1564,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Down Payment</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Down Payment</label>
                                             <CurrencyInput
                                                 className="light-accent-input"
                                                 placeholder="$ (Opt)"
@@ -1573,7 +1573,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Date</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Due Date</label>
                                             <Input
                                                 className="light-accent-input"
                                                 type="number" min="1" max="31"
@@ -1603,11 +1603,11 @@ const Expenses = () => {
                             title={(() => {
                                 const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                                 return (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>
                                         Edit <span style={{ color: activeColor }}>Tracked Debt</span>
                                     </div>
                                 );
@@ -1617,7 +1617,7 @@ const Expenses = () => {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Debt Name / Creditor</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Debt Name / Creditor</label>
                                             <Input
                                                 className="light-accent-input dark-mode-black-text"
                                                 placeholder="e.g. Chase Sapphire"
@@ -1627,7 +1627,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Category</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Category</label>
                                             <select 
                                                 value={editDebtForm.type}
                                                 onChange={e => setEditDebtForm({...editDebtForm, type: e.target.value})}
@@ -1648,7 +1648,7 @@ const Expenses = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Total Balance</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Total Balance</label>
                                             <CurrencyInput
                                                 className="light-accent-input dark-mode-black-text"
                                                 leftIcon={Wallet}
@@ -1659,7 +1659,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Interest Rate</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Interest Rate</label>
                                             <Input
                                                 className="light-accent-input dark-mode-black-text"
                                                 leftIcon={Percent}
@@ -1674,7 +1674,7 @@ const Expenses = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Monthly Min</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Monthly Min</label>
                                             <CurrencyInput
                                                 className="light-accent-input dark-mode-black-text"
                                                 placeholder="$"
@@ -1684,7 +1684,7 @@ const Expenses = () => {
                                             />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px' }}>Due Date</label>
+                                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500, paddingLeft: '4px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>Due Date</label>
                                             <Input
                                                 className="light-accent-input dark-mode-black-text"
                                                 type="number" min="1" max="31"
@@ -2145,7 +2145,7 @@ const Expenses = () => {
                 title={(() => {
                     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                     return (
@@ -2353,7 +2353,7 @@ const Expenses = () => {
                 title={(() => {
                     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
                     return (

@@ -65,7 +65,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
@@ -186,7 +186,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
     if (isModal) {
         return (
             <div style={{ position: 'relative', zIndex: 99 }}>
-                {title && <h3 className="form-title" style={{ marginBottom: '16px' }}>{title}</h3>}
+                {title && <h3 className="form-title" style={{ marginBottom: '16px', textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>{title}</h3>}
                 {content}
             </div>
         );
@@ -194,7 +194,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
 
     return (
         <Card glass className={`income-form-card ${className}`.trim()} style={{ position: 'relative', zIndex: 99 }}>
-            {title && <h3 className="form-title">{title}</h3>}
+            {title && <h3 className="form-title" style={{ textShadow: theme === 'dark' && activeColor ? `0 0 12px ${activeColor}` : 'none' }}>{title}</h3>}
             {content}
         </Card>
     );
@@ -240,7 +240,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                     title={(() => {
                         const activeColor = {
                             blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                            red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+                            red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
                             yellow: '#eab308', orange: '#f97316'
                         }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                         return (
@@ -348,7 +348,7 @@ const Income = () => {
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : undefined;
 
@@ -854,7 +854,7 @@ const Income = () => {
                 title={(() => {
                     const activeColor = {
                         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-                        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+                        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
                         yellow: '#eab308', orange: '#f97316'
                     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7');
                     return (

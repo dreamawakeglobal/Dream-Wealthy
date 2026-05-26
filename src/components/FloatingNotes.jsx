@@ -139,7 +139,7 @@ const FloatingNotes = () => {
 
     const activeRgb = expenseBorderColor && expenseBorderColor !== 'none' ? ({
         blue: '79, 163, 247', white: '255, 255, 255', black: '136, 136, 136',
-        red: '255, 59, 48', green: '46, 204, 113', purple: '139, 92, 246',
+        red: '255, 0, 0', green: '46, 204, 113', purple: '139, 92, 246',
         pink: '236, 72, 153', yellow: '234, 179, 8', orange: '249, 115, 22'
     }[expenseBorderColor] || '255, 215, 0') : '255, 215, 0';
 

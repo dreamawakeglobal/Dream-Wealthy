@@ -20,7 +20,7 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
     const { theme, expenseBorderColor } = useTheme();
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
-        red: '#ff3b30', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
+        red: '#FF0000', green: '#2ecc71', purple: '#8b5cf6', pink: '#ec4899',
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#ffffff' : '#4FA3F7') : 'var(--accent-primary)';
 
@@ -97,9 +97,9 @@ const Projections = () => {
         blue: '#4FA3F7',
         white: '#ffffff',
         black: '#000000',
-        red: '#F43F5E',
+        red: '#FF0000',
         green: '#10B981',
-        purple: '#818CF8',
+        purple: '#8b5cf6',
         pink: '#ec4899',
         yellow: '#eab308',
         orange: '#f97316'
@@ -401,7 +401,7 @@ const Projections = () => {
                                                             sign="+"
                                                             onSave={(val) => handleCellEdit(row.monthIndex, 'Income', val)}
                                                         />
-                                                        <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${(row.ActualIncome || 0).toLocaleString()}</span>
+                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${(row.ActualIncome || 0).toLocaleString()}</span>
                                                     </div>
                                                 </td>
                                                 <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
@@ -411,7 +411,7 @@ const Projections = () => {
                                                             sign="-"
                                                             onSave={(val) => handleCellEdit(row.monthIndex, 'Expenses', val)}
                                                         />
-                                                        <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
+                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
                                                     </div>
                                                 </td>
                                                 {extraColumns.map(c => (
@@ -435,13 +435,13 @@ const Projections = () => {
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                                     <span>+${pageTotals.Income.toLocaleString()}</span>
-                                                    <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${pageTotals.ActualIncome.toLocaleString()}</span>
+                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${pageTotals.ActualIncome.toLocaleString()}</span>
                                                 </div>
                                             </td>
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                                     <span>-${pageTotals.Expenses.toLocaleString()}</span>
-                                                    <span style={{ fontSize: '0.71rem', color: theme === 'dark' ? activeColor : 'var(--text-secondary)', textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
+                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
                                                 </div>
                                             </td>
                                             {extraColumns.map(c => (
