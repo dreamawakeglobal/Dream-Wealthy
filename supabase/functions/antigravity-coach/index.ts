@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': 'https://dreamwealthyco.com',
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -27,30 +27,34 @@ serve(async (req: Request) => {
         const body = await req.json();
         const payload = body.omnisciencePayload || {};
 
-        const {
-            profile,
-            goals,
-            transactions,
-            subscriptions,
-            debts,
-            trackedDebts,
-            incomeStreams,
-            fixedExpenses,
-            bankBalances,
-            portfolio,
-            trackerContext
-        } = payload;
+        // 1. Direct DB Query to guarantee 100% accurate user financial data
+        const { data: dbProfile } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+        const { data: dbIncome } = await supabase.from('income_streams').select('*').eq('user_id', user.id);
+        const { data: dbExpenses } = await supabase.from('user_expenses').select('*').eq('user_id', user.id);
+        const { data: dbPlaidAccounts } = await supabase.from('plaid_accounts').select('*').eq('user_id', user.id);
+        const { data: dbGoals } = await supabase.from('goals').select('*').eq('user_id', user.id);
+
+        const incomeList = (dbIncome && dbIncome.length > 0) ? dbIncome : (payload.incomeStreams || dbProfile?.income_streams || []);
+        const expensesList = (dbExpenses && dbExpenses.length > 0) ? dbExpenses : (payload.fixedExpenses || dbProfile?.expenses || []);
+        const plaidList = (dbPlaidAccounts && dbPlaidAccounts.length > 0) ? dbPlaidAccounts : (payload.bankBalances || []);
+        const goalsList = (dbGoals && dbGoals.length > 0) ? dbGoals : (payload.goals || dbProfile?.savings_goals || []);
 
         let activeGoal = "No active savings goal";
-        if (goals && goals.length > 0) {
-            const firstUnfinished = goals.find((g: any) => (Number(g.targetAmount) - Number(g.currentAmount)) > 0);
+        if (goalsList && goalsList.length > 0) {
+            const firstUnfinished = goalsList.find((g: any) => (Number(g.targetAmount || g.target_amount) - Number(g.currentAmount || g.current_amount)) > 0);
             if (firstUnfinished) {
-                activeGoal = `'${firstUnfinished.name}' (saved $${firstUnfinished.currentAmount} out of $${firstUnfinished.targetAmount})`;
+                const name = firstUnfinished.name || firstUnfinished.title || 'Savings Goal';
+                const cur = firstUnfinished.currentAmount || firstUnfinished.current_amount || 0;
+                const tgt = firstUnfinished.targetAmount || firstUnfinished.target_amount || 0;
+                activeGoal = `'${name}' (saved $${cur} out of $${tgt})`;
             }
         }
 
-        const activeIncomeSum = incomeStreams ? incomeStreams.filter((i: any) => !i.isFuture).reduce((acc: number, curr: any) => acc + (Number(curr.amount) || 0), 0) : 0;
-        const realMonthlyIncome = Math.round(activeIncomeSum > 0 ? activeIncomeSum : (Number(profile?.startingSavings) || 0));
+        const activeIncomeSum = incomeList.reduce((acc: number, curr: any) => acc + (Number(curr.amount || curr.monthly_amount) || 0), 0);
+        const activePlaidBalance = plaidList.reduce((acc: number, curr: any) => acc + (Number(curr.current_balance || curr.balance || curr.currentBalance) || 0), 0);
+        const profileIncome = Number(dbProfile?.monthly_income || dbProfile?.startingSavings || payload.profile?.startingSavings) || 0;
+
+        const realMonthlyIncome = Math.round(activeIncomeSum > 0 ? activeIncomeSum : (profileIncome > 0 ? profileIncome : (activePlaidBalance > 0 ? activePlaidBalance : 0)));
 
         // Calculate ISO Week Modulus to rotate the coaching segment
         const now = new Date();
