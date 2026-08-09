@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
-import { TrendingUp, Settings, Plus, Trash2, Edit2, X } from 'lucide-react';
+import { TrendingUp, Settings, Plus, Trash2, Edit2, X, ArrowDown } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { CurrencyInput } from '../components/ui/CurrencyInput';
@@ -16,7 +16,7 @@ import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import './Projections.css';
 
 // Component for editable table cells
-const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
+const EditableCell = ({ value, onSave, onCopyDown, isCurrency = true, sign = '' }) => {
     const { theme, expenseBorderColor } = useTheme();
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
@@ -70,12 +70,43 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
     }
 
     return (
-        <div
-            onClick={() => setIsEditing(true)}
-            className="editable-cell-display"
-            title="Click to edit value"
-        >
-            {isCurrency ? `${sign}$${Number(editValue).toLocaleString()}` : `${sign}${Number(editValue).toLocaleString()}`}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'flex-end' }}>
+            <div
+                onClick={() => setIsEditing(true)}
+                className="editable-cell-display"
+                title="Click to edit value"
+                style={{ cursor: 'pointer', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}
+            >
+                {isCurrency ? `${sign}$${Number(editValue).toLocaleString()}` : `${sign}${Number(editValue).toLocaleString()}`}
+            </div>
+            {onCopyDown && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onCopyDown(editValue);
+                        // Trigger a small haptic pop if sound context is available
+                        const soundContext = document.getElementById('audio-pop-sound');
+                        if (soundContext) soundContext.play().catch(() => {});
+                    }}
+                    title="Copy this amount to all future months"
+                    style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        padding: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.5,
+                        transition: 'opacity 0.2s, color 0.2s'
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = activeColor; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.5; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                >
+                    <ArrowDown size={12} />
+                </button>
+            )}
         </div>
     );
 };
@@ -83,8 +114,8 @@ const EditableCell = ({ value, onSave, isCurrency = true, sign = '' }) => {
 const Projections = () => {
     const {
         totalMonthlyIncome, totalMonthlyExpenses,
-        incomeGrowthRate, setIncomeGrowthRate,
-        expenseInflationRate, setExpenseInflationRate,
+        incomeGrowthRate: _incomeGrowthRate, setIncomeGrowthRate: _setIncomeGrowthRate,
+        expenseInflationRate: _expenseInflationRate, setExpenseInflationRate: _setExpenseInflationRate,
         startingSavings, setStartingSavings,
         extraColumns, setExtraColumns,
         setCellOverrides,
@@ -120,6 +151,21 @@ const Projections = () => {
                 [column]: value === '' ? undefined : Number(value)
             }
         }));
+    };
+
+    const handleCopyDown = (startMonthIndex, column, value) => {
+        playPop();
+        setCellOverrides(prev => {
+            const newOverrides = { ...prev };
+            const numValue = value === '' ? undefined : Number(value);
+            for (let i = startMonthIndex; i < projectionYears * 12; i++) {
+                newOverrides[i] = {
+                    ...(newOverrides[i] || {}),
+                    [column]: numValue
+                };
+            }
+            return newOverrides;
+        });
     };
     const projectionData = useMemo(() => {
         // The old internal logic always started at index 0 (January) and the current year.
@@ -378,7 +424,7 @@ const Projections = () => {
                                 )}
                                 </div>
                             </div>
-                            <div className="table-wrapper">
+                            <div className="table-wrapper table-responsive-card">
                                 <table className="projection-table">
                                     <thead>
                                         <tr>
@@ -400,8 +446,9 @@ const Projections = () => {
                                                             value={row.Income}
                                                             sign="+"
                                                             onSave={(val) => handleCellEdit(row.monthIndex, 'Income', val)}
+                                                            onCopyDown={(val) => handleCopyDown(row.monthIndex, 'Income', val)}
                                                         />
-                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${(row.ActualIncome || 0).toLocaleString()}</span>
+                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: +${(row.ActualIncome || 0).toLocaleString()}</span>
                                                     </div>
                                                 </td>
                                                 <td style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
@@ -410,8 +457,9 @@ const Projections = () => {
                                                             value={row.Expenses}
                                                             sign="-"
                                                             onSave={(val) => handleCellEdit(row.monthIndex, 'Expenses', val)}
+                                                            onCopyDown={(val) => handleCopyDown(row.monthIndex, 'Expenses', val)}
                                                         />
-                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
+                                                        <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
                                                     </div>
                                                 </td>
                                                 {extraColumns.map(c => (
@@ -420,6 +468,7 @@ const Projections = () => {
                                                             value={row[c.name] || 0}
                                                             sign="-"
                                                             onSave={(val) => handleCellEdit(row.monthIndex, c.name, val)}
+                                                            onCopyDown={(val) => handleCopyDown(row.monthIndex, c.name, val)}
                                                         />
                                                     </td>
                                                 ))}
@@ -434,19 +483,28 @@ const Projections = () => {
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>Year {currentPage + 1} Total</td>
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                                    <span>+${pageTotals.Income.toLocaleString()}</span>
-                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: +${pageTotals.ActualIncome.toLocaleString()}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'flex-end' }}>
+                                                        <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>+${pageTotals.Income.toLocaleString()}</span>
+                                                        <div style={{ width: '16px' }} />
+                                                    </div>
+                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: +${pageTotals.ActualIncome.toLocaleString()}</span>
                                                 </div>
                                             </td>
                                             <td style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
                                                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                                    <span>-${pageTotals.Expenses.toLocaleString()}</span>
-                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'flex-end' }}>
+                                                        <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>-${pageTotals.Expenses.toLocaleString()}</span>
+                                                        <div style={{ width: '16px' }} />
+                                                    </div>
+                                                    <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
                                                 </div>
                                             </td>
                                             {extraColumns.map(c => (
                                                 <td key={`total-${c.id}`} style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
-                                                    -${(pageTotals[c.name] || 0).toLocaleString()}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'flex-end' }}>
+                                                        <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>-${(pageTotals[c.name] || 0).toLocaleString()}</span>
+                                                        <div style={{ width: '16px' }} />
+                                                    </div>
                                                 </td>
                                             ))}
                                             <td style={{ borderTop: '2px solid var(--surface-border)' }} className={pageTotals.Net >= 0 ? 'text-success' : 'text-danger'}>

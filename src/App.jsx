@@ -12,6 +12,11 @@ const Investments = React.lazy(() => import('./pages/Investments'));
 const SignUp = React.lazy(() => import('./pages/SignUp'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
+const Checkout = React.lazy(() => import('./pages/Checkout'));
+const Privacy = React.lazy(() => import('./pages/Privacy'));
+const Terms = React.lazy(() => import('./pages/Terms'));
+const Contact = React.lazy(() => import('./pages/Contact'));
+const FAQ = React.lazy(() => import('./pages/FAQ'));
 import AudioPlayer from './components/AudioPlayer';
 import FloatingNotes from './components/FloatingNotes';
 import ScrollToTop from './components/ScrollToTop';
@@ -25,6 +30,7 @@ import ThemeToggle from './components/ThemeToggle';
 import { TutorialOverlay } from './components/TutorialOverlay';
 import PointerGlow from './components/PointerGlow';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import HelpLauncher from './components/HelpLauncher';
 
 const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 
@@ -42,6 +48,7 @@ function App() {
                 <ThemeToggle />
                 <PointerGlow />
                 <TutorialOverlay />
+                <HelpLauncher />
                 <ErrorBoundary>
                   <Routes>
                     <Route path="/" element={<Layout />}>
@@ -54,8 +61,13 @@ function App() {
                       <Route path="investments" element={<ProtectedRoute><Investments /></ProtectedRoute>} />
                       <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                       <Route path="pricing" element={<ProtectedRoute><Pricing /></ProtectedRoute>} />
+                      <Route path="checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
                       <Route path="signup" element={<SignUp />} />
                     </Route>
+                    <Route path="/privacy" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><Privacy /></Suspense>} />
+                    <Route path="/terms" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><Terms /></Suspense>} />
+                    <Route path="/contact" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><Contact /></Suspense>} />
+                    <Route path="/faq" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><FAQ /></Suspense>} />
                   </Routes>
                 </ErrorBoundary>
               </BrowserRouter>

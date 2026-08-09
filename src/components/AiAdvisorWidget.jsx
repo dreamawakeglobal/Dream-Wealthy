@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, X, Send, User, ChevronDown } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { Sparkles, X, Send, User, ChevronDown, Lock } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useSubscriptionEntitlements } from '../hooks/useSubscriptionEntitlements';
 import ReactMarkdown from 'react-markdown';
 import { useSound } from '../SoundContext';
 import { supabase } from '../supabaseClient';
@@ -8,12 +9,15 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useFinancialContext } from '../FinancialContext';
 import { useStore } from '../store';
+import { Button } from './ui/Button';
 import './AiAdvisorWidget.css';
 
 const AiAdvisorWidget = () => {
+    const navigate = useNavigate();
     const { playWhoosh, playPop, playChime } = useSound();
     const { theme, expenseBorderColor } = useTheme();
     const { user } = useAuth();
+    const { canUseAIAdvisor } = useSubscriptionEntitlements();
     const { getProjectionData, transactionsByCategory, mapUserExpenseToPlaidCategory } = useFinancialContext();
     const { variableExpenses, fixedExpenses } = useStore();
     const location = useLocation();
@@ -193,49 +197,66 @@ const AiAdvisorWidget = () => {
                         </button>
                     </div>
 
-                    <div className="ai-chat-messages">
-                        {messages.map((msg, index) => (
-                            <div key={index} className={`ai-message-row ${msg.role}`}>
-                                {msg.role === 'assistant' && (
-                                    <div className="ai-avatar" style={{ background: `${activeColor}22`, color: activeColor }}>
-                                        <Sparkles size={14} />
+                    {!canUseAIAdvisor ? (
+                        <div className="ai-advisor-lock-overlay" style={{ padding: '32px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', margin: 'auto' }}>
+                            <div style={{ padding: '16px', borderRadius: '50%', background: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.4)' }}>
+                                <Lock size={32} color="#0ea5e9" />
+                            </div>
+                            <h4 style={{ margin: 0, fontSize: '1.2rem', color: '#ffffff' }}>Premium Feature</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#ffffff', lineHeight: 1.5 }}>
+                                Upgrade to Dream Wealthy Premium to unlock 24/7 AI Financial Advisor Coaching & Automation.
+                            </p>
+                            <Button onClick={() => { setIsOpen(false); navigate('/settings'); }} style={{ background: 'var(--primary)', color: '#ffffff', fontWeight: 600, padding: '10px 20px', borderRadius: '12px' }}>
+                                Upgrade to Premium
+                            </Button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="ai-chat-messages">
+                                {messages.map((msg, index) => (
+                                    <div key={index} className={`ai-message-row ${msg.role}`}>
+                                        {msg.role === 'assistant' && (
+                                            <div className="ai-avatar" style={{ background: `${activeColor}22`, color: activeColor }}>
+                                                <Sparkles size={14} />
+                                            </div>
+                                        )}
+                                        <div className={`ai-bubble ${msg.role}`} style={msg.role === 'user' ? { background: activeColor } : {}}>
+                                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                                        </div>
+                                    </div>
+                                ))}
+                                {isThinking && (
+                                    <div className="ai-message-row assistant">
+                                        <div className="ai-avatar" style={{ background: `${activeColor}22`, color: activeColor }}>
+                                            <Sparkles size={14} />
+                                        </div>
+                                        <div className="ai-bubble assistant thinking">
+                                            <span className="dot"></span><span className="dot"></span><span className="dot"></span>
+                                        </div>
                                     </div>
                                 )}
-                                <div className={`ai-bubble ${msg.role}`} style={msg.role === 'user' ? { background: activeColor } : {}}>
-                                    <ReactMarkdown>{msg.content}</ReactMarkdown>
-                                </div>
+                                <div ref={messagesEndRef} />
                             </div>
-                        ))}
-                        {isThinking && (
-                            <div className="ai-message-row assistant">
-                                <div className="ai-avatar" style={{ background: `${activeColor}22`, color: activeColor }}>
-                                    <Sparkles size={14} />
-                                </div>
-                                <div className="ai-bubble assistant thinking">
-                                    <span className="dot"></span><span className="dot"></span><span className="dot"></span>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
 
-                    <form className="ai-chat-input-area" onSubmit={handleSend} style={{ borderTopColor: `${activeColor}33` }}>
-                        <input 
-                            type="text" 
-                            placeholder="Ask me a financial question..." 
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            disabled={isThinking}
-                        />
-                        <button 
-                            type="submit" 
-                            className="ai-chat-send"
-                            disabled={!input.trim() || isThinking}
-                            style={{ background: input.trim() ? activeColor : 'var(--surface-hover)' }}
-                        >
-                            <Send size={16} color={input.trim() ? '#fff' : 'var(--text-muted)'} />
-                        </button>
-                    </form>
+                            <form className="ai-chat-input-area" onSubmit={handleSend} style={{ borderTopColor: `${activeColor}33` }}>
+                                <input 
+                                    type="text" 
+                                    placeholder="Ask me a financial question..." 
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    disabled={isThinking}
+                                />
+                                <button 
+                                    type="submit" 
+                                    className="ai-chat-send"
+                                    disabled={!input.trim() || isThinking}
+                                    style={{ background: input.trim() ? activeColor : 'var(--surface-hover)' }}
+                                >
+                                    <Send size={16} color={input.trim() ? '#fff' : 'var(--text-muted)'} />
+                                </button>
+                            </form>
+                        </>
+                    )}
                 </div>
             )}
 

@@ -14,6 +14,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GoalsSection } from '../components/dashboard/GoalsSection';
+import { SavingsOptimizationCard } from '../components/SavingsOptimizationCard';
 import './Income.css';
 import { getFilterLabel } from './Expenses';
 
@@ -339,9 +340,12 @@ const Income = () => {
         currentIncome, setCurrentIncome,
         futureIncome, setFutureIncome,
         totalMonthlyIncome,
+        totalFixedExpenses, totalVariableExpenses,
+        accounts, plaidAccounts,
         allocations, setAllocations,
         transactions, incomeTransactionsByCategory
     } = useFinancialContext();
+    const totalExpenses = (totalFixedExpenses || 0) + (totalVariableExpenses || 0);
     const recentIncomeMerchants = useRecentIncomeMerchants(transactions);
     const { expenseBorderColor, theme } = useTheme();
     const { playPop } = useSound();
@@ -419,9 +423,9 @@ const Income = () => {
     }, [filteredIncomeTransactions]);
 
     // --- Allocations State & Logic ---
-    const totalPercentage = allocations.reduce((acc, cat) => acc + cat.percentage, 0);
-    const remainingPercentage = 100 - totalPercentage;
-    const isOverAllocated = totalPercentage > 100;
+    const totalPercentage = Number(allocations.reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0).toFixed(2));
+    const remainingPercentage = Number((100 - totalPercentage).toFixed(2));
+    const isOverAllocated = remainingPercentage < 0;
 
     const [editingCategory, setEditingCategory] = useState(null); // Dollar edit
     const [editValue, setEditValue] = useState("");
@@ -438,7 +442,16 @@ const Income = () => {
         if (editingCategory === id && editValue !== "") {
             const newDollarValue = parseFloat(editValue);
             if (!isNaN(newDollarValue) && totalMonthlyIncome > 0) {
-                const newPercentage = Number(((newDollarValue / totalMonthlyIncome) * 100).toFixed(2));
+                let newPercentage = Number(((newDollarValue / totalMonthlyIncome) * 100).toFixed(2));
+                const otherCategoriesSum = allocations
+                    .filter(cat => cat.id !== id)
+                    .reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0);
+                const maxAllowed = Math.max(0, Number((100 - otherCategoriesSum).toFixed(2)));
+
+                if (newPercentage > maxAllowed) {
+                    newPercentage = maxAllowed;
+                }
+
                 setAllocations(prev => prev.map(cat => cat.id === id ? { ...cat, percentage: newPercentage } : cat));
             }
         }
@@ -453,16 +466,29 @@ const Income = () => {
     };
 
     const handleSliderChange = (id, value) => {
-        const newValue = Number(value);
+        let newValue = Number(value);
+        const otherCategoriesSum = allocations
+            .filter(cat => cat.id !== id)
+            .reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0);
+        const maxAllowed = Math.max(0, Number((100 - otherCategoriesSum).toFixed(2)));
+
+        if (newValue > maxAllowed) {
+            newValue = maxAllowed;
+        }
+
         setAllocations(prev => prev.map(cat => cat.id === id ? { ...cat, percentage: newValue } : cat));
     };
 
     const handleAddCategory = () => {
+        const currentTotal = allocations.reduce((acc, c) => acc + (Number(c.percentage) || 0), 0);
+        const maxNewPercentage = Math.max(0, Number((100 - currentTotal).toFixed(2)));
+        const defaultPercentage = Math.min(10, maxNewPercentage);
+
         const newColor = COLOR_PALETTE[allocations.length % COLOR_PALETTE.length];
         const newCategory = {
             id: crypto.randomUUID(),
             name: `Category ${allocations.length + 1}`,
-            percentage: 0,
+            percentage: defaultPercentage,
             color: newColor
         };
         setAllocations([...allocations, newCategory]);
@@ -484,8 +510,8 @@ const Income = () => {
     // --- End Allocations Logic ---
 
     const totalYearlyIncome = totalMonthlyIncome * 12;
-    // User requested "bi-monthly" right next to yearly. Most people refer to every two weeks (26 pay periods) as bi-weekly or bi-monthly in this context.
-    const totalBiWeeklyIncome = (totalYearlyIncome / 26);
+    // User requested the simple "twice a month" calculation (24 pay periods)
+    const totalBiWeeklyIncome = (totalYearlyIncome / 24);
     
     const projectedFutureIncome = futureIncome.reduce((acc, curr) => acc + curr.amount, 0);
     const totalProjectedMonthly = totalMonthlyIncome + projectedFutureIncome;
@@ -634,6 +660,13 @@ const Income = () => {
                 <GoalsSection />
             </div>
 
+            {/* High-Yield Savings Strategy Engine (HYSA) */}
+            <AnimateOnScroll delay={0.15}>
+                <div className="hysa-optimization-section" style={{ marginTop: '48px' }}>
+                    <SavingsOptimizationCard plaidAccounts={plaidAccounts || accounts || []} monthlyExpenses={totalExpenses} />
+                </div>
+            </AnimateOnScroll>
+
             {/* --- Merged Allocations Dashboard --- */}
             <AnimateOnScroll delay={0.1} yOffset={40}>
                 <div className="allocation-dashboard" style={{ marginTop: '48px' }}>
@@ -659,9 +692,9 @@ const Income = () => {
                                     <div className={`status-badge ${isOverAllocated ? 'danger' : remainingPercentage === 0 ? 'success' : 'warning'}`}>
                                         {isOverAllocated && <AlertCircle size={16} />}
                                         {isOverAllocated ? (
-                                            <span>Over Allocated by {Math.abs(remainingPercentage)}%</span>
+                                            <span>Over Allocated by {Math.abs(remainingPercentage).toFixed(2)}%</span>
                                         ) : (
-                                            <span>{remainingPercentage}% Remaining</span>
+                                            <span>{remainingPercentage.toFixed(2)}% Remaining</span>
                                         )}
                                     </div>
                                 </div>

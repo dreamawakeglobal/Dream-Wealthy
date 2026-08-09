@@ -1,0 +1,331 @@
+.help-launcher-wrapper {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Floating Launcher Button */
+.help-launcher-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 30px;
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: var(--shadow-float, 0 8px 32px rgba(0, 0, 0, 0.2));
+    transition: all var(--transition-smooth, 0.3s cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.help-launcher-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+    background: var(--surface-hover);
+    border-color: var(--primary, rgba(56, 189, 248, 0.5));
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+}
+
+.help-launcher-btn.open {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #f87171;
+}
+
+.help-launcher-badge {
+    letter-spacing: 0.5px;
+}
+
+/* Panel Overlay */
+.help-panel-overlay {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    max-width: calc(100vw - 32px);
+    z-index: 10000;
+}
+
+.help-panel-card {
+    padding: 0;
+    overflow: hidden;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    background: rgba(15, 23, 42, 0.92) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.help-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.help-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.help-header-title h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+body.light-theme .help-header-title h3 {
+    color: #0f172a;
+}
+
+.help-close-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+}
+
+.help-close-btn:hover {
+    color: #ffffff;
+}
+
+/* Tabs */
+.help-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.help-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #94a3b8;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.help-tab.active {
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Content Area */
+.help-tab-content {
+    padding: 18px 20px;
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.help-search-box {
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.help-search-box .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+}
+
+.help-search-input {
+    width: 100%;
+    padding: 10px 12px 10px 38px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 0.88rem;
+    outline: none;
+}
+
+body.light-theme .help-search-input {
+    background: rgba(0, 0, 0, 0.04);
+    color: #0f172a;
+}
+
+.help-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.help-faq-item {
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.help-faq-item h4 {
+    margin: 0 0 4px 0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+body.light-theme .help-faq-item h4 {
+    color: #0f172a;
+}
+
+.help-faq-item p {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #94a3b8;
+    line-height: 1.45;
+}
+
+.help-footer-link {
+    margin-top: 14px;
+    text-align: center;
+}
+
+.help-footer-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #38bdf8;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Support Form */
+.help-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.help-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.help-field label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.help-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 0.88rem;
+    outline: none;
+    font-family: inherit;
+    resize: vertical;
+}
+
+body.light-theme .help-field textarea {
+    background: rgba(0, 0, 0, 0.04);
+    color: #0f172a;
+}
+
+.help-error {
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 0.82rem;
+    text-align: center;
+}
+
+.help-success-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 16px 0;
+}
+
+.help-success-view h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+body.light-theme .help-success-view h4 {
+    color: #0f172a;
+}
+
+.help-success-view p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #94a3b8;
+}
+
+.help-ticket-badge {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.help-ticket-badge span {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.5px;
+}
+
+.help-ticket-badge strong {
+    font-size: 1.15rem;
+    font-family: monospace;
+}
+
+.help-ticket-badge small {
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .help-launcher-wrapper {
+        bottom: 16px;
+        right: 16px;
+    }
+    
+    .help-panel-overlay {
+        bottom: 64px;
+        width: calc(100vw - 32px);
+    }
+}

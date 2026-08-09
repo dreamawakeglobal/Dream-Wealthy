@@ -3,10 +3,10 @@ import { usePlaidLink } from 'react-plaid-link';
 import { useAuth } from '../contexts/AuthContext';
 import { useFinancialContext } from '../FinancialContext';
 import { supabase } from '../supabaseClient';
-import { Link2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Link2, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 import './PlaidConnectButton.css';
 
-const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedAccessToken = null, brokenAccountId = null }) => {
+const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, brokenAccountId = null }) => {
     const { user } = useAuth();
     const { fetchAllData } = useFinancialContext();
     const [token, setToken] = useState(null);
@@ -32,7 +32,7 @@ const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedA
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${session.access_token}`
                 },
-                body: JSON.stringify({ userId: user.id, accessToken: linkedAccessToken })
+                body: JSON.stringify({ userId: user.id, accountId: brokenAccountId })
             });
 
             const data = await response.json().catch(() => null);
@@ -59,7 +59,7 @@ const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedA
         } finally {
             setIsGeneratingToken(false);
         }
-    }, [user]);
+    }, [user, brokenAccountId]);
 
     // Generate token eagerly so the modal is ready instantly when clicked
     useEffect(() => {
@@ -119,7 +119,7 @@ const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedA
         } finally {
             setIsExchanging(false);
         }
-    }, [onConnectionSuccess]);
+    }, [onConnectionSuccess, isUpdateMode, brokenAccountId, fetchAllData]);
 
     const config = {
         token,
@@ -176,6 +176,12 @@ const PlaidConnectButton = ({ onConnectionSuccess, isUpdateMode = false, linkedA
                     <span>{error}</span>
                 </div>
             )}
+            <div className="plaid-security-disclosure">
+                <ShieldCheck size={14} className="security-icon" />
+                <span>
+                    Encrypted with bank-grade 256-bit security. Credentials are never seen or stored. By connecting, you agree to Plaid's <a href="https://plaid.com/legal/#consumers" target="_blank" rel="noopener noreferrer">End User Privacy Policy</a>.
+                </span>
+            </div>
         </div>
     );
 };

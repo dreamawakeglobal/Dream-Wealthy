@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useSound } from '../SoundContext';
+import { supabase } from '../supabaseClient';
 import './TutorialOverlay.css';
 
 // Premium Custom Tooltip built with Framer Motion
@@ -43,6 +44,21 @@ const CustomTooltip = ({
             }}
         >
             <div className="tooltip-inner-content">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <span style={{ 
+                        fontSize: '0.75rem', 
+                        fontWeight: 700, 
+                        color: 'var(--accent-primary, #38bdf8)', 
+                        textTransform: 'uppercase', 
+                        letterSpacing: '1px',
+                        background: 'rgba(56, 189, 248, 0.1)',
+                        padding: '3px 10px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(56, 189, 248, 0.25)'
+                    }}>
+                        Step {index + 1} of {size}
+                    </span>
+                </div>
                 {step.content}
             </div>
 
@@ -89,7 +105,7 @@ const CustomTooltip = ({
 };
 
 export const TutorialOverlay = () => {
-    const { isTutorialActive, setTutorialActive } = useAuth();
+    const { isTutorialActive, setTutorialActive, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [stepIndex, setStepIndex] = useState(0);
@@ -567,6 +583,22 @@ export const TutorialOverlay = () => {
         if (finishedStatuses.includes(status) || action === ACTIONS.SKIP || action === ACTIONS.CLOSE) {
             setTutorialActive(false);
             setStepIndex(0);
+            
+            try {
+                localStorage.setItem('dw_onboarding_completed', 'true');
+            } catch (err) {
+                console.debug(err);
+            }
+
+            if (user?.id) {
+                supabase
+                    .from('profiles')
+                    .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+                    .eq('id', user.id)
+                    .then(({ error }) => {
+                        if (error) console.debug('Failed to update onboarding_completed in profile:', error);
+                    });
+            }
             return;
         }
 

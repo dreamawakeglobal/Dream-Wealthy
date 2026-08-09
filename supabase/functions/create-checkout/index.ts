@@ -6,7 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@14.14.0?target=deno";
 
 const corsHeaders = {
-    'Access-Control-Allow-Origin': 'https://dreamwealthyco.com',
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -37,12 +37,10 @@ serve(async (req: Request) => {
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user) throw new Error("Invalid or expired token");
 
-        // 2. Parse requested tier
-        const { tier } = await req.json();
-        if (!tier || !PRICE_IDS[tier]) throw new Error(`Invalid tier: ${tier}. Must be 'basic' or 'premium'.`);
-
-        const priceId = PRICE_IDS[tier];
-        if (!priceId) throw new Error(`Stripe Price ID not configured for tier: ${tier}`);
+        // 2. Parse requested tier or priceId
+        const { tier, priceId: inputPriceId } = await req.json();
+        const priceId = inputPriceId || (tier ? PRICE_IDS[tier] : '');
+        if (!priceId) throw new Error(`Invalid request. Valid priceId or tier is required.`);
 
         // 3. Initialize Stripe
         const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2023-10-16" });
@@ -70,20 +68,23 @@ serve(async (req: Request) => {
                 .eq('user_id', user.id);
         }
 
-        // 5. Create Checkout Session
+        // 5. Create Checkout Session (Embedded or Hosted)
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             mode: 'subscription',
+            ui_mode: 'embedded',
+            return_url: `${SITE_URL}/settings?session_id={CHECKOUT_SESSION_ID}`,
             line_items: [{ price: priceId, quantity: 1 }],
-            success_url: `${SITE_URL}/settings?checkout=success`,
-            cancel_url: `${SITE_URL}/pricing?checkout=cancelled`,
             subscription_data: {
-                metadata: { supabase_user_id: user.id, tier },
+                metadata: { supabase_user_id: user.id, tier: tier || 'premium' },
             },
         });
 
         return new Response(
-            JSON.stringify({ url: session.url }),
+            JSON.stringify({ 
+                clientSecret: session.client_secret,
+                url: session.url 
+            }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
         );
 

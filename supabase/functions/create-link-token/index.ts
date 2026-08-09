@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { Configuration, PlaidApi, PlaidEnvironments, Products, CountryCode } from "npm:plaid";
 
 // Initialize CORS headers for browser requests
@@ -29,18 +30,35 @@ serve(async (req) => {
 
   try {
     // 2. Validate User Authentication
-    // The React frontend will pass the user's Supabase JWT in the Auth header.
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error("Missing Authorization Header. You must be logged in to connect a bank.");
     }
 
-    // We could decode the JWT here to get the exact User ID, but for the link request 
-    // we can just extract the payload sent by the client.
-    const { userId, accessToken } = await req.json();
+    const { userId, accessToken: rawAccessToken, accountId } = await req.json();
 
     if (!userId) {
       throw new Error("Missing user ID in request body.");
+    }
+
+    let resolvedAccessToken = rawAccessToken;
+
+    // If accountId is provided, look up the access_token securely from isolated `plaid_credentials`
+    if (accountId && !resolvedAccessToken) {
+      const supabaseAdmin = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { data: cred, error: credErr } = await supabaseAdmin
+        .from('plaid_credentials')
+        .select('plaid_access_token')
+        .eq('account_id', accountId)
+        .single();
+
+      if (!credErr && cred?.plaid_access_token) {
+        resolvedAccessToken = cred.plaid_access_token;
+      }
     }
 
     // 3. Request Link Token from Plaid
@@ -55,9 +73,9 @@ serve(async (req) => {
       redirect_uri: Deno.env.get('PLAID_REDIRECT_URI') || undefined,
     };
 
-    if (accessToken) {
+    if (resolvedAccessToken) {
         // [UPDATE MODE] Plaid strictly forbids passing `products` or `transactions` objects when issuing an Update Token.
-        requestParams.access_token = accessToken;
+        requestParams.access_token = resolvedAccessToken;
         console.log(`Generating Update Mode Token for user ${userId}...`);
     } else {
         // [STANDARD MODE]

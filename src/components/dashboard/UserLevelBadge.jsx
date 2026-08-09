@@ -21,7 +21,7 @@ const WEALTH_QUOTES = [
 export const UserLevelBadge = () => {
     const { user } = useAuth();
     const { expenseBorderColor } = useTheme();
-    const { level, title, xpPercentage, xpProgress } = useXP();
+    const { level, title, xpPercentage = 0, xpProgress = 0, xpToNext = 1000 } = useXP() || {};
     const financialContext = useFinancialContext();
     const {
         portfolio,
@@ -120,9 +120,9 @@ export const UserLevelBadge = () => {
                         <div className="xp-progress-container">
                             <div className="xp-progress-text-row">
                                 <span className="xp-progress-current" style={{ color: isPositive ? 'var(--accent-primary)' : 'var(--danger)' }}>
-                                    {xpProgress.toLocaleString()} XP
+                                    {(xpProgress || 0).toLocaleString()} XP
                                 </span>
-                                <span>{(5000 - xpProgress).toLocaleString()} to Next Lvl</span>
+                                <span>{(xpToNext || 1000).toLocaleString()} to Next Rank</span>
                             </div>
                             <div className="xp-progress-track">
                                 <div 

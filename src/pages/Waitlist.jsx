@@ -47,11 +47,12 @@ const Waitlist = () => {
 
     // Prevent scrolling on Waitlist page on desktop only via CSS
     useEffect(() => {
+        if (user) return;
         document.body.classList.add('waitlist-body-lock');
         return () => {
             document.body.classList.remove('waitlist-body-lock');
         };
-    }, []);
+    }, [user]);
 
     // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
     if (user) {
@@ -113,6 +114,7 @@ const Waitlist = () => {
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     className="hero-video-bg waitlist-video-bg"
                 >
                     <source src="/hero-bg.mp4" type="video/mp4" />
@@ -195,6 +197,9 @@ const Waitlist = () => {
                                 </Button>
                             </form>
                         )}
+                        <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.80rem', color: 'var(--text-secondary)' }}>
+                            By joining, you agree to our <a href="/terms" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Terms</a> & <a href="/privacy" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Privacy Policy</a>.
+                        </div>
                     </Card>
                     </div>
                 </div>

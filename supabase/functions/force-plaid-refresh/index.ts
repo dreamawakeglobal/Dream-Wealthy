@@ -63,15 +63,14 @@ serve(async (req) => {
         });
         const plaidClient = new PlaidApi(configuration);
 
-        // 4. Fetch the user's connected Plaid accounts
-        const { data: accounts, error: accountError } = await supabaseAdmin
-            .from('accounts')
-            .select('*')
-            .eq('user_id', user.id)
-            .not('plaid_access_token', 'is', null);
+        // 4. Fetch the user's connected Plaid credentials from isolated table
+        const { data: creds, error: credError } = await supabaseAdmin
+            .from('plaid_credentials')
+            .select('id, account_id, plaid_access_token')
+            .eq('user_id', user.id);
 
-        if (accountError) throw accountError;
-        if (!accounts || accounts.length === 0) {
+        if (credError) throw credError;
+        if (!creds || creds.length === 0) {
             return new Response(JSON.stringify({ success: true, message: 'No connected accounts found.' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 200,
@@ -79,17 +78,17 @@ serve(async (req) => {
         }
 
         // 5. Forcefully Interrogate the Bank by executing /transactions/refresh on all accounts!
-        for (const account of accounts) {
+        for (const cred of creds) {
             try {
                 await plaidClient.transactionsRefresh({
                     client_id: plaidClientId,
                     secret: plaidSecret,
-                    access_token: account.plaid_access_token
+                    access_token: cred.plaid_access_token
                 });
-                console.log(`Bank Interrogation Initiated for Account ${account.id}`);
+                console.log(`Bank Interrogation Initiated for Account ${cred.account_id || cred.id}`);
             } catch (refreshErr: any) {
                 // Plaid returns an error if a refresh is already secretly running in the background. We safely ignore it.
-                console.error(`Refresh collision on account ${account.id}. The system is already extracting data.`, refreshErr.response?.data?.error_message || refreshErr.message);
+                console.error(`Refresh collision on account ${cred.account_id || cred.id}. The system is already extracting data.`, refreshErr.response?.data?.error_message || refreshErr.message);
             }
         }
 

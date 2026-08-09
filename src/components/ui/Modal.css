@@ -1,9 +1,9 @@
 .modal-overlay {
     left: 0;
     right: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(2, 6, 23, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -15,26 +15,23 @@
 .modal-content {
     background: var(--surface);
     border: 1px solid var(--surface-border);
-    border-radius: 16px;
+    border-radius: 20px;
     width: 100%;
     max-width: 800px;
-    /* Wider for tables */
     max-height: 90vh;
-    /* Don't grow larger than screen */
     display: flex;
     flex-direction: column;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), var(--neon-glow-primary);
     animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     overflow: hidden;
-    /* Keep header sticky by scrolling body */
 }
 
 /* Glassmorphism support */
 .modal-content.glass {
-    background: var(--surface);
-    backdrop-filter: blur(36px);
-    -webkit-backdrop-filter: blur(36px);
-    border: 1px solid var(--surface-border);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 

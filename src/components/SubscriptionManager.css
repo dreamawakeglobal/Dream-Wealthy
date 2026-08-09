@@ -1,0 +1,150 @@
+.subscription-manager-card {
+    background: var(--surface);
+    border: 1px solid var(--surface-border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 24px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.sub-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sub-title-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sub-icon-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sub-heading {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.sub-subheading {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 2px 0 0 0;
+}
+
+.sub-total-badge {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 14px;
+    padding: 8px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.sub-total-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+}
+
+.sub-total-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #10b981;
+}
+
+.sub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.sub-item-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--surface-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.sub-item-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+}
+
+.sub-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sub-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.sub-cadence-badge {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(129, 140, 248, 0.15);
+    color: #818cf8;
+    font-weight: 600;
+}
+
+.sub-date-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+}
+
+.sub-item-price {
+    text-align: right;
+}
+
+.sub-price-val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.sub-freq {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.sub-footer-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--surface-border);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}

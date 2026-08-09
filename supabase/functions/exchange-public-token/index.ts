@@ -74,19 +74,17 @@ serve(async (req) => {
     const accessToken = exchangeResponse.data.access_token;
     const itemId = exchangeResponse.data.item_id;
 
-    // 5. Store the sensitive Access Token in our Supabase `accounts` table securely.
-    // We use the supabaseAdmin to bypass potentially strict RLS insert policies
+    // 5. Store account metadata in `accounts` and sensitive Access Token in isolated `plaid_credentials` table.
     console.log(`Saving Item ${itemId} to database...`);
     const { data: dbData, error: dbError } = await supabaseAdmin
       .from('accounts')
       .upsert({
         user_id: user.id, // Explicitly linked to the verified user
         plaid_item_id: itemId,
-        plaid_access_token: accessToken,
         name: institutionName || 'My Connected Bank',
         type: 'depository', // Default representation 
         current_balance: 0, // Will be updated by Webhook syncs
-      })
+      }, { onConflict: 'plaid_item_id' })
       .select();
 
     if (dbError) {
@@ -94,6 +92,22 @@ serve(async (req) => {
     }
 
     const internalAccountId = dbData?.[0]?.id;
+
+    if (internalAccountId) {
+      const { error: credError } = await supabaseAdmin
+        .from('plaid_credentials')
+        .upsert({
+          user_id: user.id,
+          account_id: internalAccountId,
+          plaid_item_id: itemId,
+          plaid_access_token: accessToken,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'plaid_item_id' });
+
+      if (credError) {
+        console.error("Failed to save credentials to isolated table:", credError.message);
+      }
+    }
 
     // 5.5 PROACTIVE CACHE WARMER (Fire & Forget, wrapped defensively so it NEVER breaks Auth)
     if (internalAccountId) {

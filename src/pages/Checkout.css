@@ -1,0 +1,206 @@
+.checkout-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 20px 60px 20px;
+    min-height: calc(100vh - 100px);
+}
+
+.checkout-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding: 16px 24px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+}
+
+.back-link-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.back-link-btn:hover {
+    color: #0ea5e9;
+    transform: translateX(-4px);
+}
+
+.checkout-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ffffff;
+}
+
+.checkout-container-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 32px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .checkout-container-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.checkout-summary-pane {
+    padding: 32px;
+    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.summary-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.plan-badge-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-tag {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+}
+
+.summary-header h2 {
+    margin: 4px 0 0 0;
+    font-size: 1.5rem;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.summary-price-box {
+    background: rgba(255, 255, 255, 0.04);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.price-title {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.price-display {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 6px 0;
+}
+
+.price-display span {
+    font-size: 1rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.price-subtext {
+    margin: 6px 0 0 0;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.4;
+}
+
+.summary-features-list h4 {
+    margin: 0 0 14px 0;
+    font-size: 0.95rem;
+    color: #ffffff;
+}
+
+.summary-features-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.summary-features-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    color: #ffffff;
+}
+
+.trust-seal-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.checkout-form-pane {
+    padding: 24px;
+    border-radius: 24px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.checkout-loading-box,
+.checkout-error-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px;
+    gap: 16px;
+    color: #ffffff;
+}
+
+.spin-icon {
+    animation: spin 1.2s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.embedded-form-wrapper {
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+}

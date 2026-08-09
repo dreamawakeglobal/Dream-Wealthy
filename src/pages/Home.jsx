@@ -23,7 +23,40 @@ import {
 import { generateInsights } from '../utils/insightsEngine';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { MonthlyReportGenerator } from '../components/MonthlyReportGenerator';
+import { GamificationCard } from '../components/GamificationCard';
 import './Home.css';
+// Custom Tooltip for Area Charts (Single Value)
+const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="chart-tooltip" style={{ backgroundColor: 'rgba(15,15,20,0.95)', border: 'none', backdropFilter: 'blur(16px)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: '10px 18px' }}>
+                <p className="tooltip-label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{label}</p>
+                <p className="tooltip-value" style={{ color: '#fff', fontWeight: '700', fontSize: '1.25rem', margin: 0 }}>
+                    ${payload[0].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                </p>
+            </div>
+        );
+    }
+    return null;
+};
+
+// Custom Tooltip for Line Chart (Dual Value)
+const DualLineTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="chart-tooltip" style={{ backgroundColor: 'rgba(15,15,20,0.95)', border: 'none', backdropFilter: 'blur(16px)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: '12px 18px' }}>
+                <p className="tooltip-label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '8px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{label}</p>
+                {payload.map((entry, index) => (
+                    <p key={index} className="tooltip-row" style={{ color: entry.stroke || entry.color, display: 'flex', justifyContent: 'space-between', gap: '16px', margin: '4px 0', fontSize: '1.1rem', fontWeight: '600' }}>
+                        <span className="tooltip-name">{entry.name}:</span>
+                        <span className="tooltip-amount">${entry.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                    </p>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
 
 const Home = () => {
     const navigate = useNavigate();
@@ -35,7 +68,9 @@ const Home = () => {
     const contextData = useFinancialContext();
     const {
         getProjectionData,
-        portfolio
+        portfolio,
+        plaidAccounts,
+        totalExpenses
     } = contextData;
 
     const activeColor = expenseBorderColor !== 'none' ? {
@@ -45,13 +80,14 @@ const Home = () => {
     }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
     const insights = useMemo(() => generateInsights(contextData), [contextData]);
-    const positiveInsight = insights.find(i => i.type === 'success');
+    const _positiveInsight = insights.find(i => i.type === 'success');
 
     const videoRef = useRef(null);
 
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 0.65;
+            videoRef.current.play().catch(() => {});
         }
 
         // Gamification Daily Login Check
@@ -96,9 +132,8 @@ const Home = () => {
             const monthName = date.toLocaleString('default', { month: 'short' });
             
             const isLast = i === 5;
-
-            // eslint-disable-next-line react-hooks/purity
-            let value = isLast ? totalPortfolioValue : currentValue + (Math.random() - 0.5) * (totalPortfolioValue * 0.05);
+            const variance = Math.sin(i * 1.5) * (totalPortfolioValue * 0.02);
+            let value = isLast ? totalPortfolioValue : currentValue + variance;
 
             data.push({
                 month: monthName,
@@ -115,39 +150,6 @@ const Home = () => {
     }));
     const projected6MonthTotal = futureChartData[futureChartData.length - 1]?.value || 0;
 
-    // Custom Tooltip for Area Charts (Single Value)
-    const CustomTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="chart-tooltip" style={{ backgroundColor: 'rgba(15,15,20,0.95)', border: 'none', backdropFilter: 'blur(16px)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: '10px 18px' }}>
-                    <p className="tooltip-label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{label}</p>
-                    <p className="tooltip-value" style={{ color: '#fff', fontWeight: '700', fontSize: '1.25rem', margin: 0 }}>
-                        ${payload[0].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                    </p>
-                </div>
-            );
-        }
-        return null;
-    };
-
-    // Custom Tooltip for Line Chart (Dual Value)
-    const DualLineTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="chart-tooltip" style={{ backgroundColor: 'rgba(15,15,20,0.95)', border: 'none', backdropFilter: 'blur(16px)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)', padding: '12px 18px' }}>
-                    <p className="tooltip-label" style={{ color: 'rgba(255,255,255,0.5)', marginBottom: '8px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>{label}</p>
-                    {payload.map((entry, index) => (
-                        <p key={index} className="tooltip-row" style={{ color: entry.stroke || entry.color, display: 'flex', justifyContent: 'space-between', gap: '16px', margin: '4px 0', fontSize: '1.1rem', fontWeight: '600' }}>
-                            <span className="tooltip-name">{entry.name}:</span>
-                            <span className="tooltip-amount">${entry.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-                        </p>
-                    ))}
-                </div>
-            );
-        }
-        return null;
-    };
-
     return (
         <div className="home-container animate-fade-in">
 
@@ -160,6 +162,7 @@ const Home = () => {
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     className="hero-video-bg"
                 >
                     <source src="/hero-bg.mp4" type="video/mp4" />
@@ -318,6 +321,11 @@ const Home = () => {
                         </Card>
                     </AnimateOnScroll>
                 </div>
+
+                {/* Gamification & Rank Progression Matrix */}
+                <AnimateOnScroll delay={0.35}>
+                    <GamificationCard />
+                </AnimateOnScroll>
             </section >
         </div >
     );

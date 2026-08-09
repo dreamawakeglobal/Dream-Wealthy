@@ -1,8 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
 import { supabase } from './supabaseClient';
+import { detectSubscriptions } from './utils/subscriptionDetector';
+import { detectPseudoCategory } from './utils/categoryDetector';
 
 const FinancialContext = createContext();
 
@@ -237,43 +239,37 @@ export const FinancialProvider = ({ children }) => {
         return processedTransactions.reduce((acc, tx) => {
             // Only sum up expenses (positive Plaid amounts). Negative amounts are income/refunds.
             if (tx.amount > 0 && tx.date) {
-                const [y, m, d] = tx.date.split('-');
+                const [y, m] = tx.date.split('-');
                 if (parseInt(y) === currentY && parseInt(m) - 1 === currentM) {
                     const catLower = (tx.category || '').toLowerCase();
                     const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
                     if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return acc;
 
-                    const isManual = tx.category && tx.category.endsWith(' ');
-                    const category = tx.category ? tx.category.trim() : 'Uncategorized';
-                    
-                    // 1. Standard Macro Category aggregation
-                    acc[category] = (acc[category] || 0) + tx.amount;
+                    const effectiveCat = detectPseudoCategory(tx);
 
-                    if (!isManual) {
-                        // 2. Virtual Pseudo-Category: GASOLINE (Isolates from Transportation!)
-                        if (merchant.includes('exxon') || merchant.includes('shell') || merchant.includes('chevron') || merchant.includes('wawa') || merchant.includes('bp ') || merchant.includes('sunoco') || merchant.includes('speedway') || merchant.includes('quik') || merchant.includes('pilot') || merchant.includes('gas') || merchant.includes('fuel')) {
-                            acc['PSEUDO_GAS'] = (acc['PSEUDO_GAS'] || 0) + tx.amount;
-                        }
+                    // 1. Accumulate into the transaction's true effective category
+                    acc[effectiveCat] = (acc[effectiveCat] || 0) + tx.amount;
 
-                        // 3. Virtual Pseudo-Category: RIDE SHARING (Isolates from Transportation!)
-                        if (merchant.includes('uber') || merchant.includes('lyft') || merchant.includes('taxi') || merchant.includes('cab')) {
-                            acc['PSEUDO_RIDE_SHARE'] = (acc['PSEUDO_RIDE_SHARE'] || 0) + tx.amount;
-                        }
-
-                        // 4. Virtual Pseudo-Category: GROCERIES (Isolates from Food & Drink!)
-                        if (merchant.includes('walmart') || merchant.includes('kroger') || merchant.includes('target') || merchant.includes('publix') || merchant.includes('safeway') || merchant.includes('trader joe') || merchant.includes('whole food') || merchant.includes('aldi') || merchant.includes('wegmans') || merchant.includes('h-e-b') || merchant.includes('meijer') || merchant.includes('food lion') || merchant.includes('costco') || merchant.includes('sam\'s club') || merchant.includes('bjs') || merchant.includes('grocery') || merchant.includes('supermarket')) {
-                            acc['PSEUDO_GROCERIES'] = (acc['PSEUDO_GROCERIES'] || 0) + tx.amount;
-                        }
-
-                        // 5. Virtual Pseudo-Category: HYGIENE & HOUSEHOLD
-                        if (merchant.includes('cvs') || merchant.includes('walgreens') || merchant.includes('rite aid') || merchant.includes('sephora') || merchant.includes('ulta') || merchant.includes('bath & body') || merchant.includes('home depot') || merchant.includes('lowe\'s') || merchant.includes('ace hardware') || merchant.includes('ikea') || merchant.includes('bed bath') || merchant.includes('pharmacy') || merchant.includes('drugstore') || merchant.includes('sally beauty') || merchant.includes('mac cosmetics')) {
-                            acc['PSEUDO_HYGIENE_HOUSEHOLD'] = (acc['PSEUDO_HYGIENE_HOUSEHOLD'] || 0) + tx.amount;
-                        }
-
-                        // 6. Virtual Pseudo-Category: SUBSCRIPTIONS
-                        if (merchant.includes('netflix') || merchant.includes('spotify') || merchant.includes('hulu') || merchant.includes('disney+') || merchant.includes('apple') || merchant.includes('amazon prime') || merchant.includes('hbomax') || merchant.includes('peacock') || merchant.includes('paramount') || merchant.includes('gym')) {
-                            acc['PSEUDO_SUBSCRIPTIONS'] = (acc['PSEUDO_SUBSCRIPTIONS'] || 0) + tx.amount;
-                        }
+                    // 2. Add aliases so custom category names match UI budget rules!
+                    if (effectiveCat === 'PSEUDO_SUBSCRIPTIONS' || effectiveCat === 'Subscriptions') {
+                        acc['PSEUDO_SUBSCRIPTIONS'] = (acc['PSEUDO_SUBSCRIPTIONS'] || 0) + tx.amount;
+                        acc['Subscriptions'] = (acc['Subscriptions'] || 0) + tx.amount;
+                    }
+                    if (effectiveCat === 'PSEUDO_GAS' || effectiveCat === 'Gas & Fuel') {
+                        acc['PSEUDO_GAS'] = (acc['PSEUDO_GAS'] || 0) + tx.amount;
+                        acc['Gas & Fuel'] = (acc['Gas & Fuel'] || 0) + tx.amount;
+                    }
+                    if (effectiveCat === 'PSEUDO_RIDE_SHARE' || effectiveCat === 'Ride Share') {
+                        acc['PSEUDO_RIDE_SHARE'] = (acc['PSEUDO_RIDE_SHARE'] || 0) + tx.amount;
+                        acc['Ride Share'] = (acc['Ride Share'] || 0) + tx.amount;
+                    }
+                    if (effectiveCat === 'PSEUDO_GROCERIES' || effectiveCat === 'Groceries') {
+                        acc['PSEUDO_GROCERIES'] = (acc['PSEUDO_GROCERIES'] || 0) + tx.amount;
+                        acc['Groceries'] = (acc['Groceries'] || 0) + tx.amount;
+                    }
+                    if (effectiveCat === 'PSEUDO_HYGIENE_HOUSEHOLD' || effectiveCat === 'Hygiene & Household') {
+                        acc['PSEUDO_HYGIENE_HOUSEHOLD'] = (acc['PSEUDO_HYGIENE_HOUSEHOLD'] || 0) + tx.amount;
+                        acc['Hygiene & Household'] = (acc['Hygiene & Household'] || 0) + tx.amount;
                     }
                 }
             }
@@ -313,7 +309,36 @@ export const FinancialProvider = ({ children }) => {
         }, {});
     }, [processedTransactions]);
 
-    const totalSubscriptionCost = (store.subscriptions || []).reduce((sum, s) => sum + (Number(s.cost) || 0), 0);
+    const autoDetectedSubs = useMemo(() => {
+        const { subscriptions: detected } = detectSubscriptions(processedTransactions || []);
+        return detected || [];
+    }, [processedTransactions]);
+
+    const totalSubscriptionCost = useMemo(() => {
+        const manualSubs = store.subscriptions || [];
+        const mergedMap = new Map();
+        
+        let dismissed = [];
+        try { dismissed = JSON.parse(localStorage.getItem('dw_dismissed_subs')) || []; } catch (err) { console.debug(err); }
+
+        manualSubs.forEach(s => {
+            const key = s.name.toLowerCase().trim();
+            if (!dismissed.includes(key) && !dismissed.includes(String(s.id))) {
+                mergedMap.set(key, Number(s.cost) || 0);
+            }
+        });
+
+        autoDetectedSubs.forEach(a => {
+            const key = a.name.toLowerCase().trim();
+            const aId = a.id || `auto-${key}`;
+            if (!mergedMap.has(key) && !dismissed.includes(key) && !dismissed.includes(aId)) {
+                mergedMap.set(key, Number(a.monthlyCost || a.amount) || 0);
+            }
+        });
+
+        return Array.from(mergedMap.values()).reduce((sum, cost) => sum + cost, 0);
+    }, [store.subscriptions, autoDetectedSubs]);
+
     const totalTrackedMonthlyPayments = (store.trackedDebts || []).reduce((sum, d) => sum + (Number(d.minimumPayment) || 0), 0);
 
     const totalMonthlyExpenses = totalFixedExpenses + totalVariableExpenses + totalSubscriptionCost + totalTrackedMonthlyPayments;
@@ -444,6 +469,11 @@ export const FinancialProvider = ({ children }) => {
         // Subscriptions
         subscriptions: store.subscriptions,
         setSubscriptions: store.setSubscriptions,
+
+        // Bank Accounts & Plaid
+        accounts: store.accounts,
+        plaidAccounts: store.accounts,
+        bankBalances: store.bankBalances,
 
         // Plaid Sync
         forceSyncPlaid,

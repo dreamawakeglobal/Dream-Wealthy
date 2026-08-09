@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useSound } from '../SoundContext';
@@ -9,10 +9,10 @@ const Navigation = () => {
     const { playNavClick } = useSound();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Close menu when route changes
-    useEffect(() => {
-        setTimeout(() => setIsMobileMenuOpen(false), 0);
-    }, [location]);
+    const handleNavClick = () => {
+        if (playNavClick) playNavClick();
+        setIsMobileMenuOpen(false);
+    };
 
 
     const navItems = [
@@ -44,7 +44,7 @@ const Navigation = () => {
                         }
                         style={customStyle || {}}
                         onClick={(e) => {
-                            playNavClick();
+                            handleNavClick();
                             if (location.pathname === '/') {
                                 e.preventDefault();
                             }

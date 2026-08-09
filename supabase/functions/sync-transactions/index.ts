@@ -56,15 +56,26 @@ serve(async (req) => {
     }
     const supabaseAdmin = getAdminSupabase();
 
-    // 2. Look up the User ID and Access Token associated with this incoming Item ID
+    // 2. Look up the User ID, account details, and isolated Access Token associated with this incoming Item ID
     const { data: account, error: accountErr } = await supabaseAdmin
       .from('accounts')
-      .select('id, user_id, plaid_access_token, transactions_cursor')
+      .select('id, user_id, transactions_cursor')
       .eq('plaid_item_id', itemId)
       .single();
 
     if (accountErr || !account) {
       throw new Error(`Could not find account for item_id: ${itemId}`);
+    }
+
+    const { data: cred } = await supabaseAdmin
+      .from('plaid_credentials')
+      .select('plaid_access_token')
+      .eq('plaid_item_id', itemId)
+      .single();
+
+    const accessToken = cred?.plaid_access_token;
+    if (!accessToken) {
+      throw new Error(`Could not find isolated credentials for item_id: ${itemId}`);
     }
 
     const plaidClient = getPlaidClient();
@@ -82,7 +93,7 @@ serve(async (req) => {
 
       while (hasMore) {
         const syncResponse = await plaidClient.transactionsSync({
-          access_token: account.plaid_access_token,
+          access_token: accessToken,
           cursor: cursor,
         });
 
@@ -177,7 +188,7 @@ serve(async (req) => {
     // ============================================
     try {
         const balResponse = await plaidClient.accountsGet({
-            access_token: account.plaid_access_token
+            access_token: accessToken
         });
         
         const balancesToUpsert = balResponse.data.accounts.map((bankObj: any) => ({

@@ -26,19 +26,19 @@ const plaidClient = new PlaidApi(new Configuration({
 async function fireTestWebhook() {
     console.log("Fetching a connected user's Plaid Access Token from Supabase...");
 
-    // Grab the most recently connected account
-    const { data: accounts, error } = await supabase
-        .from('accounts')
-        .select('plaid_access_token, name, user_id')
-        .order('id', { ascending: false })
+    // Grab the most recently connected account credentials
+    const { data: creds, error } = await supabase
+        .from('plaid_credentials')
+        .select('plaid_access_token, user_id')
+        .order('created_at', { ascending: false })
         .limit(1);
 
-    if (error || !accounts || accounts.length === 0) {
+    if (error || !creds || creds.length === 0) {
         console.error("No accounts found in DB! Please connect a bank through the UI first.");
         return;
     }
 
-    const testAccount = accounts[0];
+    const testAccount = creds[0];
     console.log(`Testing webhook for connected Bank: ${testAccount.name} (User: ${testAccount.user_id})`);
 
     try {

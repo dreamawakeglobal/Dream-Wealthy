@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save, Edit2, Scissors } from 'lucide-react';
+import { Plus, Trash2, Wallet, DollarSign, TrendingDown, Percent, Flame, Wind, CloudRain, AlertTriangle, Car, GraduationCap, Home, HeartPulse, CreditCard, Clock, CheckCircle2, Smile, Activity, Save, Edit2, Scissors, Zap } from 'lucide-react';
 import EmojiPicker from 'emoji-picker-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +27,7 @@ import { useXP } from '../contexts/XPContext';
 import { supabase } from '../supabaseClient';
 import './Expenses.css';
 import { SplitTransactionModal } from '../components/SplitTransactionModal';
+import { detectSubscriptions } from '../utils/subscriptionDetector';
 
 export const getFilterLabel = (filterId) => {
     if (!filterId) return '🏷️ Uncategorized';
@@ -61,31 +62,8 @@ export const getFilterLabel = (filterId) => {
     return `🏷️ ${formattedName}`;
 };
 
-export const detectPseudoCategory = (tx) => {
-    if (tx.category && tx.category.endsWith(' ')) {
-        return tx.category.trim();
-    }
-    
-    const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
-    
-    if (merchant.includes('exxon') || merchant.includes('shell') || merchant.includes('chevron') || merchant.includes('wawa') || merchant.includes('bp ') || merchant.includes('sunoco') || merchant.includes('speedway') || merchant.includes('quik') || merchant.includes('pilot') || merchant.includes('gas') || merchant.includes('fuel')) {
-        return 'PSEUDO_GAS';
-    }
-    if (merchant.includes('uber') || merchant.includes('lyft') || merchant.includes('taxi') || merchant.includes('cab')) {
-        return 'PSEUDO_RIDE_SHARE';
-    }
-    if (merchant.includes('walmart') || merchant.includes('kroger') || merchant.includes('target') || merchant.includes('publix') || merchant.includes('safeway') || merchant.includes('trader joe') || merchant.includes('whole food') || merchant.includes('aldi') || merchant.includes('wegmans') || merchant.includes('h-e-b') || merchant.includes('meijer') || merchant.includes('food lion') || merchant.includes('costco') || merchant.includes("sam's club") || merchant.includes('bjs') || merchant.includes('grocery') || merchant.includes('supermarket')) {
-        return 'PSEUDO_GROCERIES';
-    }
-    if (merchant.includes('cvs') || merchant.includes('walgreens') || merchant.includes('rite aid') || merchant.includes('sephora') || merchant.includes('ulta') || merchant.includes('bath & body') || merchant.includes('home depot') || merchant.includes("lowe's") || merchant.includes('ace hardware') || merchant.includes('ikea') || merchant.includes('bed bath') || merchant.includes('pharmacy') || merchant.includes('drugstore') || merchant.includes('sally beauty') || merchant.includes('mac cosmetics')) {
-        return 'PSEUDO_HYGIENE_HOUSEHOLD';
-    }
-    if (merchant.includes('netflix') || merchant.includes('spotify') || merchant.includes('hulu') || merchant.includes('disney+') || merchant.includes('apple') || merchant.includes('amazon prime') || merchant.includes('hbomax') || merchant.includes('peacock') || merchant.includes('paramount') || merchant.includes('gym')) {
-        return 'PSEUDO_SUBSCRIPTIONS';
-    }
-    
-    return tx.category || 'Uncategorized';
-};
+import { detectPseudoCategory } from '../utils/categoryDetector';
+export { detectPseudoCategory };
 
 export const useRecentMerchants = (transactions) => {
     return useMemo(() => {
@@ -301,10 +279,10 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
     const { playCheck, playPop } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const [editingId, setEditingId] = useState(null);
-    const [editName, setEditName] = useState('');
-    const [editAmount, setEditAmount] = useState('');
-    const [editDueDate, setEditDueDate] = useState('');
-    const [editTargetCategory, setEditTargetCategory] = useState('');
+    const [_editName, setEditName] = useState('');
+    const [_editAmount, setEditAmount] = useState('');
+    const [_editDueDate, setEditDueDate] = useState('');
+    const [_editTargetCategory, setEditTargetCategory] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
 
@@ -573,11 +551,19 @@ const Expenses = () => {
         
         if (activityCategoryFilter === 'All') return expenseTxs;
 
-        if (activityCategoryFilter.startsWith('PSEUDO_')) {
-            return expenseTxs.filter(tx => detectPseudoCategory(tx) === activityCategoryFilter);
-        }
+        return expenseTxs.filter(tx => {
+            const detected = detectPseudoCategory(tx);
+            if (activityCategoryFilter === detected) return true;
+            if ((activityCategoryFilter === 'PSEUDO_SUBSCRIPTIONS' || activityCategoryFilter === 'Subscriptions') && 
+                (detected === 'Subscriptions' || detected === 'PSEUDO_SUBSCRIPTIONS')) return true;
 
-        return expenseTxs.filter(tx => (tx.category ? tx.category.trim() : 'Uncategorized') === activityCategoryFilter);
+            // If transaction is classified as a pseudo category (e.g. Subscriptions), 
+            // exclude it from non-matching category filters (e.g. Entertainment) so it moves immediately!
+            if (detected !== activityCategoryFilter && detected.startsWith('PSEUDO_')) return false;
+
+            const rawCat = typeof tx.category === 'string' ? tx.category.trim() : (Array.isArray(tx.category) ? tx.category[0] : '');
+            return rawCat === activityCategoryFilter;
+        });
     }, [transactions, activityCategoryFilter]);
 
     const activityTotalPages = Math.ceil(filteredTransactions.length / activityItemsPerPage);
@@ -782,15 +768,59 @@ const Expenses = () => {
         { id: 'paramount', name: 'Paramount+', domain: 'paramountplus.com', cost: 11.99 },
         { id: 'peacock', name: 'Peacock', domain: 'peacocktv.com', cost: 7.99 },
     ];
+    const [dismissedSubIds, setDismissedSubIds] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('dw_dismissed_subs')) || [];
+        } catch (err) {
+            console.debug(err);
+            return [];
+        }
+    });
+
+    const autoDetectedSubscriptions = useMemo(() => {
+        const { subscriptions: detected } = detectSubscriptions(transactions || []);
+        return detected || [];
+    }, [transactions]);
+
     const activeSubscriptions = useMemo(() => {
-        if (!transactions || !subscriptions) return subscriptions || [];
+        const manualSubs = subscriptions || [];
         
+        const mergedMap = new Map();
+
+        // Add user manual subscriptions
+        manualSubs.forEach(sub => {
+            const key = sub.name.toLowerCase().trim();
+            if (!dismissedSubIds.includes(key) && !dismissedSubIds.includes(String(sub.id))) {
+                mergedMap.set(key, { ...sub, isAutoDetected: false });
+            }
+        });
+
+        // Auto-merge subscriptions detected from Plaid transactions (if not dismissed or overridden)
+        autoDetectedSubscriptions.forEach(autoSub => {
+            const key = autoSub.name.toLowerCase().trim();
+            const subId = autoSub.id || `auto-${key}`;
+
+            if (!mergedMap.has(key) && !dismissedSubIds.includes(key) && !dismissedSubIds.includes(subId)) {
+                mergedMap.set(key, {
+                    id: subId,
+                    name: autoSub.name,
+                    cost: autoSub.monthlyCost || autoSub.amount,
+                    cadence: autoSub.cadence,
+                    nextBilling: autoSub.nextBilling,
+                    domain: `${key.replace(/\s+/g, '')}.com`,
+                    isAutoDetected: true
+                });
+            }
+        });
+
+        const mergedSubs = Array.from(mergedMap.values());
+
         const now = new Date();
         const currentM = now.getMonth();
         const currentY = now.getFullYear();
         
         const thisMonthSubscriptionMerchants = [];
-        transactions.forEach(tx => {
+        (transactions || []).forEach(tx => {
             if (tx.amount <= 0 || !tx.date) return;
             const [y, m] = tx.date.split('-');
             
@@ -802,7 +832,7 @@ const Expenses = () => {
             }
         });
 
-        return (subscriptions || []).map(sub => {
+        return mergedSubs.map(sub => {
             const searchTag = sub.name.toLowerCase();
             const isPaid = thisMonthSubscriptionMerchants.some(m => m.includes(searchTag) || searchTag.includes(m));
             if (isPaid) {
@@ -810,17 +840,28 @@ const Expenses = () => {
             }
             return sub;
         });
-    }, [subscriptions, transactions]);
+    }, [subscriptions, transactions, autoDetectedSubscriptions, dismissedSubIds]);
     const [showAddSub, setShowAddSub] = useState(false);
     const [newSub, setNewSub] = useState({ name: '', cost: '', domain: '', dueDate: '' });
 
     const toggleSubscription = (sub) => {
         playPop();
         const prev = subscriptions || [];
-        const exists = prev.find(s => s.name === sub.name);
+        const nameKey = sub.name.toLowerCase().trim();
+        const exists = prev.find(s => s.name.toLowerCase().trim() === nameKey);
         if (exists) {
-            setSubscriptions(prev.filter(s => s.name !== sub.name));
+            setSubscriptions(prev.filter(s => s.name.toLowerCase().trim() !== nameKey));
+            setDismissedSubIds(p => {
+                const u = [...p, nameKey];
+                try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
+                return u;
+            });
         } else {
+            setDismissedSubIds(p => {
+                const u = p.filter(x => x !== nameKey && x !== sub.id);
+                try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
+                return u;
+            });
             setSubscriptions([...prev, { ...sub, id: crypto.randomUUID() }]);
         }
     };
@@ -830,13 +871,25 @@ const Expenses = () => {
         if (newSub.name && newSub.cost) {
             const prev = subscriptions || [];
             if (editingSubId) {
-                setSubscriptions(prev.map(s => String(s.id) === String(editingSubId) ? { 
-                    ...s, 
-                    name: newSub.name, 
-                    domain: newSub.domain,
-                    cost: parseFloat(newSub.cost), 
-                    dueDate: newSub.dueDate || null 
-                } : s));
+                const isExistingInSubscriptions = prev.some(s => String(s.id) === String(editingSubId));
+                if (isExistingInSubscriptions) {
+                    setSubscriptions(prev.map(s => String(s.id) === String(editingSubId) ? { 
+                        ...s, 
+                        name: newSub.name, 
+                        domain: newSub.domain,
+                        cost: parseFloat(newSub.cost), 
+                        dueDate: newSub.dueDate || null 
+                    } : s));
+                } else {
+                    const custom = {
+                        id: editingSubId,
+                        name: newSub.name,
+                        domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
+                        cost: parseFloat(newSub.cost),
+                        dueDate: newSub.dueDate || null
+                    };
+                    setSubscriptions([...prev, custom]);
+                }
             } else {
                 const custom = {
                     id: crypto.randomUUID(),
@@ -853,10 +906,19 @@ const Expenses = () => {
         }
     };
 
-    const removeSubscription = (id) => {
+    const removeSubscription = (subTarget) => {
         playPop();
         const prev = subscriptions || [];
-        setSubscriptions(prev.filter(s => String(s.id) !== String(id)));
+        const id = typeof subTarget === 'object' ? subTarget.id : subTarget;
+        const nameKey = typeof subTarget === 'object' ? subTarget.name?.toLowerCase().trim() : String(id).toLowerCase();
+
+        setSubscriptions(prev.filter(s => String(s.id) !== String(id) && s.name?.toLowerCase().trim() !== nameKey));
+
+        setDismissedSubIds(prevDismissed => {
+            const updated = Array.from(new Set([...prevDismissed, String(id), nameKey]));
+            try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(updated)); } catch (err) { console.debug(err); }
+            return updated;
+        });
     };
 
     const [editingSubId, setEditingSubId] = useState(null);
@@ -864,14 +926,14 @@ const Expenses = () => {
     const [editSubCost, setEditSubCost] = useState('');
     const [editSubDueDate, setEditSubDueDate] = useState('');
 
-    const startEditingSub = (sub) => {
+    const _startEditingSub = (sub) => {
         setEditingSubId(sub.id);
         setEditSubName(sub.name);
         setEditSubCost(sub.cost.toString());
         setEditSubDueDate(sub.dueDate || '');
     };
 
-    const saveSubEdit = (id) => {
+    const _saveSubEdit = (id) => {
         if (editSubName && editSubCost) {
             const prev = subscriptions || [];
             setSubscriptions(prev.map(s => String(s.id) === String(id) ? { ...s, name: editSubName, cost: parseFloat(editSubCost), dueDate: editSubDueDate || null } : s));
@@ -1224,19 +1286,26 @@ const Expenses = () => {
                 </AnimateOnScroll>
             </div>
 
-            {/* Subscriptions Section */}
+            {/* Subscriptions & Auto-Detection Section */}
             <AnimateOnScroll yOffset={40} delay={0.1} className="subscription-box">
                 <Card glass className={borderGlowClass} style={{ marginTop: '32px' }}>
+                    {autoDetectedSubscriptions.length > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.08)', padding: '8px 16px', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.25)', marginBottom: '20px' }}>
+                            <Zap size={15} style={{ color: '#fbbf24' }} />
+                            <span>Plaid Auto-Detector active: <strong>{autoDetectedSubscriptions.length} recurring subscriptions</strong> synced from transaction history.</span>
+                        </div>
+                    )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                             <h2 style={{ margin: 0 }}>Subscriptions</h2>
-                            <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalSubscriptionCost.toFixed(2)}/mo</span>
                             {(() => {
-                                const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + Number(sub.cost), 0);
-                                const left = totalSubscriptionCost - paid;
+                                const currentTotal = (activeSubscriptions || []).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                const left = Math.max(0, currentTotal - paid);
                                 return (
                                     <>
-                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
+                                        <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${currentTotal.toFixed(2)}/mo</span>
+                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)' }}>
                                             Paid: ${paid.toFixed(2)}
                                         </span>
                                         <span className="badge success-badge">
@@ -1389,7 +1458,7 @@ const Expenses = () => {
                                             </div>
                                         )}
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); removeSubscription(sub.id); }}
+                                            onClick={(e) => { e.stopPropagation(); removeSubscription(sub); }}
                                             style={{ position: 'absolute', top: '4px', right: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', fontSize: '0.7rem', zIndex: 20 }}
                                             title="Remove"
                                         >
@@ -1404,8 +1473,15 @@ const Expenses = () => {
                                         <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 600, textAlign: 'center', lineHeight: 1.2, display: 'flex', alignItems: 'center', gap: '4px' }}>
                                             {sub.name}
                                         </span>
-                                        <span style={{ fontSize: '0.85rem', color: sub.isPaid ? (activeColor || 'var(--success)') : 'var(--danger)', fontWeight: 700, marginTop: '4px' }}>${sub.cost.toFixed(2)}</span>
-                                        {sub.dueDate && <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Due: {sub.dueDate}{[11, 12, 13].includes(Number(sub.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(sub.dueDate) % 10) - 1] || 'th')}</span>}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                            <span style={{ fontSize: '0.85rem', color: sub.isPaid ? (activeColor || 'var(--success)') : 'var(--danger)', fontWeight: 700 }}>${sub.cost.toFixed(2)}</span>
+                                            {sub.cadence && <span style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: '4px', background: 'rgba(129, 140, 248, 0.18)', color: '#818cf8', fontWeight: 600 }}>{sub.cadence}</span>}
+                                        </div>
+                                        {sub.nextBilling ? (
+                                            <span style={{ fontSize: '0.68rem', color: '#38bdf8', marginTop: '2px' }}>Next: {sub.nextBilling}</span>
+                                        ) : sub.dueDate ? (
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>Due: {sub.dueDate}{[11, 12, 13].includes(Number(sub.dueDate)) ? 'th' : (['st', 'nd', 'rd'][(Number(sub.dueDate) % 10) - 1] || 'th')}</span>
+                                        ) : null}
                                     </div>
                                 ))}
                             </div>

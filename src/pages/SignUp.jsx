@@ -7,6 +7,7 @@ import { Sparkles, ArrowRight, Mail } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { triggerWelcomeEmail } from '../utils/emailTriggers';
 import './Home.css';
 import './Waitlist.css';
 import './SignUp.css';
@@ -22,7 +23,7 @@ const SignUp = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
-    const [successMsg, setSuccessMsg] = useState(null);
+    const [successMsg, _setSuccessMsg] = useState(null);
     const [loading, setLoading] = useState(false);
     const [showEmailForm, setShowEmailForm] = useState(false);
     const [searchParams] = useSearchParams();
@@ -50,7 +51,7 @@ const SignUp = () => {
         }
     };
 
-    const handleMagicLink = async () => {
+    const _handleMagicLink = async () => {
         playPop();
         if (!email) {
             setErrorMsg("Please enter your email above for a Magic Link");
@@ -77,7 +78,7 @@ const SignUp = () => {
 
         try {
             if (isLogin) {
-                const { data, error } = await supabase.auth.signInWithPassword({
+                const { error } = await supabase.auth.signInWithPassword({
                     email: email.trim(),
                     password,
                 });
@@ -100,6 +101,9 @@ const SignUp = () => {
                 });
 
                 if (error) throw error;
+
+                // Send welcome onboarding email
+                triggerWelcomeEmail(email.trim(), `${firstName} ${lastName}`.trim());
 
                 // Supabase returns a null session if Email Confirmations are enabled
                 if (!data?.session) {
@@ -274,14 +278,6 @@ const SignUp = () => {
                             </Button>
                         </form>
 
-                        {isLogin && (
-                            <div style={{ marginTop: '16px' }}>
-                                <Button variant="outline" onClick={handleMagicLink} disabled={loading} style={{ width: '100%', padding: '12px', background: 'transparent' }}>
-                                    <Mail size={18} style={{ marginRight: '8px' }} /> Send Magic Link
-                                </Button>
-                            </div>
-                        )}
-
                         <div style={{ textAlign: 'center', marginTop: '24px' }}>
                             <button
                                 className="toggle-auth-mode"
@@ -306,6 +302,9 @@ const SignUp = () => {
                 )}
                     </>
                 )}
+                <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '0.80rem', color: 'var(--text-secondary)' }}>
+                    By continuing, you agree to our <a href="/terms" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Terms</a> & <a href="/privacy" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Privacy Policy</a>.
+                </div>
             </Card>
         </div>
     );

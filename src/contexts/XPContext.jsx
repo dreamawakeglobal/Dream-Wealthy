@@ -4,6 +4,8 @@ import { useAuth } from './AuthContext';
 import { useSound } from '../SoundContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import { calculateRankDetails } from '../utils/xpEngine';
+
 const XPContext = createContext({});
 
 export const useXP = () => useContext(XPContext);
@@ -33,23 +35,12 @@ export const XPProvider = ({ children }) => {
 
     const totalXP = user ? Math.max(optimisticXp, user?.user_metadata?.total_xp || 0) : optimisticXp;
     
-    // Simple 5000 XP linear progression per level
-    const level = Math.floor(totalXP / 5000) + 1;
-    const currentLevelThreshold = (level - 1) * 5000;
-    const xpProgress = totalXP - currentLevelThreshold;
-    const xpPercentage = (xpProgress / 5000) * 100;
-
-    const rankTitles = [
-        "Initiate Tracker", "Budget Brawler", "Debt Destroyer",
-        "Wealth Architect", "Compound Capitalist", "Financial Sovereign"
-    ];
-    // Scale title
-    let title = rankTitles[0];
-    if (level >= 50) title = rankTitles[5];
-    else if (level >= 35) title = rankTitles[4];
-    else if (level >= 20) title = rankTitles[3];
-    else if (level >= 10) title = rankTitles[2];
-    else if (level >= 5) title = rankTitles[1];
+    const rankDetails = calculateRankDetails(totalXP);
+    const level = rankDetails.currentLevel;
+    const title = rankDetails.currentRank.title;
+    const xpPercentage = rankDetails.progressPercent;
+    const xpProgress = rankDetails.earnedInRank !== undefined ? rankDetails.earnedInRank : Math.max(0, totalXP - rankDetails.currentRank.minXP);
+    const xpToNext = rankDetails.xpToNext !== undefined ? rankDetails.xpToNext : 1000;
 
     const addXP = useCallback(async (amount, actionName = "") => {
         // Optimistic evaluation
@@ -86,7 +77,7 @@ export const XPProvider = ({ children }) => {
     }, [user, playChime]);
 
     return (
-        <XPContext.Provider value={{ totalXP, level, xpProgress, xpPercentage, title, addXP }}>
+        <XPContext.Provider value={{ totalXP, level, xpProgress, xpToNext, xpPercentage, title, rankDetails, addXP }}>
             {children}
             
             {/* HUD Overlay for XP Popups */}

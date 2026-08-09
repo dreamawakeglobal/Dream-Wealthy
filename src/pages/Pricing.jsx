@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Check, X, Zap, Shield, TrendingUp, Sparkles, CreditCard } from 'lucide-react';
@@ -14,11 +15,12 @@ const getPlans = (isYearly) => [
         name: 'Basic',
         price: isYearly ? '$4.00' : '$6.99',
         period: '/month',
-        billedAs: isYearly ? 'Billed $48 annually' : 'Billed monthly',
-        description: 'Take control of your money manually without automated syncing.',
+        billedAs: isYearly ? '3-Day Free Trial, then $48 billed annually' : '3-Day Free Trial, then $6.99 billed monthly',
+        description: 'Includes a 3-Day Free Trial. Core budgeting & projections.',
         icon: Shield,
         color: '#0ea5e9',
         features: [
+            { text: '3-Day Free Access for New Accounts', included: true },
             { text: 'Manual Income & Expense Tracking', included: true },
             { text: '12-Month Financial Projections', included: true },
             { text: 'Debt Destroyer Strategies', included: true },
@@ -33,13 +35,14 @@ const getPlans = (isYearly) => [
         name: 'Premium',
         price: isYearly ? '$10.00' : '$12.99',
         period: '/month',
-        billedAs: isYearly ? 'Billed $120 annually' : 'Billed monthly',
-        description: 'Full automation. Everything seamlessly syncs in the background.',
+        billedAs: isYearly ? '3-Day Free Trial, then $120 billed annually' : '3-Day Free Trial, then $12.99 billed monthly',
+        description: 'Includes a 3-Day Free Trial. Full automation & AI Advisor.',
         icon: Sparkles,
         color: 'var(--primary)',
         popular: true,
         features: [
             { text: 'Everything in Basic', included: true },
+            { text: '3-Day Free Access for New Accounts', included: true },
             { text: 'Plaid Bank Auto-Sync', included: true },
             { text: 'AI Advisor & Automation', included: true },
             { text: 'Active Investments Tracking', included: true },
@@ -52,6 +55,7 @@ const getPlans = (isYearly) => [
 ];
 
 const Pricing = () => {
+    const navigate = useNavigate();
     const { profileData } = useFinancialContext();
     const { user } = useAuth();
     const { playPop } = useSound();
@@ -60,36 +64,19 @@ const Pricing = () => {
     const currentTier = profileData?.subscriptionTier || 'none';
     const currentPlans = getPlans(isYearly);
 
-    const handleCheckout = async (tier) => {
-        if (!user) return;
-        setIsLoading(tier);
-
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-
-            const res = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`,
-                    },
-                    body: JSON.stringify({ tier }),
-                }
-            );
-
-            const data = await res.json();
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                console.error('Checkout error:', data.error);
-            }
-        } catch (err) {
-            console.error('Failed to create checkout:', err);
-        } finally {
-            setIsLoading(null);
+    const handleCheckout = (tierName) => {
+        if (!user) {
+            navigate('/signup');
+            return;
         }
+        if (playPop) playPop();
+        const priceId = tierName === 'premium' 
+            ? (isYearly ? (import.meta.env.VITE_STRIPE_PREMIUM_YEARLY_PRICE_ID || '') : (import.meta.env.VITE_STRIPE_PREMIUM_MONTHLY_PRICE_ID || ''))
+            : (isYearly ? (import.meta.env.VITE_STRIPE_BASIC_YEARLY_PRICE_ID || '') : (import.meta.env.VITE_STRIPE_BASIC_MONTHLY_PRICE_ID || ''));
+
+        const planName = tierName === 'premium' ? `Dream Wealthy Premium` : `Dream Wealthy Basic`;
+
+        navigate(`/checkout?priceId=${encodeURIComponent(priceId)}&plan=${encodeURIComponent(planName)}&tier=${tierName}&cycle=${isYearly ? 'yearly' : 'monthly'}`);
     };
 
     return (

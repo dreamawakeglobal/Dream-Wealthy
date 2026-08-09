@@ -7,8 +7,8 @@ async function run() {
     console.log("Starting test...");
     const supabaseAdmin = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     
-    // Get user
-    const { data: accounts } = await supabaseAdmin.from('accounts').select('*').not('plaid_access_token', 'is', null);
+    // Get user credentials
+    const { data: accounts } = await supabaseAdmin.from('plaid_credentials').select('*');
     if (!accounts || accounts.length === 0) return console.log("No accounts");
     
     for (const account of accounts) {

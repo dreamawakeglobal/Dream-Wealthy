@@ -9,9 +9,11 @@ import { Modal } from '../components/ui/Modal';
 import { TrendingUp, Plus, Target, DollarSign, GripVertical, Trash2, Search, X } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useFinancialContext } from '../FinancialContext';
+import { supabase } from '../supabaseClient';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import investmentsHeaderImg from '../assets/investments-header.png';
 import './Investments.css';
+import { SavingsOptimizationCard } from '../components/SavingsOptimizationCard';
 
 // Base Initial State structure
 const INITIAL_ASSET_CLASSES = {
@@ -117,7 +119,7 @@ const CustomCandle = (props) => {
 };
 
 const Investments = () => {
-    const { portfolio, setPortfolio } = useFinancialContext();
+    const { portfolio, setPortfolio, plaidAccounts } = useFinancialContext();
     const { expenseBorderColor, theme } = useTheme();
     const { playPop } = useSound();
 
@@ -584,6 +586,11 @@ const Investments = () => {
                         </div>
                     </Card>
                 </div>
+            </AnimateOnScroll>
+
+            {/* High-Yield Savings Strategy Engine */}
+            <AnimateOnScroll delay={0.15}>
+                <SavingsOptimizationCard plaidAccounts={plaidAccounts || []} />
             </AnimateOnScroll>
 
             {/* Bottom: Market Drawer, Holdings & Total Value */}

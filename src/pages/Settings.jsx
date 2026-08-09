@@ -11,7 +11,8 @@ import { Button } from '../components/ui/Button';
 import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
-// import { MonthlyReportsTab } from '../components/dashboard/MonthlyReportsTab';
+import { GamificationCard } from '../components/GamificationCard';
+import { InAppBillingManager } from '../components/InAppBillingManager';
 import './Settings.css';
 
 const Settings = () => {
@@ -31,7 +32,7 @@ const Settings = () => {
 
     // State for AI Advisor Persona
     const [activePersona, setActivePersona] = useState(user?.user_metadata?.advisor_persona || 'wealth_manager');
-    const [personaUpdating, setPersonaUpdating] = useState(false);
+    const [_personaUpdating, setPersonaUpdating] = useState(false);
     const [personaMessage, setPersonaMessage] = useState({ type: '', text: '' });
 
     const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
@@ -166,6 +167,36 @@ const Settings = () => {
         }
     };
 
+    const [portalLoading, setPortalLoading] = useState(false);
+
+    const handleManageBilling = async () => {
+        if (playPop) playPop();
+        setPortalLoading(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+            
+            const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://xqfxrbyjsbdfgmtxgvhu.supabase.co'}/functions/v1/create-portal-link`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (data?.url) {
+                window.location.href = data.url;
+            } else {
+                alert(data?.error || 'Unable to open billing portal. Please try again.');
+            }
+        } catch (err) {
+            alert(`Error opening billing portal: ${err.message}`);
+        } finally {
+            setPortalLoading(false);
+        }
+    };
+
     return (
         <div className="settings-page-container animate-fade-in">
             <div className="settings-header">
@@ -181,6 +212,12 @@ const Settings = () => {
                         onClick={() => { if(playPop) playPop(); setActiveTab('profile'); }}
                     >
                         <User size={18} /> Profile
+                    </button>
+                    <button 
+                        className={`settings-tab ${activeTab === 'billing' ? 'active' : ''}`}
+                        onClick={() => { if(playPop) playPop(); setActiveTab('billing'); }}
+                    >
+                        <Zap size={18} /> Billing & Plan
                     </button>
                     {/* <button 
                         className={`settings-tab ${activeTab === 'reports' ? 'active' : ''}`}
@@ -288,8 +325,17 @@ const Settings = () => {
                                 {profileUpdating ? 'Saving...' : <><Save size={16} /> Save Changes</>}
                             </Button>
                         </form>
+
+                        <GamificationCard />
                     </div>
                 </AnimateOnScroll>
+                    )}
+
+                    {/* Billing & Subscription In-App Manager */}
+                    {activeTab === 'billing' && (
+                        <AnimateOnScroll delay={0.1}>
+                            <InAppBillingManager />
+                        </AnimateOnScroll>
                     )}
 
                     {/* Monthly Reports Card */}
@@ -400,7 +446,7 @@ const Settings = () => {
                                             </div>
                                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                             {acc.needs_relink && (
-                                                <PlaidConnectButton isUpdateMode={true} linkedAccessToken={acc.plaid_access_token} brokenAccountId={acc.id} />
+                                                <PlaidConnectButton isUpdateMode={true} brokenAccountId={acc.id} />
                                             )}
                                             <Button 
                                                 variant="secondary" 

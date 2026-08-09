@@ -27,15 +27,18 @@ const Footer = () => {
                 <div className="footer-links">
                     <div className="footer-column">
                         <h4>Tools</h4>
+                        <NavLink to="/dashboard">Dashboard</NavLink>
+                        <NavLink to="/income">Streams</NavLink>
+                        <NavLink to="/expenses">Expenses</NavLink>
                         <NavLink to="/projections">Projections</NavLink>
-                        <NavLink to="/allocations">Allocations</NavLink>
-                        <NavLink to="/debt">Debt Freer</NavLink>
+                        <NavLink to="/investments">Investments</NavLink>
                     </div>
                     <div className="footer-column">
-                        <h4>Legal</h4>
-                        <a href="#privacy">Privacy Policy</a>
-                        <a href="#terms">Terms of Service</a>
-                        <a href="#contact">Contact Us</a>
+                        <h4>Legal & Support</h4>
+                        <a href="/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>
+                        <a href="/terms" target="_blank" rel="noreferrer">Terms of Service</a>
+                        <a href="/faq" target="_blank" rel="noreferrer">FAQ</a>
+                        <a href="/contact" target="_blank" rel="noreferrer">Contact Us</a>
                     </div>
                     <div className="footer-column">
                         <h4>Socials</h4>

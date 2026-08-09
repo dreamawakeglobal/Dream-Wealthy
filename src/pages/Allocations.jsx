@@ -21,9 +21,9 @@ const Allocations = () => {
         setAllocations
     } = useFinancialContext();
 
-    const totalPercentage = allocations.reduce((acc, cat) => acc + cat.percentage, 0);
-    const remainingPercentage = 100 - totalPercentage;
-    const isOverAllocated = totalPercentage > 100;
+    const totalPercentage = Number(allocations.reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0).toFixed(2));
+    const remainingPercentage = Number((100 - totalPercentage).toFixed(2));
+    const isOverAllocated = remainingPercentage < 0;
 
     const [editingCategory, setEditingCategory] = React.useState(null); // Dollar edit
     const [editValue, setEditValue] = React.useState("");
@@ -35,7 +35,16 @@ const Allocations = () => {
         if (editingCategory === id && editValue !== "") {
             const newDollarValue = parseFloat(editValue);
             if (!isNaN(newDollarValue) && totalMonthlyIncome > 0) {
-                const newPercentage = Number(((newDollarValue / totalMonthlyIncome) * 100).toFixed(2));
+                let newPercentage = Number(((newDollarValue / totalMonthlyIncome) * 100).toFixed(2));
+                const otherCategoriesSum = allocations
+                    .filter(cat => cat.id !== id)
+                    .reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0);
+                const maxAllowed = Math.max(0, Number((100 - otherCategoriesSum).toFixed(2)));
+
+                if (newPercentage > maxAllowed) {
+                    newPercentage = maxAllowed;
+                }
+
                 setAllocations(prev => prev.map(cat => cat.id === id ? { ...cat, percentage: newPercentage } : cat));
             }
         }
@@ -50,16 +59,29 @@ const Allocations = () => {
     };
 
     const handleSliderChange = (id, value) => {
-        const newValue = Number(value);
+        let newValue = Number(value);
+        const otherCategoriesSum = allocations
+            .filter(cat => cat.id !== id)
+            .reduce((acc, cat) => acc + (Number(cat.percentage) || 0), 0);
+        const maxAllowed = Math.max(0, Number((100 - otherCategoriesSum).toFixed(2)));
+
+        if (newValue > maxAllowed) {
+            newValue = maxAllowed;
+        }
+
         setAllocations(prev => prev.map(cat => cat.id === id ? { ...cat, percentage: newValue } : cat));
     };
 
     const handleAddCategory = () => {
+        const currentTotal = allocations.reduce((acc, c) => acc + (Number(c.percentage) || 0), 0);
+        const maxNewPercentage = Math.max(0, Number((100 - currentTotal).toFixed(2)));
+        const defaultPercentage = Math.min(10, maxNewPercentage);
+
         const newColor = COLOR_PALETTE[allocations.length % COLOR_PALETTE.length];
         const newCategory = {
             id: crypto.randomUUID(),
             name: `Category ${allocations.length + 1}`,
-            percentage: 0,
+            percentage: defaultPercentage,
             color: newColor
         };
         setAllocations([...allocations, newCategory]);
@@ -106,9 +128,9 @@ const Allocations = () => {
                                 <div className={`status-badge ${isOverAllocated ? 'danger' : remainingPercentage === 0 ? 'success' : 'warning'}`}>
                                     {isOverAllocated && <AlertCircle size={16} />}
                                     {isOverAllocated ? (
-                                        <span>Over Allocated by {Math.abs(remainingPercentage)}%</span>
+                                        <span>Over Allocated by {Math.abs(remainingPercentage).toFixed(2)}%</span>
                                     ) : (
-                                        <span>{remainingPercentage}% Remaining</span>
+                                        <span>{remainingPercentage.toFixed(2)}% Remaining</span>
                                     )}
                                 </div>
                             </div>

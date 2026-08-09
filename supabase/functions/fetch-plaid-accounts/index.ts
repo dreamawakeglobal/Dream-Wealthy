@@ -55,10 +55,10 @@ serve(async (req) => {
       throw new Error(`Invalid Auth Token. Cannot identify user: ${userError?.message || 'Unknown error'}`);
     }
 
-    // 3. Fetch the linked Plaid items from the database
+    // 3. Fetch the linked Plaid credentials from the isolated table
     const { data: accounts, error: dbError } = await supabaseAdmin
-      .from('accounts')
-      .select('plaid_access_token')
+      .from('plaid_credentials')
+      .select('account_id, plaid_access_token')
       .eq('user_id', user.id);
 
     if (dbError) {
@@ -103,7 +103,7 @@ serve(async (req) => {
                // Push to UPSERT Pipeline
                balancesToUpsert.push({
                    user_id: user.id,
-                   item_id: acc.id, // Using our internal accounts (Item) table UUID
+                   item_id: acc.account_id, // Using our internal accounts (Item) table UUID
                    plaid_account_id: bankObj.account_id,
                    name: bankObj.name,
                    mask: bankObj.mask,

@@ -63,15 +63,28 @@ serve(async (req) => {
         });
         const plaidClient = new PlaidApi(configuration);
 
-        // 4. Fetch the user's connected Plaid accounts from Supabase
+        // 4. Fetch the user's connected Plaid accounts & isolated credentials from Supabase
         const { data: accounts, error: accountError } = await supabaseAdmin
             .from('accounts')
-            .select('*')
-            .eq('user_id', user.id)
-            .not('plaid_access_token', 'is', null);
+            .select('id, user_id, transactions_cursor, plaid_item_id')
+            .eq('user_id', user.id);
 
         if (accountError) throw accountError;
-        if (!accounts || accounts.length === 0) {
+
+        const { data: creds } = await supabaseAdmin
+            .from('plaid_credentials')
+            .select('account_id, plaid_item_id, plaid_access_token')
+            .eq('user_id', user.id);
+
+        const credMap = new Map<string, string>();
+        creds?.forEach((c: any) => {
+            if (c.account_id) credMap.set(c.account_id, c.plaid_access_token);
+            if (c.plaid_item_id) credMap.set(c.plaid_item_id, c.plaid_access_token);
+        });
+
+        const validAccounts = (accounts || []).filter(a => credMap.has(a.id) || credMap.has(a.plaid_item_id));
+
+        if (validAccounts.length === 0) {
             return new Response(JSON.stringify({ success: true, message: 'No connected accounts found.' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
                 status: 200,
@@ -83,8 +96,9 @@ serve(async (req) => {
         let totalRemoved = 0;
 
         // 5. Loop through each item/account and securely execute Transactions Sync!
-        for (const account of accounts) {
-            const accessToken = account.plaid_access_token;
+        for (const account of validAccounts) {
+            const accessToken = credMap.get(account.id) || credMap.get(account.plaid_item_id);
+            if (!accessToken) continue;
             let cursor = account.transactions_cursor || '';
             let hasMore = true;
 

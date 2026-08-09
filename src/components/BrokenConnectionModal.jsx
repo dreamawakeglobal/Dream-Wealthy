@@ -24,7 +24,6 @@ const BrokenConnectionModal = () => {
                 <div className="broken-action-container">
                     <PlaidConnectButton 
                         isUpdateMode={true} 
-                        linkedAccessToken={brokenAccount.plaid_access_token} 
                         brokenAccountId={brokenAccount.id} 
                     />
                 </div>
