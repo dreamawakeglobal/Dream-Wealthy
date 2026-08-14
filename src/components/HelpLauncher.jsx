@@ -24,7 +24,7 @@ export const HelpLauncher = () => {
     const { user } = useAuth();
 
     // Hide support launcher button on waitlist page
-    if (location.pathname === '/' || location.pathname === '/waitlist') {
+    if (location.pathname === '/' || location.pathname === '/waitlist' || location.pathname.endsWith('/index.html')) {
         return null;
     }
     
