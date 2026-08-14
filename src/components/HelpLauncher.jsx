@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
@@ -17,9 +18,15 @@ const QUICK_FAQS = [
 ];
 
 export const HelpLauncher = () => {
+    const location = useLocation();
     const { playPop } = useSound();
     const { theme, expenseBorderColor } = useTheme();
     const { user } = useAuth();
+
+    // Hide support launcher button on waitlist page
+    if (location.pathname === '/' || location.pathname === '/waitlist') {
+        return null;
+    }
     
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('search'); // 'search' | 'ticket'
