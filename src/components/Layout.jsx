@@ -11,6 +11,7 @@ import { NotificationBell } from './NotificationBell';
 import AiAdvisorWidget from './AiAdvisorWidget';
 import BrokenConnectionModal from './BrokenConnectionModal';
 import { AICoachModal } from './dashboard/AICoachModal';
+import { NightSkySparkles } from './NightSkySparkles';
 import './Layout.css';
 
 const Layout = () => {
@@ -40,6 +41,7 @@ const Layout = () => {
     return (
         <div className="app-container">
             <div className="global-bg-image"></div>
+            <NightSkySparkles />
             <Link to="/" className="logo-stamp-link">
                 <img src="/logo-stamp.png" alt="Dream Wealthy Logo Stamp" className="logo-stamp" />
             </Link>
@@ -83,7 +85,7 @@ const Layout = () => {
                     )
                 )}
             </div>
-            <Navigation />
+            {location.pathname !== '/' && <Navigation />}
             <main className={`main-content ${location.pathname === '/' ? 'waitlist-main' : ''}`}>
                 <Suspense fallback={
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', padding: '40px', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
