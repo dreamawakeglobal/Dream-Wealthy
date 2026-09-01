@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import EmojiPicker from 'emoji-picker-react';
+import { motion } from 'framer-motion';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Plus, Trash2, Sparkles, DollarSign, Edit2, Check, X, Target, AlertCircle, Wallet, Smile, CheckCircle2, TrendingUp, RefreshCw, Layers, PieChart, Star, Activity, ArrowRight, Scissors } from 'lucide-react';
 import { Card } from '../components/ui/Card';
@@ -14,9 +15,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GoalsSection } from '../components/dashboard/GoalsSection';
-import { SavingsOptimizationCard } from '../components/SavingsOptimizationCard';
 import './Income.css';
-import { getFilterLabel } from './Expenses';
+import { getFilterLabel } from '../utils/categoryDetector';
 
 const useRecentIncomeMerchants = (transactions) => {
     return useMemo(() => {
@@ -56,7 +56,7 @@ const useRecentIncomeMerchants = (transactions) => {
     }, [transactions]);
 };
 
-const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recentMerchants = [], initialData = null }) => {
+const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recentMerchants = [], initialData = null, showBankSearch = true }) => {
     const [name, setName] = useState(initialData?.name || '');
     const [amount, setAmount] = useState(initialData?.amount || '');
     const [linkedMerchant, setLinkedMerchant] = useState(initialData?.apiId || '');
@@ -91,34 +91,36 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
 
     const content = (
         <form onSubmit={handleSubmit} className="income-form" style={isModal ? { background: 'transparent', padding: '8px 0', border: 'none' } : {}}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                <Input
-                    list="recent-income-merchants"
-                    placeholder="🔗 Search Bank Transactions (Last 60 Days)"
-                    value={linkedMerchant}
-                    onChange={(e) => {
-                        const val = e.target.value;
-                        setLinkedMerchant(val);
-                        if (recentMerchants && recentMerchants.length > 0) {
-                            const match = recentMerchants.find(m => m.merchant === val);
-                            if (match) {
-                                if (!name) setName(match.merchant);
-                                if (!amount) setAmount(Math.round(Math.abs(match.amount)));
+            {showBankSearch && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                    <Input
+                        list="recent-income-merchants"
+                        placeholder="🔗 Search Bank Transactions (Last 60 Days)"
+                        value={linkedMerchant}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            setLinkedMerchant(val);
+                            if (recentMerchants && recentMerchants.length > 0) {
+                                const match = recentMerchants.find(m => m.merchant === val);
+                                if (match) {
+                                    if (!name) setName(match.merchant);
+                                    if (!amount) setAmount(Math.round(Math.abs(match.amount)));
+                                }
                             }
-                        }
-                    }}
-                    style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
-                />
-                {recentMerchants && recentMerchants.length > 0 && (
-                    <datalist id="recent-income-merchants">
-                        {recentMerchants.map(m => (
-                            <option key={m.merchant} value={m.merchant}>
-                                ${Number(m.amount).toFixed(2)}
-                            </option>
-                        ))}
-                    </datalist>
-                )}
-            </div>
+                        }}
+                        style={{ color: theme === 'dark' ? '#ffffff' : 'var(--text-primary)', fontWeight: theme === 'dark' ? 'bold' : 'normal', textShadow: theme === 'dark' && activeColor ? `0 0 8px ${activeColor}` : 'none', marginBottom: 0, border: `2px solid ${activeColor || 'var(--surface-border)'}`, borderRadius: '50px' }}
+                    />
+                    {recentMerchants && recentMerchants.length > 0 && (
+                        <datalist id="recent-income-merchants">
+                            {recentMerchants.map(m => (
+                                <option key={m.merchant} value={m.merchant}>
+                                    ${Number(m.amount).toFixed(2)}
+                                </option>
+                            ))}
+                        </datalist>
+                    )}
+                </div>
+            )}
 
             <div style={{ position: 'relative', display: 'flex', gap: '8px', marginBottom: '16px', alignItems: 'center' }}>
                     <Button 
@@ -201,7 +203,7 @@ const IncomeStreamForm = ({ onAdd, title, className = '', isModal = false, recen
     );
 };
 
-export const getStreamAutoReceivedAmount = (stream, incomeTransactionsByCategory, filteredIncomeTransactions) => {
+const getStreamAutoReceivedAmount = (stream, incomeTransactionsByCategory, filteredIncomeTransactions) => {
     if (stream.apiId && filteredIncomeTransactions && filteredIncomeTransactions.length > 0) {
         const searchTag = stream.apiId.toLowerCase();
         return filteredIncomeTransactions
@@ -348,7 +350,7 @@ const Income = () => {
     const totalExpenses = (totalFixedExpenses || 0) + (totalVariableExpenses || 0);
     const recentIncomeMerchants = useRecentIncomeMerchants(transactions);
     const { expenseBorderColor, theme } = useTheme();
-    const { playPop } = useSound();
+    const { playPop, playKaChing } = useSound();
 
     const activeColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7', white: '#ffffff', black: '#000000',
@@ -385,7 +387,7 @@ const Income = () => {
             if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return false;
 
             return txDate >= cutOffDate;
-        }).map(tx => tx.category || 'Uncategorized'));
+        }).map(tx => tx.category ? tx.category.trim() : 'Uncategorized'));
         
         return ['All', ...cats].sort();
     }, [transactions]);
@@ -412,7 +414,7 @@ const Income = () => {
         });
         
         if (activityCategoryFilter === 'All') return incomeTxs;
-        return incomeTxs.filter(tx => (tx.category || 'Uncategorized') === activityCategoryFilter);
+        return incomeTxs.filter(tx => (tx.category || 'Uncategorized').trim() === activityCategoryFilter);
     }, [transactions, activityCategoryFilter]);
 
     const activityTotalPages = Math.ceil(filteredIncomeTransactions.length / activityItemsPerPage);
@@ -535,9 +537,15 @@ const Income = () => {
                 <AnimateOnScroll delay={0.1}>
                     <Card glass className={`summary-card ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`} style={{ textAlign: 'center' }}>
                         <p className="summary-label" style={{ textAlign: 'center' }}>Current Monthly</p>
-                        <h2 className="summary-value positive">
-                            $<AnimatedNumber value={totalMonthlyIncome} />
-                        </h2>
+                        <motion.h2
+                            initial={{ y: -380, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 160, damping: 15, mass: 0.9, delay: 0.65 }}
+                            className="summary-value positive"
+                            style={{ willChange: 'transform' }}
+                        >
+                            $<AnimatedNumber value={totalMonthlyIncome} duration={1200} startFromZero delay={650} />
+                        </motion.h2>
                         <p className="summary-subtext" style={{ textAlign: 'center' }}>Bi-Monthly: ${totalBiWeeklyIncome.toLocaleString(undefined, { maximumFractionDigits: 0 })}  |  Yearly: ${totalYearlyIncome.toLocaleString()}</p>
                     </Card>
                 </AnimateOnScroll>
@@ -548,9 +556,23 @@ const Income = () => {
                             <Sparkles size={16} className="text-success" />
                             <span>Projected Growth (Current + Future)</span>
                         </div>
-                        <h2 className="summary-value text-success">
-                            $<AnimatedNumber value={totalProjectedMonthly} />
-                        </h2>
+                        <motion.h2
+                            initial={{ y: -380, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 160, damping: 15, mass: 0.9, delay: 0.8 }}
+                            className="summary-value text-success"
+                            style={{ willChange: 'transform' }}
+                        >
+                            $<AnimatedNumber 
+                                value={totalProjectedMonthly} 
+                                duration={1400} 
+                                startFromZero 
+                                delay={800}
+                                onComplete={() => {
+                                    if (playKaChing) playKaChing();
+                                }} 
+                            />
+                        </motion.h2>
                         <p className="summary-subtext" style={{ textAlign: 'center' }}>Monthly target</p>
                     </Card>
                 </AnimateOnScroll>
@@ -659,13 +681,6 @@ const Income = () => {
             <div className="goals-section" style={{ marginTop: '48px' }}>
                 <GoalsSection />
             </div>
-
-            {/* High-Yield Savings Strategy Engine (HYSA) */}
-            <AnimateOnScroll delay={0.15}>
-                <div className="hysa-optimization-section" style={{ marginTop: '48px' }}>
-                    <SavingsOptimizationCard plaidAccounts={plaidAccounts || accounts || []} monthlyExpenses={totalExpenses} />
-                </div>
-            </AnimateOnScroll>
 
             {/* --- Merged Allocations Dashboard --- */}
             <AnimateOnScroll delay={0.1} yOffset={40}>
@@ -837,14 +852,14 @@ const Income = () => {
                                         <p>Allocate funds to see your chart</p>
                                     </div>
                                 ) : (
-                                    <ResponsiveContainer width="100%" height={300}>
+                                    <ResponsiveContainer width="100%" height={190}>
                                         <RechartsPieChart>
                                             <Pie
                                                 data={chartData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={80}
-                                                outerRadius={120}
+                                                innerRadius={55}
+                                                outerRadius={80}
                                                 paddingAngle={5}
                                                 dataKey="value"
                                                 stroke="none"
@@ -942,9 +957,9 @@ const Income = () => {
                     ) : (
                         paginatedIncomeTransactions.map((tx) => (
                             <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
-                                <div className="tx-merchant" style={{ fontWeight: 600 }}>
-                                    {tx.merchant_name || 'Income Source'}
-                                    {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}
+                                <div className="tx-merchant" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span>{tx.merchant_name || tx.name || 'Income Source'}</span>
+                                    {tx.pending && <span className="badge warning-badge" style={{ fontSize: '0.7rem' }}>Pending</span>}
                                 </div>
                                 <div className="tx-date text-muted" style={{ fontSize: '0.85rem' }}>
                                     {new Date(tx.date).toLocaleDateString()}
@@ -956,12 +971,12 @@ const Income = () => {
                                 </div>
                                 <div className="tx-amount text-success" style={{ textAlign: 'right', fontWeight: 'bold' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                        +${Math.abs(tx.amount).toLocaleString()}
+                                        +${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         <button 
                                             onClick={() => setSplittingTransaction(tx)}
                                             className="btn-icon" 
-                                            style={{ opacity: 0.5, padding: '4px' }}
-                                            title="Split Transaction"
+                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.5, color: tx.isSplitChild ? 'var(--success)' : 'inherit', padding: '4px' }}
+                                            title={tx.isSplitChild ? "Edit Split" : "Split Transaction"}
                                         >
                                             <Scissors size={14} />
                                         </button>
@@ -1025,7 +1040,7 @@ const Income = () => {
                         onAdd={(stream) => { addFutureIncome(stream); setIsFutureStreamModalOpen(false); }} 
                         title="" 
                         isModal={true}
-                        recentMerchants={recentIncomeMerchants}
+                        showBankSearch={false}
                     />
                 </div>
             </Modal>

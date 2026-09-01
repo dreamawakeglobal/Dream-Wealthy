@@ -36,20 +36,20 @@ const Onboarding = React.lazy(() => import('./pages/Onboarding'));
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <SoundProvider>
-          <XPProvider>
-            <FinancialProvider>
-              <BrowserRouter>
-                <ScrollToTop />
-                <AudioPlayer />
-                <FloatingNotes />
-                <ThemeToggle />
-                <PointerGlow />
-                <TutorialOverlay />
-                <HelpLauncher />
-                <ErrorBoundary>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <SoundProvider>
+            <XPProvider>
+              <FinancialProvider>
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <AudioPlayer />
+                  <FloatingNotes />
+                  <ThemeToggle />
+                  <PointerGlow />
+                  <TutorialOverlay />
+                  <HelpLauncher />
                   <Routes>
                     <Route path="/" element={<Layout />}>
                       <Route index element={<Waitlist />} />
@@ -69,13 +69,13 @@ function App() {
                     <Route path="/contact" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><Contact /></Suspense>} />
                     <Route path="/faq" element={<Suspense fallback={<div>Loading...</div>}><div className="global-bg-image"></div><FAQ /></Suspense>} />
                   </Routes>
-                </ErrorBoundary>
-              </BrowserRouter>
-            </FinancialProvider>
-          </XPProvider>
-        </SoundProvider>
-      </AuthProvider>
-    </ThemeProvider>
+                </BrowserRouter>
+              </FinancialProvider>
+            </XPProvider>
+          </SoundProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 

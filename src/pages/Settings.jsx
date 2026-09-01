@@ -8,11 +8,13 @@ import { useStore } from '../store';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
-import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText } from 'lucide-react';
+import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText, Trash2 } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GamificationCard } from '../components/GamificationCard';
 import { InAppBillingManager } from '../components/InAppBillingManager';
+import { InlineError } from '../components/ui/InlineError';
+import { Modal } from '../components/ui/Modal';
 import './Settings.css';
 
 const Settings = () => {
@@ -29,16 +31,20 @@ const Settings = () => {
     const [email] = useState(user?.email || '');
     const [profileUpdating, setProfileUpdating] = useState(false);
     const [profileMessage, setProfileMessage] = useState({ type: '', text: '' });
+    const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [bankError, setBankError] = useState('');
+    const [billingError, setBillingError] = useState('');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+    const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+    const [deleteError, setDeleteError] = useState('');
+    const fileInputRef = useRef(null);
 
     // State for AI Advisor Persona
     const [activePersona, setActivePersona] = useState(user?.user_metadata?.advisor_persona || 'wealth_manager');
     const [_personaUpdating, setPersonaUpdating] = useState(false);
     const [personaMessage, setPersonaMessage] = useState({ type: '', text: '' });
-
-    const [avatarUrl, setAvatarUrl] = useState(user?.user_metadata?.avatar_url || '');
-    const [uploadingAvatar, setUploadingAvatar] = useState(false);
-    const fileInputRef = useRef(null);
-
     // State for Password Change
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -147,6 +153,7 @@ const Settings = () => {
 
     const handleDisconnectBank = async (accountId) => {
         if(playPop) playPop();
+        setBankError('');
         const confirmDisconnect = window.confirm("Are you sure you want to disconnect this bank account? All loaded transactions will be purged from your dashboard.");
         if (!confirmDisconnect) return;
         
@@ -163,7 +170,7 @@ const Settings = () => {
             // Optional: You could also hit an Edge Function here to call plaidClient.itemRemove() 
             // to permanently sever the Plaid API connection and halt billing.
         } catch (err) {
-            alert(`Error disconnecting bank: ${err.message}`);
+            setBankError(`Error disconnecting bank: ${err.message}`);
         }
     };
 
@@ -172,6 +179,7 @@ const Settings = () => {
     const handleManageBilling = async () => {
         if (playPop) playPop();
         setPortalLoading(true);
+        setBillingError('');
         try {
             const { data: { session } } = await supabase.auth.getSession();
             const token = session?.access_token;
@@ -188,12 +196,41 @@ const Settings = () => {
             if (data?.url) {
                 window.location.href = data.url;
             } else {
-                alert(data?.error || 'Unable to open billing portal. Please try again.');
+                setBillingError(data?.error || 'Unable to open billing portal. Please try again.');
             }
         } catch (err) {
-            alert(`Error opening billing portal: ${err.message}`);
+            setBillingError(`Error opening billing portal: ${err.message}`);
         } finally {
             setPortalLoading(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText.trim() !== 'DELETE') {
+            setDeleteError('Please type DELETE in all uppercase to confirm.');
+            return;
+        }
+        setIsDeletingAccount(true);
+        setDeleteError('');
+        try {
+            if (user?.id) {
+                await supabase.from('income_streams').delete().eq('user_id', user.id);
+                await supabase.from('expenses').delete().eq('user_id', user.id);
+                await supabase.from('allocations').delete().eq('user_id', user.id);
+                await supabase.from('debts').delete().eq('user_id', user.id);
+                await supabase.from('tracked_debts').delete().eq('user_id', user.id);
+                await supabase.from('goals').delete().eq('user_id', user.id);
+                await supabase.from('portfolios').delete().eq('user_id', user.id);
+                await supabase.from('accounts').delete().eq('user_id', user.id);
+                await supabase.from('profiles').delete().eq('user_id', user.id);
+            }
+            await supabase.auth.signOut();
+            localStorage.clear();
+            sessionStorage.clear();
+            navigate('/');
+        } catch (err) {
+            setDeleteError(`Error deleting account: ${err.message}`);
+            setIsDeletingAccount(false);
         }
     };
 
@@ -423,6 +460,8 @@ const Settings = () => {
                             <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
                                 Connect your bank securely via Plaid to automate your budgeting and track expenses in real-time. We never store your credentials.
                             </p>
+
+                            <InlineError message={bankError} />
                             
                             {accounts.length > 0 && (
                                 <div className="connected-accounts-list" style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -509,6 +548,24 @@ const Settings = () => {
                                     {passwordUpdating ? 'Updating...' : <><Lock size={16} /> Update Password</>}
                                 </Button>
                             </form>
+
+                            {/* Danger Zone: Account Deletion */}
+                            <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid var(--surface-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', color: 'var(--danger)' }}>
+                                    <AlertTriangle size={18} />
+                                    <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--danger)' }}>Danger Zone</h3>
+                                </div>
+                                <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '16px' }}>
+                                    Permanently delete your account and purge all linked bank accounts, transactions, income streams, and saved debt models. This action cannot be undone.
+                                </p>
+                                <Button 
+                                    variant="secondary" 
+                                    onClick={() => { if(playPop) playPop(); setShowDeleteModal(true); setDeleteError(''); setDeleteConfirmText(''); }}
+                                    style={{ color: 'var(--danger)', borderColor: 'var(--danger)', background: 'rgba(239, 68, 68, 0.08)' }}
+                                >
+                                    <Trash2 size={16} /> Delete Account & Purge Data
+                                </Button>
+                            </div>
                         </div>
                     </AnimateOnScroll>
                 )}
@@ -601,6 +658,43 @@ const Settings = () => {
                 )}
                 </div>
             </Card>
+
+            <Modal
+                isOpen={showDeleteModal}
+                onClose={() => setShowDeleteModal(false)}
+                title="Delete Account & Purge Data"
+                containerStyle={{ maxWidth: '460px' }}
+            >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '8px 4px' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5', color: 'var(--text-secondary)' }}>
+                        This will permanently delete your account, authentication credentials, linked bank connections, and all recorded financial records from Dream Wealthy.
+                    </p>
+                    <p style={{ margin: 0, fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--danger)' }}>
+                        Type <span style={{ textDecoration: 'underline' }}>DELETE</span> below to confirm:
+                    </p>
+                    <Input 
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        placeholder="DELETE"
+                        autoFocus
+                    />
+                    <InlineError message={deleteError} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '8px' }}>
+                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="primary" 
+                            onClick={handleDeleteAccount}
+                            loading={isDeletingAccount}
+                            disabled={deleteConfirmText.trim() !== 'DELETE'}
+                            style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                        >
+                            Purge All Data
+                        </Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

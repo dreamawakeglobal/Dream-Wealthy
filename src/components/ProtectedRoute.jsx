@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
     const { user, hasCompletedOnboarding } = useAuth();
 
+    const isBetaWhitelistEnabled = import.meta.env.VITE_ENABLE_BETA_WHITELIST === 'true';
     const ALLOWED_EMAILS = [
         'w.shamerer@gmail.com'.toLowerCase(),
         'tariq.west2496@gmail.com'.toLowerCase(),
@@ -16,7 +17,7 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
         'artisaangel@gmail.com'.toLowerCase(),
         'keltonreed16@gmail.com'.trim().toLowerCase(),
         'boniernick01@gmail.com'.toLowerCase()
-    ]; // We can add more here if needed later
+    ];
 
     const userEmail = user?.email?.trim().toLowerCase() || '';
 
@@ -25,8 +26,8 @@ export const ProtectedRoute = ({ children, requireOnboarding = true }) => {
         return <Navigate to="/signup" replace />;
     }
 
-    // If user is logged in, but not on the whitelist API
-    if (user && !ALLOWED_EMAILS.includes(userEmail)) {
+    // If beta whitelist mode is explicitly enabled, verify user is on the approved list
+    if (isBetaWhitelistEnabled && !ALLOWED_EMAILS.includes(userEmail)) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px', textAlign: 'center', marginTop: '100px' }}>
                 <h2 style={{ fontSize: '2rem', color: 'var(--text-primary)', marginBottom: '16px' }}>Beta Access Restricted</h2>

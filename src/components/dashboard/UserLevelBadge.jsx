@@ -156,7 +156,7 @@ export const UserLevelBadge = () => {
                         
                         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: '48px' }}>
                             <h1 className="networth-massive-value">
-                                ${networth.toLocaleString(undefined, {maximumFractionDigits:0})}
+                                {networth < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(networth)} duration={1200} startFromZero />
                             </h1>
                             
                             {dailyQuote && (() => {
@@ -188,12 +188,12 @@ export const UserLevelBadge = () => {
                         <div className="networth-breakdown-bar glass">
                             <div className="breakdown-item">
                                 <span className="breakdown-label">Gross Assets</span>
-                                <span className="breakdown-value asset-text">${totalAssets.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
+                                <span className="breakdown-value asset-text">$<AnimatedNumber value={totalAssets} duration={1200} startFromZero /></span>
                             </div>
                             <div className="breakdown-divider" />
                             <div className="breakdown-item">
                                 <span className="breakdown-label">Total Liabilities</span>
-                                <span className="breakdown-value liability-text">${totalLiabilities.toLocaleString(undefined, {maximumFractionDigits:0})}</span>
+                                <span className="breakdown-value liability-text">$<AnimatedNumber value={totalLiabilities} duration={1200} startFromZero /></span>
                             </div>
 
                             {/* Live Sync Array */}

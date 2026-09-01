@@ -20,7 +20,7 @@ serve(async (req) => {
             throw new Error('Invalid webhook payload');
         }
 
-        const resendApiKey = Deno.env.get('RESEND_API_KEY') || 're_hbyP6YZH_B67xHfbpGFkLJB1YeD9FyvTP';
+        const resendApiKey = Deno.env.get('RESEND_API_KEY');
         const adminEmail = Deno.env.get('ADMIN_CONTACT_EMAIL') || 'dreamawakeglobal@gmail.com';
 
         if (!resendApiKey) {

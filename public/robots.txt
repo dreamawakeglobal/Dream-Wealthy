@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /faq
+Allow: /contact
+Disallow: /dashboard
+Disallow: /income
+Disallow: /expenses
+Disallow: /projections
+Disallow: /investments
+Disallow: /settings
+Disallow: /checkout
+Disallow: /onboarding
+
+Sitemap: https://dreamwealthyco.com/sitemap.xml

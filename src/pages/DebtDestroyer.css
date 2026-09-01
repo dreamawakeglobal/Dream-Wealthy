@@ -184,14 +184,16 @@
 
 .glowing-danger {
     font-size: 3rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--danger);
     text-shadow: 0 0 30px var(--danger-glow);
     line-height: 1;
+    letter-spacing: -1px;
 }
 
 .text-warning {
     font-size: 2.5rem;
-    font-weight: 600;
+    font-weight: 800;
     color: #ff9f0a;
+    letter-spacing: -0.5px;
 }

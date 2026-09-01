@@ -79,3 +79,42 @@
         font-size: 1.25rem;
     }
 }
+
+/* Explicit Light Mode Rules */
+[data-theme='light'] .legal-header h1,
+body.light-theme .legal-header h1 {
+    color: #000000;
+}
+
+[data-theme='light'] .legal-header p,
+body.light-theme .legal-header p {
+    color: #000000;
+}
+
+[data-theme='light'] .legal-card,
+body.light-theme .legal-card {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    color: #000000;
+}
+
+[data-theme='light'] .legal-card *,
+body.light-theme .legal-card * {
+    color: #000000;
+}
+
+[data-theme='light'] .legal-section h2,
+body.light-theme .legal-section h2 {
+    color: #000000;
+}
+
+[data-theme='light'] .legal-section p,
+body.light-theme .legal-section p,
+[data-theme='light'] .legal-section ul,
+body.light-theme .legal-section ul,
+[data-theme='light'] .legal-section li,
+body.light-theme .legal-section li,
+[data-theme='light'] .legal-section strong,
+body.light-theme .legal-section strong {
+    color: #000000;
+}

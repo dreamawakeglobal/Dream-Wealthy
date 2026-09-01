@@ -1,38 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 export const AnimatedNumber = ({
     value,
-    format = (val) => val.toLocaleString(),
+    format = (val) => Math.round(val).toLocaleString(),
     className = '',
-    duration = 1000
+    duration = 1200,
+    startFromZero = true,
+    delay = 0,
+    onComplete
 }) => {
     const [displayValue, setDisplayValue] = useState(0);
+    const hasMountedRef = useRef(false);
+    const onCompleteRef = useRef(onComplete);
+    onCompleteRef.current = onComplete;
 
     useEffect(() => {
-        let startTime;
-        let startValue = displayValue;
-        let endValue = value;
+        let animationFrameId;
+        let timeoutId;
+        let startTime = null;
+        const targetValue = typeof value === 'number' ? value : Number(value) || 0;
+        const startValue = !hasMountedRef.current && startFromZero ? 0 : displayValue;
+        hasMountedRef.current = true;
 
-        const step = (timestamp) => {
-            if (!startTime) startTime = timestamp;
-            const progress = Math.min((timestamp - startTime) / duration, 1);
+        if (startValue === targetValue && targetValue !== 0) {
+            setDisplayValue(targetValue);
+            return;
+        }
 
-            // Easing function (easeOutExpo)
-            const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+        const runAnimation = () => {
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
 
-            const currentVal = startValue + (endValue - startValue) * easeProgress;
-            setDisplayValue(currentVal);
+                // Easing function (easeOutExpo)
+                const easeProgress = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+                const currentVal = startValue + (targetValue - startValue) * easeProgress;
 
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                setDisplayValue(endValue);
-            }
+                setDisplayValue(currentVal);
+
+                if (progress < 1) {
+                    animationFrameId = window.requestAnimationFrame(step);
+                } else {
+                    setDisplayValue(targetValue);
+                    if (onCompleteRef.current && targetValue > 0) {
+                        onCompleteRef.current();
+                    }
+                }
+            };
+            animationFrameId = window.requestAnimationFrame(step);
         };
 
-        window.requestAnimationFrame(step);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value, duration]);
+        if (delay > 0) {
+            timeoutId = setTimeout(runAnimation, delay);
+        } else {
+            runAnimation();
+        }
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            if (animationFrameId) {
+                window.cancelAnimationFrame(animationFrameId);
+            }
+        };
+    }, [value, duration, delay]);
 
     return (
         <span className={className}>
@@ -40,3 +70,4 @@ export const AnimatedNumber = ({
         </span>
     );
 };
+

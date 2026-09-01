@@ -27,6 +27,41 @@
     filter: brightness(1.05);
 }
 
+.dream-btn:active:not(:disabled) {
+    transform: scale(0.96) translateY(1px) !important;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+    filter: brightness(0.95);
+    transition: transform 0.08s ease-out, box-shadow 0.08s ease-out !important;
+}
+
+.dream-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    filter: grayscale(0.2);
+}
+
+.dream-btn.is-loading {
+    cursor: wait !important;
+    opacity: 0.85;
+    pointer-events: none;
+}
+
+.btn-spinner {
+    animation: btn-spin 0.8s linear infinite;
+    margin-right: 6px;
+    display: inline-block;
+}
+
+@keyframes btn-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .btn-secondary {
     background: var(--surface);
     backdrop-filter: blur(16px);

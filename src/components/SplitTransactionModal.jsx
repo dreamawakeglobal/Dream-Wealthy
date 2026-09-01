@@ -7,7 +7,7 @@ import { CurrencyInput } from './ui/CurrencyInput';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { useStore } from '../store';
-import { getFilterLabel } from '../pages/Expenses';
+import { getFilterLabel, detectPseudoCategory } from '../utils/categoryDetector';
 
 export const SplitTransactionModal = ({ tx, onClose, uniqueCategories }) => {
     const { expenseBorderColor, theme } = useTheme();
@@ -23,13 +23,13 @@ export const SplitTransactionModal = ({ tx, onClose, uniqueCategories }) => {
     useEffect(() => {
         if (tx && originalTargetId) {
             // Check if already split
-            const existing = profileData.transactionSplits?.find(s => s.originalTxId === originalTargetId);
+            const existing = profileData.transactionSplits?.find(s => String(s.originalTxId) === String(originalTargetId));
             if (existing) {
                 // Ensure categories are trimmed so they match the dropdown
                 setSplits(existing.splits.map(s => ({ ...s, category: s.category ? s.category.trim() : 'Uncategorized' })));
             } else {
                 setSplits([
-                    { id: crypto.randomUUID(), amount: Math.abs(tx.amount || 0).toString(), category: (tx.category || 'Uncategorized').trim(), merchant: tx.merchant_name || tx.name || 'Merchant' },
+                    { id: crypto.randomUUID(), amount: Math.abs(tx.amount || 0).toString(), category: detectPseudoCategory(tx), merchant: tx.merchant_name || tx.name || 'Merchant' },
                     { id: crypto.randomUUID(), amount: '0', category: 'Uncategorized', merchant: tx.merchant_name || tx.name || 'Merchant' }
                 ]);
             }
@@ -55,7 +55,7 @@ export const SplitTransactionModal = ({ tx, onClose, uniqueCategories }) => {
         if (playCheck) playCheck();
 
         const newSplitsArray = [...(profileData.transactionSplits || [])];
-        const existingIdx = newSplitsArray.findIndex(s => s.originalTxId === originalTargetId);
+        const existingIdx = newSplitsArray.findIndex(s => String(s.originalTxId) === String(originalTargetId));
         
         // Plaid uses positive amounts for expenses, negative for income.
         // If it's a split child, we need to read the original parent's sign.
@@ -63,8 +63,13 @@ export const SplitTransactionModal = ({ tx, onClose, uniqueCategories }) => {
         const sign = parentAmount < 0 ? -1 : 1; 
 
         const payload = {
-            originalTxId: originalTargetId,
-            splits: splits.map(s => ({ ...s, amount: Number(s.amount) * sign, category: s.category }))
+            originalTxId: String(originalTargetId),
+            splits: splits.map(s => ({ 
+                ...s, 
+                amount: Number(s.amount) * sign, 
+                category: s.category, 
+                merchant: s.merchant || tx.merchant_name || tx.name 
+            }))
         };
 
         if (existingIdx !== -1) {
@@ -78,7 +83,7 @@ export const SplitTransactionModal = ({ tx, onClose, uniqueCategories }) => {
     };
 
     const handleRemoveSplit = () => {
-        const newSplitsArray = [...(profileData.transactionSplits || [])].filter(s => s.originalTxId !== originalTargetId);
+        const newSplitsArray = [...(profileData.transactionSplits || [])].filter(s => String(s.originalTxId) !== String(originalTargetId));
         setTransactionSplits(newSplitsArray);
         if (playCheck) playCheck();
         onClose();

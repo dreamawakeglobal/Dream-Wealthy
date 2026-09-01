@@ -63,6 +63,16 @@ serve(async (req: Request) => {
         const weekNumber = Math.floor((diff / 86400000 + start.getDay() + 1) / 7);
         const segmentFocus = weekNumber % 4; // 0, 1, 2, or 3
 
+        const profile = payload.profile || dbProfile || {};
+        const bankBalances = plaidList;
+        const portfolio = payload.portfolio || [];
+        const fixedExpenses = expensesList;
+        const trackerContext = payload.trackerContext || {};
+        const subscriptions = payload.subscriptions || [];
+        const debts = payload.debts || [];
+        const trackedDebts = payload.trackedDebts || [];
+        const transactions = payload.transactions || [];
+
         let systemPrompt = `You are Wealthy Insights, an elite native AI Agent for the 'Dream Wealthy' app.
 
 Your strict instructions:
@@ -79,7 +89,7 @@ Your strict instructions:
   }
 }
 
-Name: ${profile?.firstName || 'User'}
+Name: ${profile?.firstName || profile?.first_name || 'User'}
 Total Monthly Income: $${realMonthlyIncome}
 Top Priority Goal: ${activeGoal}
 `;
@@ -87,14 +97,14 @@ Top Priority Goal: ${activeGoal}
         if (bankBalances && bankBalances.length > 0) {
             systemPrompt += `\n--- LIVE BANK BALANCES ---\n`;
             bankBalances.forEach((b: any) => {
-                systemPrompt += `- ${b.name}: $${b.currentBalance}\n`;
+                systemPrompt += `- ${b.name || b.plaid_account_id}: $${b.currentBalance || b.current_balance || 0}\n`;
             });
         }
 
         if (portfolio && portfolio.length > 0) {
             systemPrompt += `\n--- STOCK PORTFOLIO ---\n`;
             portfolio.forEach((p: any) => {
-                systemPrompt += `- ${p.ticker}: $${p.totalValue} (${p.quantity} shares)\n`;
+                systemPrompt += `- ${p.ticker || p.symbol || 'Asset'}: $${p.totalValue || p.price || 0} (${p.quantity || 0} shares)\n`;
             });
         }
 
@@ -118,7 +128,7 @@ Top Priority Goal: ${activeGoal}
             if (subscriptions && subscriptions.length > 0) {
                 systemPrompt += `\n--- KNOWN TRACKED SUBSCRIPTIONS ---\n`;
                 subscriptions.forEach((s: any) => {
-                    systemPrompt += `- ${s.name} at $${s.cost} / ${s.billingCycle}\n`;
+                    systemPrompt += `- ${s.name} at $${s.cost} / ${s.billingCycle || s.billing_cycle || 'month'}\n`;
                 });
             }
         } else if (segmentFocus === 3) {
@@ -127,7 +137,7 @@ Top Priority Goal: ${activeGoal}
             if (debts?.length > 0 || trackedDebts?.length > 0) {
                 systemPrompt += `\n--- ACTIVE DEBTS ---\n`;
                 (debts || []).forEach((d: any) => systemPrompt += `- [PLAID] ${d.name} | Bal: $${d.balance} | Limit: $${d.limit} | APR: ${d.apr}%\n`);
-                (trackedDebts || []).forEach((d: any) => systemPrompt += `- [MANUAL] ${d.debtName} | Bal: $${d.remainingBalance} | APR: ${d.interestRate}% | Min: $${d.minimumPayment}\n`);
+                (trackedDebts || []).forEach((d: any) => systemPrompt += `- [MANUAL] ${d.debtName || d.debt_name} | Bal: $${d.remainingBalance || d.remaining_balance} | APR: ${d.interestRate || d.interest_rate}% | Min: $${d.minimumPayment || d.minimum_payment}\n`);
             }
         }
 
@@ -136,7 +146,7 @@ Top Priority Goal: ${activeGoal}
             transactions.forEach((tx: any) => {
                 const amount = Number(tx.amount || 0);
                 const signStr = amount < 0 ? `+$${Math.abs(amount).toFixed(2)}` : `$${amount.toFixed(2)}`;
-                systemPrompt += `- [${tx.date}] ${tx.merchantName || 'Unknown'} | ${signStr} | Cat: ${tx.categoryString}\n`;
+                systemPrompt += `- [${tx.date}] ${tx.merchantName || tx.merchant_name || tx.name || 'Unknown'} | ${signStr} | Cat: ${tx.categoryString || tx.category || 'Uncategorized'}\n`;
             });
         }
 

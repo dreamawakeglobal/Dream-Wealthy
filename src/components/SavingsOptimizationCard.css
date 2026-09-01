@@ -43,7 +43,7 @@
 
 .savings-subheading {
     font-size: 0.85rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     margin: 2px 0 0 0;
 }
 
@@ -61,7 +61,7 @@
     font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-weight: 600;
 }
 
@@ -79,7 +79,7 @@
 }
 
 .savings-metric-box {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface);
     border: 1px solid var(--surface-border);
     border-radius: 14px;
     padding: 14px 16px;
@@ -95,7 +95,7 @@
 
 .savings-metric-label {
     font-size: 0.78rem;
-    color: #cbd5e1;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-weight: 600;

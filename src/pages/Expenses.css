@@ -18,8 +18,8 @@
 }
 
 .metric-title {
-    color: #000000;
-    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -31,8 +31,9 @@
 
 .metric-box .metric-value {
     font-size: 2.5rem;
-    font-weight: 700;
+    font-weight: 800;
     line-height: 1.2;
+    letter-spacing: -0.5px;
     margin-bottom: 8px;
 }
 
@@ -237,9 +238,9 @@
 }
 
 .payment-circle-month {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
 }
 

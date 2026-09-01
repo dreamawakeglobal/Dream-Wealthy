@@ -4,70 +4,11 @@ import { useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
 import { supabase } from './supabaseClient';
 import { detectSubscriptions } from './utils/subscriptionDetector';
-import { detectPseudoCategory } from './utils/categoryDetector';
+import { detectPseudoCategory, mapUserExpenseToPlaidCategory } from './utils/categoryDetector';
 
 const FinancialContext = createContext();
 
 export const useFinancialContext = () => useContext(FinancialContext);
-
-// --- INTELLIGENT NLP SEMANTIC MAPPER ---
-// Mathematically routes generic human concepts ("Gas", "Uber", "Groceries") into rigid Plaid API taxonomies!
-export const mapUserExpenseToPlaidCategory = (name) => {
-    if (!name) return 'Uncategorized';
-    const n = name.toLowerCase();
-
-    // Isolated Pseudo-Categories specifically preventing Sub-Category bleeding!
-    if (n === 'gas' || n === 'gas station' || n === 'fuel' || n === 'petrol') {
-        return 'PSEUDO_GAS';
-    }
-    if (n === 'uber' || n === 'lyft' || n === 'ride share' || n === 'rideshare' || n === 'taxi') {
-        return 'PSEUDO_RIDE_SHARE';
-    }
-    if (n === 'groceries' || n === 'grocery' || n === 'supermarket') {
-        return 'PSEUDO_GROCERIES';
-    }
-    if (n.includes('hygiene') || n.includes('household') || n.includes('supplies') || n.includes('toiletr') || n.includes('cleaning')) {
-        return 'PSEUDO_HYGIENE_HOUSEHOLD';
-    }
-    if (n.includes('subscription') || n.includes('streaming') || n.includes('membership')) {
-        return 'PSEUDO_SUBSCRIPTIONS';
-    }
-
-    // Food & Dining (Excluding Groceries!)
-    if (n.includes('food') || n.includes('din') || n.includes('restaurant') || n.includes('coffee') || n.includes('snack') || n.includes('drink')) {
-        return 'FOOD_AND_DRINK';
-    }
-    // Transit & General Travel (Excluding Gas & Ride Shifts)
-    if (n.includes('transit') || n.includes('car') || n.includes('auto') || n.includes('transport') || n.includes('flight') || n.includes('travel') || n.includes('train') || n.includes('bus')) {
-        return 'TRANSPORTATION';
-    }
-    // Shopping & Retail
-    if (n.includes('shop') || n.includes('amazon') || n.includes('cloth') || n.includes('retail') || n.includes('merch') || n.includes('supplies')) {
-        return 'GENERAL_MERCHANDISE';
-    }
-    // Entertainment
-    if (n.includes('fun') || n.includes('movie') || n.includes('concert') || n.includes('game') || n.includes('entertain') || n.includes('event')) {
-        return 'ENTERTAINMENT';
-    }
-    // Personal Care
-    if (n.includes('care') || n.includes('hair') || n.includes('salon') || n.includes('spa') || n.includes('health') || n.includes('gym')) {
-        return 'PERSONAL_CARE';
-    }
-    // Home Improvement
-    if (n.includes('home') || n.includes('house') || n.includes('hardware') || n.includes('furniture') || n.includes('repair')) {
-        return 'HOME_IMPROVEMENT';
-    }
-    // Utilities & Bills
-    if (n.includes('util') || n.includes('bill') || n.includes('electric') || n.includes('water') || n.includes('rent') || n.includes('internet')) {
-        return 'RENT_AND_UTILITIES';
-    }
-    // Bank Fees
-    if (n.includes('fee') || n.includes('bank') || n.includes('charge')) {
-        return 'BANK_FEES';
-    }
-
-    return name; // If no AI match, fallback specifically to the user's explicit exact string!
-};
 
 export const FinancialProvider = ({ children }) => {
     const { user } = useAuth();
@@ -130,7 +71,6 @@ export const FinancialProvider = ({ children }) => {
                     if (!resTx.ok) {
                         const errorMsg = typeof txData === 'object' ? (txData.error || JSON.stringify(txData)) : txData;
                         console.error("SUPABASE EDGE NODE ERROR PING:", errorMsg);
-                        alert(`CRITICAL EDGE CRASH: ${errorMsg}`);
                         resolve(false);
                         return;
                     }
@@ -201,32 +141,34 @@ export const FinancialProvider = ({ children }) => {
     }, [store.variableExpenses]);
 
     const processedTransactions = useMemo(() => {
-        if (!store.transactions) return [];
-        let txs = [...store.transactions];
+        const rawTxs = store.transactions || [];
+        if (rawTxs.length === 0) return [];
+        let txs = [...rawTxs];
         const splits = store.profileData?.transactionSplits || [];
         
         for (let splitConfig of splits) {
             const idx = txs.findIndex(t => String(t.id) === String(splitConfig.originalTxId));
             if (idx !== -1) {
                 const originalTx = txs[idx];
-                txs.splice(idx, 1); // Remove original
-                splitConfig.splits.forEach(s => {
+                txs.splice(idx, 1); // Replace original row with split rows
+                (splitConfig.splits || []).forEach((s, sIdx) => {
                     txs.push({
                         ...originalTx,
-                        id: s.id, 
+                        id: s.id || (sIdx === 0 ? originalTx.id : `${originalTx.id}_split_${sIdx}`), 
                         amount: Number(s.amount), 
-                        category: (s.category || originalTx.category).trim() + ' ', // Trailing space forces isManual true!
-                        merchant_name: s.merchant || originalTx.merchant_name,
-                        name: s.merchant || originalTx.name,
+                        category: (s.category || originalTx.category || 'Uncategorized').trim() + ' ', // Trailing space forces isManual true!
+                        merchant_name: s.merchant || originalTx.merchant_name || originalTx.name || 'Merchant',
+                        name: s.merchant || originalTx.name || originalTx.merchant_name || 'Merchant',
                         isSplitChild: true,
+                        splitIndex: sIdx,
                         originalTxId: originalTx.id,
                         originalAmount: originalTx.amount
                     });
                 });
             }
         }
-        return txs.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }, [store.transactions, store.profileData.transactionSplits]);
+        return txs.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    }, [store.transactions, store.profileData?.transactionSplits]);
 
     // --- RULES ENGINE: Auto-Categorize Plaid Transactions strictly within the Current Month ---
     const transactionsByCategory = useMemo(() => {
@@ -445,7 +387,7 @@ export const FinancialProvider = ({ children }) => {
 
         // Derived state
         totalMonthlyIncome,
-        totalBiMonthlyIncome: (totalMonthlyIncome * 12) / 26,
+        totalBiMonthlyIncome: (totalMonthlyIncome * 12) / 24,
         totalFixedExpenses,
         totalVariableExpenses,
         totalSubscriptionCost,

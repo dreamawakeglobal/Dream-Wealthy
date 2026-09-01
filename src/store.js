@@ -182,7 +182,7 @@ export const useStore = create((set, get) => ({
             });
 
             if (transactionsRes.error) {
-                alert("SUPABASE RLS SYSTEM ERROR: " + JSON.stringify(transactionsRes.error));
+                console.error("SUPABASE TRANSACTIONS FETCH ERROR:", transactionsRes.error);
             }
 
             // --- DATABASE CACHE WARMER ---

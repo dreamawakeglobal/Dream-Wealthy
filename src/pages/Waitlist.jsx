@@ -7,7 +7,8 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { supabase } from '../supabaseClient';
-import './Home.css'; // Re-use the existing Home styles for the hero section
+import { motion, useAnimation } from 'framer-motion';
+import './Home.css';
 import './Waitlist.css';
 
 const Waitlist = () => {
@@ -15,8 +16,8 @@ const Waitlist = () => {
     const { playPop } = useSound();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const videoRef = useRef(null);
-
-
+    const controls = useAnimation();
+    const hasExitedRef = useRef(false);
 
     // Waitlist Form State
     const [showForm, setShowForm] = useState(false);
@@ -29,7 +30,6 @@ const Waitlist = () => {
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 0.65;
-            // Force play for some mobile browsers that ignore autoPlay attribute
             videoRef.current.play().catch(() => {});
         }
     }, []);
@@ -45,14 +45,49 @@ const Waitlist = () => {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    // Prevent scrolling on Waitlist page on desktop only via CSS
+    // Directional Hero Action Box Animation (slides off to RIGHT, returns from LEFT)
     useEffect(() => {
-        if (user) return;
-        document.body.classList.add('waitlist-body-lock');
-        return () => {
-            document.body.classList.remove('waitlist-body-lock');
+        const initialScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (initialScrollY > 15) {
+            hasExitedRef.current = true;
+            controls.set({ x: -1000, opacity: 0, scale: 0.9 });
+        }
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            const scrolled = currentScrollY > 15;
+
+            if (scrolled && !hasExitedRef.current) {
+                hasExitedRef.current = true;
+                // 1. Slide off to the RIGHT
+                controls.start({
+                    x: 1000,
+                    opacity: 0,
+                    scale: 0.9,
+                    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+                }).then(() => {
+                    // 2. Reposition off-screen on the LEFT while hidden
+                    controls.set({ x: -1000, scale: 0.9 });
+                });
+            } else if (!scrolled && hasExitedRef.current) {
+                hasExitedRef.current = false;
+                // 3. Slide back in from the LEFT into center
+                controls.start({
+                    x: 0,
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
+                });
+            }
         };
-    }, [user]);
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('scroll', handleScroll);
+        };
+    }, [controls]);
 
     // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
     if (user) {
@@ -122,7 +157,15 @@ const Waitlist = () => {
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <div className="fade-in-up" style={{ width: '100%', maxWidth: '480px', margin: '0 auto' }}>
+                    <motion.div
+                        initial={{ x: 0, opacity: 1, scale: 1 }}
+                        animate={controls}
+                        style={{
+                            width: '100%',
+                            maxWidth: '480px',
+                            margin: '0 auto'
+                        }}
+                    >
                         <Card glass className="hero-box waitlist-hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%' }}>
                             <h2 style={{ fontSize: '2rem', textAlign: 'center', margin: 0 }}>Gain Early Access</h2>
                             <p className="text-muted" style={{ textAlign: 'center', fontSize: '1rem', marginTop: '-12px' }}>
@@ -163,7 +206,7 @@ const Waitlist = () => {
                                         value={referral}
                                         onChange={(e) => setReferral(e.target.value)}
                                         style={{
-                                            padding: '12px 16px',
+                                             padding: '12px 16px',
                                             borderRadius: '12px',
                                             border: '1px solid var(--surface-border)',
                                             background: 'rgba(255,255,255,0.8)',
@@ -201,7 +244,7 @@ const Waitlist = () => {
                             By joining, you agree to our <a href="/terms" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Terms</a> & <a href="/privacy" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Privacy Policy</a>.
                         </div>
                     </Card>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
         </div>

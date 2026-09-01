@@ -2,19 +2,19 @@
 
 :root,
 [data-theme='light'] {
-  /* Sky / Cloud Theme */
+  /* Sky / Cloud Theme - Crystal Clear Optical Glass */
   --bg-color: #e0f2fe;
   --bg-gradient: linear-gradient(to bottom, #87CEEB 0%, #e0f2fe 100%);
-  --surface: rgba(255, 255, 255, 0.15);
-  --surface-hover: rgba(255, 255, 255, 0.25);
-  --surface-border: rgba(255, 255, 255, 0.3);
-  --shadow-light: 0 8px 32px rgba(135, 206, 235, 0.15);
-  --shadow-float: 0 12px 48px rgba(135, 206, 235, 0.25);
+  --surface: rgba(255, 255, 255, 0.18);
+  --surface-hover: rgba(255, 255, 255, 0.28);
+  --surface-border: rgba(255, 255, 255, 0.50);
+  --shadow-light: 0 8px 32px rgba(15, 23, 42, 0.06), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  --shadow-float: 0 16px 48px rgba(15, 23, 42, 0.10), inset 0 1px 1px rgba(255, 255, 255, 0.7);
 
-  --text-primary: #1E293B;
-  /* Soft slate dark */
-  --text-secondary: #64748B;
-  --text-muted: #94A3B8;
+  --text-primary: #0F172A;
+  /* Deep slate dark for crystal-clear readability */
+  --text-secondary: #1E293B;
+  --text-muted: #334155;
 
   /* Accents */
   --accent-primary: #4FA3F7;
@@ -77,7 +77,12 @@
   width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  background: var(--surface);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--surface-border);
   border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-light);
   margin-bottom: 24px;
 }
 
@@ -258,17 +263,88 @@ a {
   }
 }
 
+/* Universal Tactile Push-In Micro-Animation */
+button,
+.dream-btn,
+.btn,
+.btn-icon,
+.activity-sync-btn,
+.add-tab-btn,
+.strategy-btn,
+.auth-pill-btn,
+.avatar-upload-btn,
+.save-btn,
+.full-width-btn,
+.sync-btn,
+.theme-toggle-btn,
+.tab-btn,
+.nav-link,
+[role="button"] {
+  transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.12s ease, filter 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button:active:not(:disabled),
+.dream-btn:active:not(:disabled),
+.btn:active:not(:disabled),
+.btn-icon:active:not(:disabled),
+.activity-sync-btn:active:not(:disabled),
+.add-tab-btn:active:not(:disabled),
+.strategy-btn:active:not(:disabled),
+.auth-pill-btn:active:not(:disabled),
+.avatar-upload-btn:active:not(:disabled),
+.save-btn:active:not(:disabled),
+.full-width-btn:active:not(:disabled),
+.sync-btn:active:not(:disabled),
+.theme-toggle-btn:active:not(:disabled),
+.tab-btn:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: scale(0.96) translateY(1px) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15) !important;
+  filter: brightness(0.96);
+}
+
+/* Universal Typography Guard: Crisp Tabular Numbers */
+.metric-value,
+.currency,
+.amount,
+.table-cell-number,
+.animated-number,
+.stat-value,
+.panel-value,
+.chart-tooltip,
+table td,
+input[type="number"],
+input[type="text"].currency-input {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+}
+
 @keyframes floatSoft {
-  0% {
-    transform: translateY(0px);
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
   }
-
   50% {
-    transform: translateY(-8px);
+    transform: translate3d(0, -8px, 0);
   }
+}
 
-  100% {
-    transform: translateY(0px);
+@keyframes float {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(2deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -457,51 +533,40 @@ a {
   color: var(--danger);
 }
 
-/* Force Recharts Text to Black */
+/* Universal Recharts Text Contrast */
 .recharts-text {
-  fill: #000000 !important;
+  fill: #0F172A !important;
+  font-weight: 600;
 }
 
 .recharts-tooltip-item {
-  color: #000000 !important;
+  color: #0F172A !important;
 }
 
-
 [data-theme='dark'] .recharts-text {
-  fill: #000000 !important;
+  fill: rgba(255, 255, 255, 0.85) !important;
 }
 
 [data-theme='dark'] .recharts-tooltip-item,
 [data-theme='dark'] .recharts-tooltip-wrapper {
-  color: #000000 !important;
+  color: #FFFFFF !important;
 }
 
-
-/* Force Recharts Text to Black */
-[data-theme='dark'] .recharts-text {
-  fill: #000000 !important;
-}
-
-[data-theme='dark'] .recharts-tooltip-item,
-[data-theme='dark'] .recharts-tooltip-wrapper {
-  color: #000000 !important;
-}
-
-/* Force Form Inputs Text to Black in Dark Mode */
+/* Universal Form Inputs & Textareas */
 [data-theme='dark'] input,
 [data-theme='dark'] textarea,
 [data-theme='dark'] select {
   color: #FFFFFF !important;
-  background-color: var(--surface-hover);
-  border-color: var(--surface-border);
+  background-color: rgba(15, 23, 42, 0.6);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 [data-theme='dark'] input::placeholder,
 [data-theme='dark'] textarea::placeholder {
-  color: rgba(0, 0, 0, 0.5) !important;
+  color: #94A3B8 !important;
 }
 
-/* Force specific colors in dark mode for savings popup */
+/* Specific colors in dark mode for savings popup */
 [data-theme='dark'] .savings-goal-popup h3,
 [data-theme='dark'] .savings-goal-popup label,
 [data-theme='dark'] .savings-goal-popup span {

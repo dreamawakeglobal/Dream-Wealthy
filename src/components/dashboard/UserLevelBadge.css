@@ -393,8 +393,8 @@
 }
 
 .insight-hud-tag {
-    font-size: 0.65rem;
-    font-weight: 900;
+    font-size: 0.75rem;
+    font-weight: 800;
     color: #fff;
     background-color: var(--insight-color, var(--accent-primary));
     text-transform: uppercase;
@@ -425,8 +425,8 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 12px;
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 1px;

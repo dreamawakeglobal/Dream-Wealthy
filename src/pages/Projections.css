@@ -74,25 +74,43 @@
 
 .controls-group {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding: 4px 0;
 }
 
 .controls-group label {
     font-size: 0.85rem;
-    color: #000000;
-    font-weight: bold;
+    color: var(--text-secondary);
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    flex: 1;
+    margin: 0;
 }
 
 [data-theme='dark'] .controls-group label {
     color: #ffffff;
 }
 
-.controls-group input {
-    font-weight: bold !important;
+.controls-group .input-wrapper {
+    width: auto;
+    max-width: 140px;
+    min-width: 120px;
+}
+
+.controls-group .dream-input {
+    width: 100%;
+    max-width: 140px;
+    height: 38px;
+    padding: 6px 12px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    text-align: right;
+    border-radius: 12px !important;
 }
 
 .controls-divider {

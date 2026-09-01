@@ -47,7 +47,7 @@ export const generateInsights = (contextData) => {
                 title: 'Accelerate Debt Payoff',
                 message: `You have $${Math.round(unallocatedCashflow).toLocaleString()} in unallocated monthly cashflow. Try applying this as an "Extra Payment" to your debts to save on interest and reach debt-freedom faster.`,
                 actionText: 'Simulate Payoff',
-                actionLink: '/debt'
+                actionLink: '/expenses'
             });
         }
 
@@ -60,7 +60,7 @@ export const generateInsights = (contextData) => {
                 title: 'High Interest Alert',
                 message: `You have ${highInterestDebts.length} debt(s) with an interest rate of 15% or higher. Attack this balance aggressively using the Avalanche method to stop bleeding money to interest.`,
                 actionText: 'Crush Debt',
-                actionLink: '/debt'
+                actionLink: '/expenses'
             });
         }
     }
@@ -73,7 +73,7 @@ export const generateInsights = (contextData) => {
             title: 'Give Every Dollar a Job',
             message: `You have $${Math.round(unallocatedCashflow).toLocaleString()} unallocated this month. Assign this money to an investment or savings goal in your Allocations dashboard so it goes to work for you.`,
             actionText: 'Allocate Funds',
-            actionLink: '/allocations'
+            actionLink: '/income'
         });
     }
 

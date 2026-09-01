@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -6,13 +6,64 @@ import './Modal.css';
 
 export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false, silent = false }) => {
     const { theme } = useTheme();
+    const modalRef = useRef(null);
+
+    // Escape Key Listener to dismiss modal
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape' || e.keyCode === 27) {
+                e.stopPropagation();
+                if (onClose) onClose();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
+    // Keyboard Focus Trap (Tab & Shift+Tab cycle inside modal)
+    useEffect(() => {
+        if (!isOpen || !modalRef.current) return;
+
+        const focusableElements = modalRef.current.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        // Focus first focusable control on open
+        if (firstElement && typeof firstElement.focus === 'function') {
+            firstElement.focus();
+        }
+
+        const handleTabKey = (e) => {
+            if (e.key !== 'Tab') return;
+
+            if (e.shiftKey) {
+                if (document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement?.focus();
+                }
+            } else {
+                if (document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement?.focus();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleTabKey);
+        return () => window.removeEventListener('keydown', handleTabKey);
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
-    // Close on an explicit click of the black background, not the content box
+    // Close on an explicit click of the backdrop overlay, not the modal content
     const handleOverlayClick = (e) => {
         if (e.target === e.currentTarget) {
-            onClose();
+            if (onClose) onClose();
         }
     };
 
@@ -22,6 +73,9 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
         <div 
             className="modal-overlay" 
             onClick={handleOverlayClick}
+            role="dialog"
+            aria-modal="true"
+            aria-label={typeof title === 'string' ? title : 'Modal Dialog'}
             style={{ 
                 position: 'fixed', 
                 top: 0, 
@@ -36,6 +90,7 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
             }}
         >
             <div 
+                ref={modalRef}
                 className={`modal-content ${glass ? 'glass' : ''} ${invertColors ? 'modal-inverted' : ''} ${customClass}`}
                 style={{
                     ...(useNeonGlow ? {

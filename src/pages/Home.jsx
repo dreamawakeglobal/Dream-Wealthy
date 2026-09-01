@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, TrendingUp, DollarSign, Wallet } from 'lucide-react';
 import { Button } from '../components/ui/Button';
@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { useXP } from '../contexts/XPContext';
+import { motion, useAnimation } from 'framer-motion';
 import {
     AreaChart,
     Area,
@@ -23,7 +24,6 @@ import {
 import { generateInsights } from '../utils/insightsEngine';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { MonthlyReportGenerator } from '../components/MonthlyReportGenerator';
-import { GamificationCard } from '../components/GamificationCard';
 import './Home.css';
 // Custom Tooltip for Area Charts (Single Value)
 const CustomTooltip = ({ active, payload, label }) => {
@@ -79,6 +79,8 @@ const Home = () => {
         yellow: '#eab308', orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
+    const chartTickColor = theme === 'dark' ? 'rgba(255,255,255,0.75)' : '#334155';
+
     const insights = useMemo(() => generateInsights(contextData), [contextData]);
     const _positiveInsight = insights.find(i => i.type === 'success');
 
@@ -87,7 +89,14 @@ const Home = () => {
     useEffect(() => {
         if (videoRef.current) {
             videoRef.current.playbackRate = 0.65;
-            videoRef.current.play().catch(() => {});
+            try {
+                const playPromise = videoRef.current.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
+            } catch (e) {
+                // Ignore autoplay restrictions
+            }
         }
 
         // Gamification Daily Login Check
@@ -96,7 +105,7 @@ const Home = () => {
         
         if (lastLogin !== today) {
             localStorage.setItem('dream_wealthy_last_login', today);
-            setTimeout(() => addXP(10, 'Daily Check-in'), 1500); // Slight delay for dramatic effect
+            setTimeout(() => addXP(10, 'Daily Check-in'), 2000); // Trigger 2 seconds after user logs in
         }
     }, [addXP]);
 
@@ -150,6 +159,53 @@ const Home = () => {
     }));
     const projected6MonthTotal = futureChartData[futureChartData.length - 1]?.value || 0;
 
+    // Directional Hero Action Box Animation (slides off to RIGHT, returns from LEFT)
+    const controls = useAnimation();
+    const hasExitedRef = useRef(false);
+
+    useEffect(() => {
+        const initialScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        if (initialScrollY > 15) {
+            hasExitedRef.current = true;
+            controls.set({ x: -1000, opacity: 0, scale: 0.9 });
+        }
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            const scrolled = currentScrollY > 15;
+
+            if (scrolled && !hasExitedRef.current) {
+                hasExitedRef.current = true;
+                // 1. Slide off to the RIGHT
+                controls.start({
+                    x: 1000,
+                    opacity: 0,
+                    scale: 0.9,
+                    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
+                }).then(() => {
+                    // 2. Reposition off-screen on the LEFT while hidden
+                    controls.set({ x: -1000, scale: 0.9 });
+                });
+            } else if (!scrolled && hasExitedRef.current) {
+                hasExitedRef.current = false;
+                // 3. Slide back in from the LEFT into center
+                controls.start({
+                    x: 0,
+                    opacity: 1,
+                    scale: 1,
+                    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
+                });
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        document.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            document.removeEventListener('scroll', handleScroll);
+        };
+    }, [controls]);
+
     return (
         <div className="home-container animate-fade-in">
 
@@ -170,7 +226,16 @@ const Home = () => {
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <div className="fade-in-up" style={{ width: '100%', maxWidth: '480px', margin: '0 auto', marginTop: 'calc(40vh + 8px)' }}>
+                    <motion.div
+                        initial={{ x: 0, opacity: 1, scale: 1 }}
+                        animate={controls}
+                        style={{
+                            width: '100%',
+                            maxWidth: '480px',
+                            margin: '0 auto',
+                            marginTop: 'calc(40vh + 8px)'
+                        }}
+                    >
                         <Card glass className="hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', '--hero-border-color': activeColor, '--hero-shadow-color': `${activeColor}33` }}>
                             <div className="hero-actions" style={{ display: 'flex', gap: '20px', width: '100%' }}>
                                 <Button variant="secondary" style={{ flex: 1, padding: '16px 32px', fontSize: '1.1rem', height: 'auto' }} className={borderGlowClass} onClick={() => { playPop(); document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' }); }}>
@@ -181,7 +246,7 @@ const Home = () => {
                                 </Button>
                             </div>
                         </Card>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
@@ -236,8 +301,8 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#F43F5E" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
-                                        <YAxis orientation="right" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickFormatter={(value) => value >= 1000 ? `$${(value / 1000).toFixed(0)}k` : `$${value}`} width={40} tickMargin={8} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
+                                        <YAxis orientation="right" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12, fontWeight: 'bold' }} tickFormatter={(value) => value >= 1000 ? `$${(value / 1000).toFixed(0)}k` : `$${value}`} width={40} tickMargin={8} />
                                         <Tooltip content={<DualLineTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="income" name="Income" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorIncome)" activeDot={{ r: 5, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowIncome)" />
                                         <Area type="linear" dataKey="expenses" name="Expenses" stroke="#F43F5E" strokeWidth={2.5} fillOpacity={1} fill="url(#colorExpenses)" activeDot={{ r: 5, fill: '#F43F5E', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowExpenses)" />
@@ -272,7 +337,7 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#4FA3F7" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="value" stroke="#4FA3F7" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPortfolio)" activeDot={{ r: 5, fill: '#4FA3F7', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowPortfolio)" />
                                     </AreaChart>
@@ -307,7 +372,7 @@ const Home = () => {
                                                 <stop offset="100%" stopColor="#10B981" stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: 'rgba(255,255,255,0.7)', fontSize: 11, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
                                         <Area type="linear" dataKey="value" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#colorFuture)" activeDot={{ r: 5, fill: '#10B981', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowFuture)" />
                                     </AreaChart>
@@ -321,11 +386,6 @@ const Home = () => {
                         </Card>
                     </AnimateOnScroll>
                 </div>
-
-                {/* Gamification & Rank Progression Matrix */}
-                <AnimateOnScroll delay={0.35}>
-                    <GamificationCard />
-                </AnimateOnScroll>
             </section >
         </div >
     );

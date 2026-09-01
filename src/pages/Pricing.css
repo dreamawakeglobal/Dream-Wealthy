@@ -82,7 +82,7 @@
 .save-badge {
     background: rgba(52, 211, 153, 0.15);
     color: var(--success);
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     padding: 4px 8px;
     border-radius: 100px;
     text-transform: uppercase;

@@ -10,7 +10,7 @@ export const BudgetWidget = () => {
     const { totalMonthlyExpenses, transactions } = useFinancialContext();
     const navigate = useNavigate();
     const { playPop } = useSound();
-    const { expenseBorderColor } = useTheme();
+    const { expenseBorderColor, theme } = useTheme();
 
     const borderGlowClass = expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
     const activeColor = expenseBorderColor !== 'none' ? {
@@ -50,7 +50,7 @@ export const BudgetWidget = () => {
         <Card glass className={`budget-widget-card ${borderGlowClass}`} style={{ marginBottom: '24px', padding: '24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div className="icon-wrapper" style={{ background: 'rgba(255,255,255,0.05)', padding: '8px', borderRadius: '8px' }}>
+                    <div className="icon-wrapper" style={{ background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', padding: '8px', borderRadius: '8px' }}>
                         <Wallet size={20} color={activeColor} />
                     </div>
                     <h3 className="panel-title" style={{ margin: 0 }}>Monthly Budget vs. Current Spend</h3>
@@ -68,13 +68,13 @@ export const BudgetWidget = () => {
                     <span style={{ fontSize: '2rem', fontWeight: 'bold', color: isOverBudget ? activeColor : 'var(--text-primary)', textShadow: isOverBudget && expenseBorderColor !== 'none' ? `0 0 12px ${activeColor}` : 'none' }}>
                         ${spentThisMonth.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
-                    <span style={{ color: '#000000', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                         of ${totalMonthlyExpenses.toLocaleString(undefined, { maximumFractionDigits: 0 })} budgeted
                     </span>
                 </div>
 
                 {/* Progress Bar */}
-                <div style={{ height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
+                <div style={{ height: '12px', background: theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)', borderRadius: '6px', overflow: 'hidden', position: 'relative' }}>
                     <div 
                         style={{ 
                             position: 'absolute', 

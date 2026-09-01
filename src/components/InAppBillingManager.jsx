@@ -146,9 +146,13 @@ export const InAppBillingManager = () => {
                 }
             });
             const data = await res.json();
-            if (data?.url) window.location.href = data.url;
+            if (data?.url) {
+                window.location.href = data.url;
+            } else {
+                setStatusMessage({ type: 'error', text: data?.error || 'Unable to open billing portal.' });
+            }
         } catch (err) {
-            alert(err.message);
+            setStatusMessage({ type: 'error', text: err.message });
         } finally {
             setActionLoading(false);
         }

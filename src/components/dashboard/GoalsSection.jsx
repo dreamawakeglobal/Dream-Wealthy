@@ -8,6 +8,7 @@ import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { CurrencyInput } from '../ui/CurrencyInput';
 import { Card } from '../ui/Card';
+import { LuxuryColorWheel } from '../ui/LuxuryColorWheel';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Reorder } from 'framer-motion';
 import '../ui/Modal.css';
@@ -386,16 +387,15 @@ export const GoalsSection = () => {
                             </div>
 
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Theme Glow Color</label>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <input
-                                        type="color"
-                                        value={newGoal.color}
-                                        onChange={e => setNewGoal({ ...newGoal, color: e.target.value })}
-                                        style={{ width: '48px', height: '48px', padding: '0', border: '2px solid rgba(255,255,255,0.2)', borderRadius: '12px', cursor: 'pointer', background: 'transparent' }}
-                                    />
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Pick a color for the orb's hologram effect</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                    <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Theme Glow Color</label>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Orb Hologram Aura</span>
                                 </div>
+                                <LuxuryColorWheel
+                                    value={newGoal.color || '#00F0FF'}
+                                    onChange={(newColor) => setNewGoal({ ...newGoal, color: newColor })}
+                                    size={180}
+                                />
                             </div>
                             <Button type="submit" variant="primary" style={{ padding: '16px', fontSize: '1.05rem', marginTop: '8px', background: newGoal.color || 'var(--accent-gradient)', border: 'none', color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.5)', boxShadow: newGoal.color ? `0 4px 12px ${newGoal.color}66` : '0 4px 12px rgba(0, 150, 255, 0.3)' }}>
                                 {editingGoalId ? 'Update Goal' : 'Save Goal to Dashboard'}

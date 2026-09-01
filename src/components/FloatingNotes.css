@@ -79,12 +79,12 @@
 }
 
 .floating-notepad-header .page-badge {
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     padding: 2px 8px;
     border-radius: 6px;
     background: var(--primary);
     color: white;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: capitalize;
 }
 

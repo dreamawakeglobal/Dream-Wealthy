@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useAuth } from './AuthContext';
@@ -80,31 +81,47 @@ export const XPProvider = ({ children }) => {
         <XPContext.Provider value={{ totalXP, level, xpProgress, xpToNext, xpPercentage, title, rankDetails, addXP }}>
             {children}
             
-            {/* HUD Overlay for XP Popups */}
-            <div style={{ position: 'fixed', top: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+            {/* HUD Overlay for XP Popups - Positioned 25% lower down the viewport */}
+            <div style={{ position: 'fixed', top: '25%', left: '50%', transform: 'translateX(-50%)', zIndex: 99999, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
                 <AnimatePresence>
                     {xpPopups.map((popup) => (
                         <motion.div
                             key={popup.id}
-                            initial={{ opacity: 0, y: 20, scale: 0.8 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -20, scale: 0.8 }}
-                            transition={{ duration: 0.4, type: "spring" }}
+                            initial={{ opacity: 0, y: -120, scale: 0.4, rotate: -6 }}
+                            animate={{ 
+                                opacity: 1, 
+                                y: 0, 
+                                scale: [0.4, 1.12, 1], 
+                                rotate: 0 
+                            }}
+                            exit={{ 
+                                opacity: 0, 
+                                y: -40, 
+                                scale: 0.85, 
+                                filter: 'blur(8px)',
+                                transition: { duration: 0.3 }
+                            }}
+                            transition={{ 
+                                type: "spring", 
+                                stiffness: 350, 
+                                damping: 20, 
+                                mass: 0.7 
+                            }}
                             style={{
-                                background: 'rgba(15, 23, 42, 0.85)',
-                                backdropFilter: 'blur(12px)',
-                                border: '1px solid rgba(79, 163, 247, 0.4)',
-                                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 16px rgba(79, 163, 247, 0.3)',
+                                background: 'rgba(15, 23, 42, 0.92)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(79, 163, 247, 0.55)',
+                                boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(79, 163, 247, 0.45), inset 0 0 15px rgba(79, 163, 247, 0.15)',
                                 borderRadius: '100px',
-                                padding: '10px 24px',
+                                padding: '12px 28px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '12px',
                                 color: 'white'
                             }}
                         >
-                            <span style={{ color: '#4FA3F7', fontWeight: 'bold', fontSize: '1.25rem', textShadow: '0 0 8px rgba(79,163,247,0.5)' }}>+{popup.amount} XP</span>
-                            {popup.actionName && <span style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{popup.actionName}</span>}
+                            <span style={{ color: '#4FA3F7', fontWeight: 'bold', fontSize: '1.35rem', textShadow: '0 0 12px rgba(79,163,247,0.7)' }}>+{popup.amount} XP</span>
+                            {popup.actionName && <span style={{ fontSize: '0.95rem', color: 'rgba(255,255,255,0.95)', fontWeight: 600, letterSpacing: '0.3px' }}>{popup.actionName}</span>}
                         </motion.div>
                     ))}
                 </AnimatePresence>

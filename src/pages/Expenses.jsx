@@ -28,44 +28,9 @@ import { supabase } from '../supabaseClient';
 import './Expenses.css';
 import { SplitTransactionModal } from '../components/SplitTransactionModal';
 import { detectSubscriptions } from '../utils/subscriptionDetector';
+import { detectPseudoCategory, getFilterLabel, mapUserExpenseToPlaidCategory } from '../utils/categoryDetector';
 
-export const getFilterLabel = (filterId) => {
-    if (!filterId) return '🏷️ Uncategorized';
-    if (filterId === 'PSEUDO_GAS') return '⛽️ Gas & Fuel';
-    if (filterId === 'PSEUDO_RIDE_SHARE') return '🚗 Ride Share';
-    if (filterId === 'PSEUDO_GROCERIES') return '🛒 Groceries';
-    if (filterId === 'PSEUDO_HYGIENE_HOUSEHOLD') return '🧼 Hygiene & Household';
-    if (filterId === 'PSEUDO_SUBSCRIPTIONS') return '🔄 Subscriptions';
-    if (filterId === 'All') return '🌎 All';
-    
-    // Format the backend string: replace underscores with spaces and title case
-    const formattedName = filterId
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-        
-    const lower = filterId.toLowerCase();
-    if (lower.includes('food') || lower.includes('drink') || lower.includes('dining') || lower.includes('restaurant')) return `🍔 ${formattedName}`;
-    if (lower.includes('travel') || lower.includes('airline') || lower.includes('hotel')) return `✈️ ${formattedName}`;
-    if (lower.includes('shop') || lower.includes('retail') || lower.includes('clothing')) return `🛍️ ${formattedName}`;
-    if (lower.includes('transfer') || lower.includes('payment') || lower.includes('credit card')) return `💳 ${formattedName}`;
-    if (lower.includes('health') || lower.includes('medical') || lower.includes('doctor')) return `🏥 ${formattedName}`;
-    if (lower.includes('service') || lower.includes('subscription')) return `⚙️ ${formattedName}`;
-    if (lower.includes('entertainment') || lower.includes('recreation')) return `🎟️ ${formattedName}`;
-    if (lower.includes('auto') || lower.includes('car') || lower.includes('transport')) return `🚙 ${formattedName}`;
-    if (lower.includes('utility') || lower.includes('bills')) return `⚡️ ${formattedName}`;
-    if (lower.includes('personal') || lower.includes('care')) return `💅 ${formattedName}`;
-    if (lower.includes('education') || lower.includes('school')) return `🎓 ${formattedName}`;
-    if (lower.includes('home') || lower.includes('rent') || lower.includes('mortgage')) return `🏠 ${formattedName}`;
-    if (lower.includes('income') || lower.includes('salary') || lower.includes('paycheck')) return `💵 ${formattedName}`;
-    
-    return `🏷️ ${formattedName}`;
-};
-
-import { detectPseudoCategory } from '../utils/categoryDetector';
-export { detectPseudoCategory };
-
-export const useRecentMerchants = (transactions) => {
+const useRecentMerchants = (transactions) => {
     return useMemo(() => {
         if (!transactions || transactions.length === 0) return [];
         
@@ -529,7 +494,7 @@ const Expenses = () => {
         });
         
         if (expenseTxs.length === 0) return ['All'];
-        const cats = new Set(expenseTxs.map(tx => tx.category ? tx.category.trim() : 'Uncategorized'));
+        const cats = new Set(expenseTxs.map(tx => detectPseudoCategory(tx)));
         return ['All', ...cats].sort();
     }, [transactions]);
 
@@ -556,6 +521,14 @@ const Expenses = () => {
             if (activityCategoryFilter === detected) return true;
             if ((activityCategoryFilter === 'PSEUDO_SUBSCRIPTIONS' || activityCategoryFilter === 'Subscriptions') && 
                 (detected === 'Subscriptions' || detected === 'PSEUDO_SUBSCRIPTIONS')) return true;
+            if ((activityCategoryFilter === 'PSEUDO_GAS' || activityCategoryFilter === 'Gas & Fuel') && 
+                (detected === 'Gas & Fuel' || detected === 'PSEUDO_GAS')) return true;
+            if ((activityCategoryFilter === 'PSEUDO_GROCERIES' || activityCategoryFilter === 'Groceries') && 
+                (detected === 'Groceries' || detected === 'PSEUDO_GROCERIES')) return true;
+            if ((activityCategoryFilter === 'PSEUDO_RIDE_SHARE' || activityCategoryFilter === 'Ride Share') && 
+                (detected === 'Ride Share' || detected === 'PSEUDO_RIDE_SHARE')) return true;
+            if ((activityCategoryFilter === 'PSEUDO_HYGIENE_HOUSEHOLD' || activityCategoryFilter === 'Hygiene & Household') && 
+                (detected === 'Hygiene & Household' || detected === 'PSEUDO_HYGIENE_HOUSEHOLD')) return true;
 
             // If transaction is classified as a pseudo category (e.g. Subscriptions), 
             // exclude it from non-matching category filters (e.g. Entertainment) so it moves immediately!
@@ -1060,9 +1033,15 @@ const Expenses = () => {
                             <span className="metric-title">Total Monthly Expenses</span>
                             <TrendingDown size={20} className="text-danger" />
                         </div>
-                        <h2 className="metric-value" style={{ color: 'var(--danger)' }}>
-                            $<AnimatedNumber value={totalMonthlyExpenses} />
-                        </h2>
+                        <motion.h2
+                            initial={{ y: -380, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 160, damping: 15, mass: 0.9, delay: 0.65 }}
+                            className="metric-value"
+                            style={{ color: 'var(--danger)', willChange: 'transform' }}
+                        >
+                            $<AnimatedNumber value={totalMonthlyExpenses} duration={1200} startFromZero delay={650} />
+                        </motion.h2>
                         <div className="metric-breakdown" style={{ justifyContent: 'center', color: theme === 'dark' ? '#ffffff' : '#000000' }}>
                             <span>Fixed: ${totalFixedExpenses.toLocaleString()}</span>
                             <span>Var: ${totalVariableExpenses.toLocaleString()}</span>
@@ -1078,9 +1057,15 @@ const Expenses = () => {
                             <span className="metric-title">Net Cash Flow</span>
                             <Wallet size={20} className="text-success" />
                         </div>
-                        <h2 className="metric-value" style={{ color: netMonthlyCashFlow < 0 ? 'var(--danger)' : 'var(--success)' }}>
-                            {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} />
-                        </h2>
+                        <motion.h2
+                            initial={{ y: -380, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 160, damping: 15, mass: 0.9, delay: 0.8 }}
+                            className="metric-value"
+                            style={{ color: netMonthlyCashFlow < 0 ? 'var(--danger)' : 'var(--success)', willChange: 'transform' }}
+                        >
+                            {netMonthlyCashFlow < 0 ? '-' : ''}$<AnimatedNumber value={Math.abs(netMonthlyCashFlow)} duration={1200} startFromZero delay={800} />
+                        </motion.h2>
                         <p className="metric-subtext" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>Remaining for allocation</p>
                     </Card>
                 </AnimateOnScroll>
@@ -1091,9 +1076,15 @@ const Expenses = () => {
                             <span className="metric-title">Savings Rate</span>
                             <Percent size={20} className="text-primary" />
                         </div>
-                        <h2 className="metric-value" style={{ color: 'var(--warning)', textShadow: '0 0 16px rgba(245, 158, 11, 0.6)' }}>
-                            <AnimatedNumber value={parseFloat(savingsRate)} />%
-                        </h2>
+                        <motion.h2
+                            initial={{ y: -380, opacity: 0, scale: 0.7 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 160, damping: 15, mass: 0.9, delay: 0.95 }}
+                            className="metric-value"
+                            style={{ color: 'var(--warning)', textShadow: '0 0 16px rgba(245, 158, 11, 0.6)', willChange: 'transform' }}
+                        >
+                            <AnimatedNumber value={parseFloat(savingsRate)} duration={1200} startFromZero delay={950} />%
+                        </motion.h2>
                         <p className="metric-subtext" style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>Target: {'>'}20%</p>
                     </Card>
                 </AnimateOnScroll>
@@ -2149,7 +2140,7 @@ const Expenses = () => {
                                                         <XAxis 
                                                             dataKey="month" 
                                                             stroke="transparent" 
-                                                            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)', fontWeight: 500 }} 
+                                                            tick={{ fontSize: 12, fill: theme === 'dark' ? 'rgba(255,255,255,0.75)' : '#334155', fontWeight: 600 }} 
                                                             tickMargin={16}
                                                             minTickGap={30}
                                                         />
@@ -2158,7 +2149,7 @@ const Expenses = () => {
                                                             orientation="right"
                                                             stroke="transparent" 
                                                             tickFormatter={val => val >= 1000 ? `$${(val/1000).toFixed(1)}k` : `$${val}`} 
-                                                            tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.3)', fontWeight: 500 }} 
+                                                            tick={{ fontSize: 12, fill: theme === 'dark' ? 'rgba(255,255,255,0.75)' : '#334155', fontWeight: 600 }} 
                                                             width={50}
                                                             tickMargin={8}
                                                         />
@@ -2284,66 +2275,58 @@ const Expenses = () => {
                     ) : (
                         paginatedTransactions.map((tx) => (
                             <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
-                                <div className="tx-merchant" style={{ fontWeight: 600 }}>
-                                    {tx.merchant_name || 'Unknown Merchant'}
-                                    {tx.pending && <span className="badge warning-badge" style={{ marginLeft: '8px', fontSize: '0.7rem' }}>Pending</span>}
+                                <div className="tx-merchant" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                    <span>{tx.merchant_name || tx.name || 'Unknown Merchant'}</span>
+                                    {tx.pending && <span className="badge warning-badge" style={{ fontSize: '0.7rem' }}>Pending</span>}
                                 </div>
                                 <div className="tx-date text-muted" style={{ fontSize: '0.85rem' }}>
                                     {new Date(tx.date).toLocaleDateString()}
                                 </div>
                                 <div className="tx-category">
                                     {editingTransactionId === tx.id && !tx.isSplitChild ? (
-                                            <select
-                                                autoFocus
-                                                defaultValue={detectPseudoCategory(tx)}
-                                                style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '150px', outline: 'none', cursor: 'pointer' }}
-                                                onChange={(e) => {
-                                                    const newCat = e.target.value;
-                                                    setEditingTransactionId(null);
-                                                    if (newCat && newCat !== detectPseudoCategory(tx)) {
-                                                        const overrideCat = newCat + ' ';
-                                                        
-                                                        // ----------------------------------------------------
-                                                        // MAGICAL SUBSCRIPTIONS COMMUNICATION HOOK
-                                                        // The user requested that explicitly declaring a txn as a
-                                                        // Subscription in this UI dropdown automatically generates it!
-                                                        // ----------------------------------------------------
-                                                        if (newCat === 'PSEUDO_SUBSCRIPTIONS') {
-                                                            const newSub = {
-                                                                id: crypto.randomUUID(),
-                                                                user_id: tx.user_id,
-                                                                name: (tx.merchant_name || tx.name || 'New Subscription').trim(),
-                                                                cost: Math.abs(tx.amount),
-                                                                cycle: 'Monthly'
-                                                            };
-                                                            // Persists directly utilizing store.setSubscriptions mapped into FinancialContext
-                                                            setSubscriptions([...(subscriptions || []), newSub]);
-                                                            if (playCheck) playCheck();
-                                                        }
-
-                                                        // Optimistic Update
-                                                        useStore.setState(s => ({
-                                                            transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
-                                                        }));
-                                                        
-                                                        // Network Push (Fire and Forget)
-                                                        supabase.from('transactions').update({ category: overrideCat }).eq('id', tx.id).then();
+                                        <select
+                                            autoFocus
+                                            defaultValue={detectPseudoCategory(tx)}
+                                            style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '150px', outline: 'none', cursor: 'pointer' }}
+                                            onChange={(e) => {
+                                                const newCat = e.target.value;
+                                                setEditingTransactionId(null);
+                                                if (newCat && newCat !== detectPseudoCategory(tx)) {
+                                                    const overrideCat = newCat + ' ';
+                                                    
+                                                    if (newCat === 'PSEUDO_SUBSCRIPTIONS') {
+                                                        const newSub = {
+                                                            id: crypto.randomUUID(),
+                                                            user_id: tx.user_id,
+                                                            name: (tx.merchant_name || tx.name || 'New Subscription').trim(),
+                                                            cost: Math.abs(tx.amount),
+                                                            cycle: 'Monthly'
+                                                        };
+                                                        setSubscriptions([...(subscriptions || []), newSub]);
+                                                        if (playCheck) playCheck();
                                                     }
-                                                }}
-                                                onBlur={() => {
-                                                    setTimeout(() => setEditingTransactionId(null), 150);
-                                                }}
-                                            >
-                                                <option disabled value="">Select Category</option>
-                                                <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
-                                                <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
-                                                <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
-                                                <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
-                                                <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
-                                                {uniqueCategories.filter(c => c !== 'All').map(c => (
-                                                    <option key={c} value={c}>{getFilterLabel(c)}</option>
-                                                ))}
-                                            </select>
+
+                                                    useStore.setState(s => ({
+                                                        transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
+                                                    }));
+                                                    
+                                                    supabase.from('transactions').update({ category: overrideCat }).eq('id', tx.id).then();
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => setEditingTransactionId(null), 150);
+                                            }}
+                                        >
+                                            <option disabled value="">Select Category</option>
+                                            <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
+                                            <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
+                                            <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
+                                            <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                                            <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
+                                            {uniqueCategories.filter(c => c !== 'All').map(c => (
+                                                <option key={c} value={c}>{getFilterLabel(c)}</option>
+                                            ))}
+                                        </select>
                                     ) : (
                                         <span 
                                             onClick={() => {
@@ -2359,12 +2342,12 @@ const Expenses = () => {
                                 </div>
                                 <div className={`tx-amount ${tx.amount > 0 ? 'text-danger' : 'text-success'}`} style={{ textAlign: 'right', fontWeight: 'bold' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                        {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString()}
+                                        {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         <button 
                                             onClick={() => setSplittingTransaction(tx)}
                                             className="btn-icon" 
-                                            style={{ opacity: 0.5, padding: '4px' }}
-                                            title="Split Transaction"
+                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.5, color: tx.isSplitChild ? 'var(--primary)' : 'inherit', padding: '4px' }}
+                                            title={tx.isSplitChild ? "Edit Split" : "Split Transaction"}
                                         >
                                             <Scissors size={14} />
                                         </button>

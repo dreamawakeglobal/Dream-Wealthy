@@ -1,0 +1,96 @@
+/* Ultra-High Performance GPU-Accelerated Night Sky Stars (Zero-CPU Compositor Layer) */
+.night-sky-sparkles-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    contain: strict;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transition: opacity 0.6s ease-in-out;
+}
+
+.night-sky-sparkles-container.visible {
+    opacity: 1;
+}
+
+.night-sky-sparkles-container.hidden {
+    opacity: 0;
+}
+
+/* 4-Pointed Starburst Element - Hardware-Accelerated Transforms Only */
+.four-point-star {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    will-change: transform, opacity;
+    animation: star-sparkle ease-in-out infinite;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.four-point-star svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+/* Glittering Star Dust Particle - Opacity & Scale Only (No Dynamic Box-Shadow) */
+.star-dust-particle {
+    position: absolute;
+    background: #ffffff;
+    border-radius: 50%;
+    will-change: transform, opacity;
+    animation: dust-twinkle ease-in-out infinite;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 0 4px rgba(186, 230, 253, 0.8);
+}
+
+/* 
+ * Pure Compositor GPU Animation:
+ * Animate ONLY transform & opacity (0% layout thrashing, 0 repaints, 60-120fps locked)
+ */
+@keyframes star-sparkle {
+    0% {
+        transform: translate3d(0, 0, 0) scale(0.5);
+        opacity: 0.25;
+    }
+    50% {
+        transform: translate3d(0, 0, 0) scale(1.15);
+        opacity: 0.95;
+    }
+    100% {
+        transform: translate3d(0, 0, 0) scale(0.5);
+        opacity: 0.25;
+    }
+}
+
+/* Star Dust Twinkle Keyframe (GPU Compositor Only) */
+@keyframes dust-twinkle {
+    0%, 100% {
+        opacity: 0.15;
+        transform: translate3d(0, 0, 0) scale(0.7);
+    }
+    50% {
+        opacity: 0.9;
+        transform: translate3d(0, 0, 0) scale(1.2);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .four-point-star,
+    .star-dust-particle {
+        animation: none !important;
+        opacity: 0.6 !important;
+        transform: scale(0.8) !important;
+    }
+}

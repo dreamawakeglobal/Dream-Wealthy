@@ -1,5 +1,5 @@
 .waitlist-hero-box {
-    margin-top: calc(30vh + 8px); /* slightly raised for regular screens too */
+    margin-top: calc(10vh + 8px); /* moved up an additional 10% */
 }
 
 /* Remove default Layout padding that generates extra hidden scroll space below the video on mobile */
@@ -8,13 +8,13 @@
 }
 
 .waitlist-body-lock {
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* Mobile Portrait */
 @media (max-width: 768px) and (orientation: portrait) {
     .waitlist-hero-box {
-        margin-top: calc(15vh + 8px) !important;
+        margin-top: calc(2vh + 8px) !important;
     }
     
     .waitlist-body-lock {

@@ -13,7 +13,6 @@ import { supabase } from '../supabaseClient';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import investmentsHeaderImg from '../assets/investments-header.png';
 import './Investments.css';
-import { SavingsOptimizationCard } from '../components/SavingsOptimizationCard';
 
 // Base Initial State structure
 const INITIAL_ASSET_CLASSES = {
@@ -171,28 +170,30 @@ const Investments = () => {
 
                 if (selectedClass === 'Crypto') {
                     // Fetch from CoinGecko via Supabase Edge Function
-                    const cryptoIds = updatedAssets.map(a => a.apiId).join(',');
-                    const { data, error } = await supabase.functions.invoke('fetch-market-data', {
-                        body: { action: 'coingecko_price', payload: { ids: cryptoIds } }
-                    });
-                    if (error) throw error;
+                    const cryptoIds = updatedAssets.map(a => a.apiId).filter(Boolean).join(',');
+                    if (cryptoIds) {
+                        const { data, error } = await supabase.functions.invoke('fetch-market-data', {
+                            body: { action: 'coingecko_price', payload: { ids: cryptoIds } }
+                        });
+                        if (error) throw error;
 
-                    updatedAssets = updatedAssets.map(asset => {
-                        if (data[asset.apiId] && typeof data[asset.apiId].usd === 'number') {
-                            const change = data[asset.apiId].usd_24h_change;
-                            return {
-                                ...asset,
-                                price: data[asset.apiId].usd,
-                                change: typeof change === 'number' ? Number(change.toFixed(2)) : 0
-                            };
+                        if (data) {
+                            updatedAssets = updatedAssets.map(asset => {
+                                if (data[asset.apiId] && typeof data[asset.apiId].usd === 'number') {
+                                    const change = data[asset.apiId].usd_24h_change;
+                                    return {
+                                        ...asset,
+                                        price: data[asset.apiId].usd,
+                                        change: typeof change === 'number' ? Number(change.toFixed(2)) : 0
+                                    };
+                                }
+                                return asset;
+                            });
                         }
-                        return asset;
-                    });
-                    // Fetch from Finnhub (Stocks and Commodities)
-                    // Note: If no API key is present in env, it will likely return 401s, we handle gracefully.
-                    // FREE TIER LIMIT: Finnhub restricts free API usage to 60 calls/minute. We can only fetch a few at a time.
-                    // Edge Layer: Fetch from Finnhub via proxy
-                    const assetsToFetch = updatedAssets.slice(0, 5);
+                    }
+                } else {
+                    // Fetch from Finnhub (Stocks and Commodities) via proxy
+                    const assetsToFetch = updatedAssets.slice(0, 10);
 
                     const fetches = assetsToFetch.map(async (asset) => {
                         try {
@@ -501,7 +502,7 @@ const Investments = () => {
         <div className="page-container animate-fade-in investments-page">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '-30px', marginTop: '-60px' }}>
                 <img src={investmentsHeaderImg} alt="Investments Dashboard Header" className="investments-header-logo" style={{ height: '540px', objectFit: 'contain', marginBottom: '-40px' }} loading="lazy" />
-                <p className="page-subtitle">Drag assets to build and track your custom investment portfolio.</p>
+                <p className="page-subtitle">Track and allocate your long-term wealth assets as part of your total financial portfolio.</p>
             </div>
 
             {/* Top: Portfolio Performance Tracker */}
@@ -541,14 +542,14 @@ const Investments = () => {
                                         <XAxis
                                             dataKey="time"
                                             stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'}
-                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 11, fontWeight: 'bold' }}
+                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 12, fontWeight: 'bold' }}
                                             minTickGap={30}
                                         />
                                         <YAxis
                                             orientation="right"
                                             domain={['auto', 'auto']}
                                             stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'}
-                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 11, fontWeight: 'bold' }}
+                                            tick={{ fill: theme === 'dark' ? '#F8FAFC' : '#1E293B', fontSize: 12, fontWeight: 'bold' }}
                                             tickFormatter={(val) => val >= 1000 ? `$${(val / 1000).toFixed(1)}k` : `$${val.toFixed(0)}`}
                                         />
                                         <RechartsTooltip
@@ -586,11 +587,6 @@ const Investments = () => {
                         </div>
                     </Card>
                 </div>
-            </AnimateOnScroll>
-
-            {/* High-Yield Savings Strategy Engine */}
-            <AnimateOnScroll delay={0.15}>
-                <SavingsOptimizationCard plaidAccounts={plaidAccounts || []} />
             </AnimateOnScroll>
 
             {/* Bottom: Market Drawer, Holdings & Total Value */}
