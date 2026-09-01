@@ -2,17 +2,35 @@ import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { useSound } from '../SoundContext';
+import { useTheme } from '../contexts/ThemeContext';
 import './Navigation.css';
 
 const Navigation = () => {
     const location = useLocation();
     const { playNavClick } = useSound();
+    const { expenseBorderColor, theme } = useTheme();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const activeGlowColor = expenseBorderColor !== 'none' ? {
+        blue: '#4FA3F7',
+        white: '#ffffff',
+        black: '#000000',
+        red: '#FF0000',
+        green: '#10B981',
+        purple: '#8b5cf6',
+        pink: '#ec4899',
+        yellow: '#eab308',
+        orange: '#f97316'
+    }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
 
     const handleNavClick = () => {
         if (playNavClick) playNavClick();
         setIsMobileMenuOpen(false);
     };
+
+    if (location.pathname === '/') {
+        return null;
+    }
 
 
     const navItems = [
@@ -24,7 +42,13 @@ const Navigation = () => {
     ];
 
     return (
-        <nav className={`navigation-bar ${isMobileMenuOpen ? 'mobile-open' : ''} ${location.pathname === '/' ? 'waitlist-nav' : ''}`}>
+        <nav 
+            className={`navigation-bar ${isMobileMenuOpen ? 'mobile-open' : ''} ${location.pathname === '/' ? 'waitlist-nav' : ''}`}
+            style={{
+                '--nav-active-glow': activeGlowColor,
+                '--nav-active-glow-shadow': `${activeGlowColor}55`
+            }}
+        >
             {/* Hamburger Toggle - Only visible on mobile */}
             <button
                 className="mobile-menu-toggle"
