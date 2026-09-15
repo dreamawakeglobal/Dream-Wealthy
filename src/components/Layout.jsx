@@ -75,7 +75,6 @@ const Layout = () => {
                                 </div>
                             )}
                         </div>
-                        <AiAdvisorWidget />
                     </div>
                 ) : (
                     location.pathname !== '/' && (
@@ -101,6 +100,7 @@ const Layout = () => {
             </main>
             {location.pathname !== '/' && <Footer />}
             
+            {user && location.pathname !== '/' && <AiAdvisorWidget />}
             <AICoachModal />
         </div>
     );
