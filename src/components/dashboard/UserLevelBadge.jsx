@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ShieldAlert, ShieldCheck, ArrowUpRight, ArrowDownRight, Activity, Brain } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, ArrowUpRight, ArrowDownRight, Activity, Brain, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinancialContext } from '../../FinancialContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -70,69 +70,107 @@ export const UserLevelBadge = () => {
     const isPositive = networth >= 0;
     const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
+    const activeColor = expenseBorderColor && expenseBorderColor !== 'none' ? ({
+        blue: '#4FA3F7',
+        white: '#ffffff',
+        black: '#334155',
+        red: '#FF4D4D',
+        green: '#10B981',
+        purple: '#8b5cf6',
+        pink: '#ec4899',
+        yellow: '#eab308',
+        orange: '#f97316'
+    }[expenseBorderColor] || 'var(--accent-primary)') : 'var(--accent-primary)';
+
+    const circumference = 389.56; // 2 * Math.PI * 62
+    const safeXpPct = Math.min(100, Math.max(0, xpPercentage || 0));
+    const strokeDashoffset = circumference - (circumference * safeXpPct) / 100;
+
     return (
         <div className={`ultra-badge-container glass ${borderGlowClass}`}>
             <div className="ultra-badge-grid">
                 
                 {/* LEFT PANE: Identity Profile */}
                 <div className="identity-pane">
-                    <div className="shield-glow-ring" style={{ position: 'absolute', width: '130px', height: '130px', zIndex: 0 }}>
-                        <svg width="130" height="130" viewBox="0 0 130 130">
-                            <circle cx="65" cy="65" r="60" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+                    {/* AVATAR & ORBITAL XP RING HUB */}
+                    <div className="identity-avatar-hub">
+                        <svg className="avatar-xp-svg" viewBox="0 0 136 136">
+                            {/* Track background */}
                             <circle 
-                                cx="65" cy="65" r="60" 
-                                fill="none" 
-                                stroke={isPositive ? "var(--accent-primary)" : "var(--danger)"} 
-                                strokeWidth="6" 
-                                strokeDasharray="377" 
-                                strokeDashoffset={377 - (377 * xpPercentage) / 100}
-                                strokeLinecap="round"
-                                style={{ transition: 'stroke-dashoffset 1s ease-out, stroke 0.5s', transform: 'rotate(-90deg)', transformOrigin: 'center' }}
+                                cx="68" cy="68" r="62" 
+                                className="avatar-xp-track" 
+                            />
+                            {/* Animated XP Progress Ring */}
+                            <circle 
+                                cx="68" cy="68" r="62" 
+                                className="avatar-xp-indicator" 
+                                stroke={activeColor}
+                                strokeDasharray={circumference}
+                                strokeDashoffset={strokeDashoffset}
+                                transform="rotate(-90 68 68)"
+                                style={{
+                                    filter: `drop-shadow(0 0 8px ${activeColor})`
+                                }}
                             />
                         </svg>
-                    </div>
-                    <div className="shield-wrapper" style={{ filter: isPositive ? 'drop-shadow(0 0 24px var(--accent-primary))' : 'drop-shadow(0 0 24px var(--danger))', zIndex: 1 }}>
-                        {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
-                            <img 
-                                src={user.user_metadata.avatar_url || user.user_metadata.picture} 
-                                alt="Profile Avatar" 
-                                style={{ 
-                                    width: 96, 
-                                    height: 96, 
-                                    borderRadius: '50%', 
-                                    objectFit: 'cover',
-                                    border: '2px solid var(--text-primary)',
-                                    filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.2))' 
-                                }} 
-                            />
-                        ) : isPositive ? (
-                            <ShieldCheck size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
-                        ) : (
-                            <ShieldAlert size={110} color="var(--text-primary)" strokeWidth={1} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.1))' }} />
-                        )}
-                    </div>
-                    <div className="identity-text-stack" style={{ zIndex: 1 }}>
-                        <h2 className="identity-name">{fullName}</h2>
-                        <div className="level-badge-pill" style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'center' }}>
-                            <span className="level-text" style={{ fontWeight: 'bold' }}>LEVEL {level}</span>
-                            <span className="level-title">{title}</span>
+
+                        {/* Avatar Image Frame */}
+                        <div className="avatar-disc-frame">
+                            {user?.user_metadata?.avatar_url || user?.user_metadata?.picture ? (
+                                <img 
+                                    src={user.user_metadata.avatar_url || user.user_metadata.picture} 
+                                    alt="Profile Avatar" 
+                                    className="avatar-photo"
+                                />
+                            ) : isPositive ? (
+                                <ShieldCheck size={52} color="var(--text-primary)" strokeWidth={1.5} />
+                            ) : (
+                                <ShieldAlert size={52} color="var(--text-primary)" strokeWidth={1.5} />
+                            )}
                         </div>
-                        <div className="xp-progress-container">
-                            <div className="xp-progress-text-row">
-                                <span className="xp-progress-current" style={{ color: isPositive ? 'var(--accent-primary)' : 'var(--danger)' }}>
-                                    {(xpProgress || 0).toLocaleString()} XP
+
+                        {/* Mini Level Floating Tag on Bottom of Avatar */}
+                        <div className="avatar-mini-level-tag" style={{ borderColor: `${activeColor}88` }}>
+                            <Sparkles size={11} style={{ color: activeColor }} />
+                            <span>LVL {level || 1}</span>
+                        </div>
+                    </div>
+
+                    {/* IDENTITY DETAILS */}
+                    <div className="identity-content-stack">
+                        <h2 className="identity-user-name">{fullName}</h2>
+
+                        {/* Refined Rank Badge Pill */}
+                        <div className="identity-rank-capsule glass">
+                            <span className="rank-dot" style={{ backgroundColor: activeColor, boxShadow: `0 0 8px ${activeColor}` }} />
+                            <span className="rank-title-text">{title || 'Dreamer'}</span>
+                        </div>
+
+                        {/* XP Progress Card HUD */}
+                        <div className="identity-xp-card glass">
+                            <div className="identity-xp-header">
+                                <span className="identity-xp-current" style={{ color: activeColor }}>
+                                    {(xpProgress || 0).toLocaleString()} <span className="identity-xp-unit">XP</span>
                                 </span>
-                                <span>{(xpToNext || 1000).toLocaleString()} to Next Rank</span>
+                                <span className="identity-xp-target">
+                                    {(xpToNext || 1000).toLocaleString()} to Next Rank
+                                </span>
                             </div>
-                            <div className="xp-progress-track">
+
+                            <div className="identity-xp-bar-track">
                                 <div 
-                                    className="xp-progress-fill" 
+                                    className="identity-xp-bar-fill" 
                                     style={{ 
-                                        width: `${Math.max(xpPercentage, 2)}%`, 
-                                        background: isPositive ? 'var(--accent-primary)' : 'var(--danger)',
-                                        boxShadow: isPositive ? '0 0 15px var(--accent-primary)' : '0 0 15px var(--danger)'
+                                        width: `${Math.min(100, Math.max(safeXpPct, 4))}%`,
+                                        background: `linear-gradient(90deg, ${activeColor}, ${activeColor}dd)`,
+                                        boxShadow: `0 0 12px ${activeColor}88`
                                     }} 
                                 />
+                            </div>
+
+                            <div className="identity-xp-footer">
+                                <span className="identity-xp-percent">{Math.round(safeXpPct)}% Progress</span>
+                                <span className="identity-xp-rank-label">Rank {level || 1}</span>
                             </div>
                         </div>
                     </div>
