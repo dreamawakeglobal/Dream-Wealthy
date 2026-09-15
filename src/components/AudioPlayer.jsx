@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { useSound } from '../SoundContext';
 
 import './AudioPlayer.css';
 
 const AudioPlayer = () => {
-    const [isPlaying, setIsPlaying] = useState(true);
+    const { isMuted } = useSound() || {};
     const audioRef = useRef(null);
     
     // Web Audio refs for mobile
@@ -13,7 +13,7 @@ const AudioPlayer = () => {
     const sourceNodeRef = useRef(null);
     const hasRoutedAudio = useRef(false);
 
-    // Try to auto-play when the component mounts
+    // Try to auto-play when the component mounts if not muted
     useEffect(() => {
         if (audioRef.current) {
             // Initial fallback volume for PC
@@ -47,8 +47,8 @@ const AudioPlayer = () => {
                     }
                 }
                 
-                // If context is suspended (autoplay policy), resume it
-                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                // If context is suspended (autoplay policy), resume it if unmuted
+                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended' && !isMuted) {
                     audioCtxRef.current.resume();
                 }
             };
@@ -57,15 +57,13 @@ const AudioPlayer = () => {
             window.addEventListener('click', attachWebAudioGain, { once: true });
             window.addEventListener('touchstart', attachWebAudioGain, { once: true });
 
-            // Browsers often block autoplay on refresh unless the user interacts first.
-            const playPromise = audioRef.current.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    setIsPlaying(true);
-                }).catch(() => {
-                    // Autoplay prevented
-                    setIsPlaying(false);
-                });
+            if (!isMuted) {
+                const playPromise = audioRef.current.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Autoplay prevented
+                    });
+                }
             }
             
             return () => {
@@ -75,37 +73,32 @@ const AudioPlayer = () => {
         }
     }, []);
 
-    const togglePlay = () => {
-        if (isPlaying) {
+    // Sync play/pause with global isMuted state
+    useEffect(() => {
+        if (!audioRef.current) return;
+        if (isMuted) {
             audioRef.current.pause();
-            setIsPlaying(false);
         } else {
-            audioRef.current.play();
-            // Ensure audio context is alive if they click play
+            const playPromise = audioRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {});
+            }
             if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
                 audioCtxRef.current.resume();
             }
-            setIsPlaying(true);
         }
-    };
+    }, [isMuted]);
 
     return (
-        <div className="global-audio-player">
+        <div className="global-audio-player" style={{ display: 'none' }}>
             <audio
                 ref={audioRef}
                 src="/background-music.mp3"
                 crossOrigin="anonymous"
                 loop
                 preload="auto"
-                autoPlay
+                autoPlay={!isMuted}
             />
-            <button
-                className="audio-toggle-btn"
-                onClick={togglePlay}
-                title={isPlaying ? "Mute Background Music" : "Play Background Music"}
-            >
-                {isPlaying ? <Volume2 size={20} /> : <VolumeX size={20} />}
-            </button>
         </div>
     );
 };

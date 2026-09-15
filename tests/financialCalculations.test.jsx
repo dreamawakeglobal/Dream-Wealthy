@@ -112,15 +112,21 @@ describe('Financial Engine & Calculation Integrity', () => {
                 const actualIncome = overrides.Income !== undefined ? Number(overrides.Income) : monthlyIncome;
                 const actualExpenses = overrides.Expenses !== undefined ? Number(overrides.Expenses) : monthlyExpenses;
 
-                let extraExpensesTotal = 0;
+                let extraNet = 0;
                 const extraData = {};
                 extraColumns.forEach(c => {
                     const extraVal = overrides[c.name] !== undefined ? Number(overrides[c.name]) : Number(c.amount || 0);
-                    extraExpensesTotal += extraVal;
+                    if (c.type === 'income') {
+                        extraNet += extraVal;
+                    } else {
+                        // Both positive inflows (transfers to investments/separate savings) and negative outflows (expenses)
+                        // come out of the monthly surplus and are subtracted from income.
+                        extraNet -= extraVal;
+                    }
                     extraData[c.name] = extraVal;
                 });
 
-                const net = actualIncome - actualExpenses - extraExpensesTotal;
+                const net = actualIncome - actualExpenses + extraNet;
                 cumulative += net;
 
                 data.push({
@@ -182,6 +188,27 @@ describe('Financial Engine & Calculation Integrity', () => {
             expect(results[5].Expenses).toBe(4500);
             expect(results[5]['Annual Bonus Tax']).toBe(500);
             expect(results[5].Net).toBe(0);
+        });
+
+        it('correctly subtracts investment inflows and expense outflows from monthly income surplus', () => {
+            const results = simulateProjections({
+                startingSavings: 1000,
+                monthlyIncome: 5000,
+                monthlyExpenses: 3000,
+                extraColumns: [
+                    { name: 'Investment Inflow', amount: 500, type: 'positive' },
+                    { name: 'Separate Cause Outflow', amount: 200, type: 'negative' }
+                ],
+                totalMonths: 3
+            });
+
+            // Base surplus = 5000 - 3000 = 2000
+            // Both the investment inflow to separate account (-500) and outflow (-200) come from the monthly surplus:
+            // Net each month = 5000 - 3000 - 500 - 200 = 1300
+            expect(results[0].Net).toBe(1300);
+            expect(results[0].Cumulative).toBe(2300); // 1000 + 1300
+            expect(results[1].Cumulative).toBe(3600); // 2300 + 1300
+            expect(results[2].Cumulative).toBe(4900); // 3600 + 1300
         });
 
         it('seamlessly rolls over calendar year boundaries', () => {

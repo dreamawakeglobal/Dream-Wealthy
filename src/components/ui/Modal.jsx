@@ -4,9 +4,63 @@ import { X } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import './Modal.css';
 
+// Global modal lock ref counter to safely handle nested modals in mobile vertical view only
+let openModalCount = 0;
+let savedScrollY = 0;
+let originalBodyStyles = null;
+let originalHtmlOverflow = '';
+
 export const Modal = ({ isOpen, onClose, title, children, glass = true, contentStyle = {}, containerStyle = {}, customClass = '', useNeonGlow = false, invertColors = false, clearBlur = false, dimOverlay = true, transparentOverlay = false, lessTransparent = false, silent = false }) => {
     const { theme } = useTheme();
     const modalRef = useRef(null);
+
+    // Lock background screen ONLY in mobile vertical view (desktop PC view is 100% untouched)
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const isMobileVertical = typeof window !== 'undefined' && 
+            window.matchMedia('(max-width: 768px) and (orientation: portrait), (max-width: 480px)').matches;
+
+        if (!isMobileVertical) return; // Do NOT change anything in desktop PC view
+
+        openModalCount++;
+        if (openModalCount === 1) {
+            savedScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+            originalBodyStyles = {
+                position: document.body.style.position,
+                top: document.body.style.top,
+                left: document.body.style.left,
+                right: document.body.style.right,
+                width: document.body.style.width,
+                overflow: document.body.style.overflow
+            };
+            originalHtmlOverflow = document.documentElement.style.overflow;
+
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${savedScrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.width = '100%';
+            document.body.style.overflow = 'hidden';
+        }
+
+        return () => {
+            if (!isMobileVertical) return;
+            openModalCount = Math.max(0, openModalCount - 1);
+            if (openModalCount === 0 && originalBodyStyles) {
+                document.documentElement.style.overflow = originalHtmlOverflow;
+                document.body.style.position = originalBodyStyles.position;
+                document.body.style.top = originalBodyStyles.top;
+                document.body.style.left = originalBodyStyles.left;
+                document.body.style.right = originalBodyStyles.right;
+                document.body.style.width = originalBodyStyles.width;
+                document.body.style.overflow = originalBodyStyles.overflow;
+                window.scrollTo(0, savedScrollY);
+                originalBodyStyles = null;
+            }
+        };
+    }, [isOpen]);
 
     // Escape Key Listener to dismiss modal
     useEffect(() => {
@@ -58,6 +112,7 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
         return () => window.removeEventListener('keydown', handleTabKey);
     }, [isOpen]);
 
+    // NO HOOKS BELOW THIS LINE
     if (!isOpen) return null;
 
     // Close on an explicit click of the backdrop overlay, not the modal content
@@ -71,22 +126,27 @@ export const Modal = ({ isOpen, onClose, title, children, glass = true, contentS
 
     const modalContent = (
         <div 
-            className="modal-overlay" 
+            className={`modal-overlay ${transparentOverlay ? 'mobile-glass-overlay' : ''}`}
             onClick={handleOverlayClick}
+            onTouchMove={(e) => {
+                if (e.target === e.currentTarget) {
+                    e.preventDefault();
+                }
+            }}
             role="dialog"
             aria-modal="true"
             aria-label={typeof title === 'string' ? title : 'Modal Dialog'}
             style={{ 
                 position: 'fixed', 
                 top: 0, 
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: '100vh',
-                alignItems: 'center',
-                ...(clearBlur ? { background: 'rgba(0, 0, 0, 0.1)' } : {}),
-                ...(transparentOverlay ? { background: 'transparent' } : {}),
-                ...(!dimOverlay ? { background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' } : {})
+                left: 0, 
+                right: 0, 
+                bottom: 0, 
+                height: '100vh', 
+                alignItems: 'center', 
+                ...(clearBlur ? { background: 'rgba(0, 0, 0, 0.1)' } : {}), 
+                ...(transparentOverlay ? { background: 'transparent' } : {}), 
+                ...(!dimOverlay ? { background: 'transparent', backdropFilter: 'none', WebkitBackdropFilter: 'none' } : {}) 
             }}
         >
             <div 

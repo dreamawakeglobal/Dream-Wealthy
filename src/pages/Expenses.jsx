@@ -285,7 +285,7 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
         <div className="stream-list">
             {currentExpenses.map((expense) => (
                 <AnimateOnScroll key={expense.id} delay={0.05} yOffset={20}>
-                    <div className={`stream-item ${expense.isPaid ? 'paid' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); startEditing(expense); }}>
+                    <div className={`stream-item ${showTracking ? 'variable-expense-card' : ''} ${expense.isPaid ? 'paid' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); startEditing(expense); }}>
                         {editingId === expense.id && (
                             <Modal 
                                 isOpen={true} 
@@ -325,31 +325,102 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                 />
                             </Modal>
                         )}
-                        <>
-                                <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-                                    {!showTracking && (
-                                        <div className="checkbox-wrapper">
-                                            {expense.autoPaid ? (
-                                                <div title="Auto-Detected Monthly Payment via Bank Link" style={{ marginRight: '16px', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    <CheckCircle2 size={24} />
-                                                </div>
-                                            ) : (
-                                                <input
-                                                    type="checkbox"
-                                                    className="expense-checkbox"
-                                                    checked={expense.isPaid || false}
-                                                    onChange={(e) => {
-                                                        const isChecked = e.target.checked;
-                                                        if (isChecked) {
-                                                            playCheck();
-                                                        }
-                                                        onEdit(expense.id, { isPaid: isChecked });
-                                                    }}
-                                                    title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
-                                                />
-                                            )}
+                        {showTracking ? (
+                            <div className="variable-expense-card-inner">
+                                <div className="variable-item-identity">
+                                    <div className="variable-item-name-row">
+                                        <span className="variable-item-name">{expense.name}</span>
+                                        {expense.apiId && (
+                                            <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: '#000000' }} title={`Linked to ${expense.apiId}`}>
+                                                🔗
+                                            </span>
+                                        )}
+                                        {expense.targetCategory && (
+                                            <span className="variable-item-category-pill">
+                                                {getFilterLabel(expense.targetCategory)}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <span className="variable-item-freq">Monthly</span>
+                                </div>
+
+                                <div className="variable-item-tracker-group">
+                                    <span className="variable-item-tracker-label">Auto-Tracker:</span>
+                                    <div className="variable-item-tracker-pill">
+                                        <CurrencyInput
+                                            raw
+                                            className="variable-tracker-input"
+                                            value={expense.manualSpent != null ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
+                                            }}
+                                            placeholder=""
+                                        />
+                                    </div>
+                                </div>
+
+                                {(() => {
+                                    const spent = expense.manualSpent != null ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0);
+                                    const left = expense.amount - spent;
+                                    const isNegative = left < 0;
+                                    const isWarning = left >= 0 && left <= (expense.amount * 0.1);
+                                    const leftColor = isNegative ? '#ff3b30' : isWarning ? '#ff9f0a' : '#10b981';
+                                    const formattedLeft = Math.abs(left).toLocaleString(undefined, { 
+                                        minimumFractionDigits: left % 1 !== 0 ? 2 : 0, 
+                                        maximumFractionDigits: 2 
+                                    });
+
+                                    return (
+                                        <div className="variable-item-left-amount" style={{ color: leftColor }}>
+                                            Left: {isNegative ? '-' : ''}${formattedLeft}
                                         </div>
-                                    )}
+                                    );
+                                })()}
+
+                                <span className="variable-item-budget-amount">${expense.amount.toLocaleString()}</span>
+
+                                <div className="variable-item-actions-group">
+                                    <button 
+                                        className="variable-item-edit-btn" 
+                                        onClick={() => { if(playPop) playPop(); startEditing(expense); }}
+                                        title="Edit"
+                                    >
+                                        <Edit2 size={17} />
+                                    </button>
+                                    <button 
+                                        className="variable-item-delete-btn" 
+                                        onClick={() => onRemove(expense.id)}
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={17} />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                    <div className="checkbox-wrapper">
+                                        {expense.autoPaid ? (
+                                            <div title="Auto-Detected Monthly Payment via Bank Link" style={{ marginRight: '16px', color: 'var(--success)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <CheckCircle2 size={24} />
+                                            </div>
+                                        ) : (
+                                            <input
+                                                type="checkbox"
+                                                className="expense-checkbox"
+                                                checked={expense.isPaid || false}
+                                                onChange={(e) => {
+                                                    const isChecked = e.target.checked;
+                                                    if (isChecked) {
+                                                        playCheck();
+                                                    }
+                                                    onEdit(expense.id, { isPaid: isChecked });
+                                                }}
+                                                title={expense.isPaid ? "Mark as unpaid" : "Mark as paid"}
+                                            />
+                                        )}
+                                    </div>
                                     <div className="stream-info">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <p className="stream-name" style={{ margin: 0 }}>{expense.name}</p>
@@ -370,51 +441,15 @@ const ExpenseList = ({ expenses, onRemove, onEdit, emptyMessage, showTracking = 
                                     </div>
                                 </div>
 
-                                {showTracking && (
-                                    <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '4px 10px', gap: '8px', margin: '0 8px', flex: 1 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>Auto-Tracker: </span>
-                                            <CurrencyInput
-                                                raw
-                                                className={`auto-tracker-input ${expenseBorderColor === 'none' ? 'no-border' : ''}`}
-                                                value={expense.manualSpent != null ? expense.manualSpent : (transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)] || '')}
-                                                onChange={(e) => {
-                                                    const val = e.target.value;
-                                                    onEdit(expense.id, { manualSpent: val === '' ? undefined : Number(val) });
-                                                }}
-                                                style={{ width: '80px', background: 'transparent', border: expenseBorderColor === 'none' ? 'none' : '2px solid', borderColor: expenseBorderColor === 'none' ? 'transparent' : (activeColor || 'var(--primary)'), borderRadius: '50px', color: 'var(--text-primary)', padding: '4px 8px', fontSize: '0.9rem', textAlign: 'right', outline: 'none', transition: 'border-color 0.2s' }}
-                                                onFocus={(e) => {
-                                                    if (expenseBorderColor !== 'none') e.target.style.borderColor = activeColor || 'var(--primary)';
-                                                }}
-                                                onBlur={(e) => {
-                                                    if (expenseBorderColor !== 'none') e.target.style.borderColor = activeColor || 'var(--primary)';
-                                                }}
-                                            />
-                                        </div>
-                                        <div style={{
-                                            fontSize: '0.85rem',
-                                            fontWeight: 600,
-                                            color: (() => {
-                                                const spent = expense.manualSpent != null ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0);
-                                                const left = expense.amount - spent;
-                                                if (left <= 0) return 'var(--danger)';
-                                                if (left <= expense.amount * 0.1) return '#ff9f0a';
-                                                return 'var(--success)';
-                                            })()
-                                        }}>
-                                            Left: ${(expense.amount - (expense.manualSpent != null ? Number(expense.manualSpent) : (Number(transactionsByCategory[expense.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(expense.name) : expense.name)]) || 0))).toLocaleString()}
-                                        </div>
-                                    </div>
-                                )}
-
                                 <div className="stream-actions">
-                                    <span className="stream-amount negative" style={{ minWidth: '80px', textAlign: 'right' }}>${expense.amount.toLocaleString()}</span>
+                                    <span className="stream-amount negative" style={{ textAlign: 'right' }}>${expense.amount.toLocaleString()}</span>
                                     <button className="btn-icon" onClick={() => { if(playPop) playPop(); startEditing(expense); }}><Edit2 size={16} /></button>
                                     <button onClick={() => onRemove(expense.id)} className="btn-icon danger">
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
                             </>
+                        )}
                     </div>
                 </AnimateOnScroll>
             ))}
@@ -757,23 +792,27 @@ const Expenses = () => {
 
     const activeSubscriptions = useMemo(() => {
         const manualSubs = subscriptions || [];
-        
         const mergedMap = new Map();
 
-        // Add user manual subscriptions
+        // 1. User manual subscriptions ALWAYS show (they are the explicit source of truth)
         manualSubs.forEach(sub => {
-            const key = sub.name.toLowerCase().trim();
-            if (!dismissedSubIds.includes(key) && !dismissedSubIds.includes(String(sub.id))) {
+            const key = (sub.name || '').toLowerCase().trim();
+            if (key) {
                 mergedMap.set(key, { ...sub, isAutoDetected: false });
             }
         });
 
-        // Auto-merge subscriptions detected from Plaid transactions (if not dismissed or overridden)
+        // 2. Auto-merge Plaid auto-detected subscriptions ONLY IF not dismissed and not already in manualSubs
         autoDetectedSubscriptions.forEach(autoSub => {
-            const key = autoSub.name.toLowerCase().trim();
+            const key = (autoSub.name || '').toLowerCase().trim();
             const subId = autoSub.id || `auto-${key}`;
 
-            if (!mergedMap.has(key) && !dismissedSubIds.includes(key) && !dismissedSubIds.includes(subId)) {
+            const isDismissed = dismissedSubIds.some(d => {
+                const dStr = String(d).toLowerCase().trim();
+                return dStr === key || dStr === subId || dStr === `auto-${key}`;
+            });
+
+            if (key && !mergedMap.has(key) && !isDismissed) {
                 mergedMap.set(key, {
                     id: subId,
                     name: autoSub.name,
@@ -806,7 +845,7 @@ const Expenses = () => {
         });
 
         return mergedSubs.map(sub => {
-            const searchTag = sub.name.toLowerCase();
+            const searchTag = (sub.name || '').toLowerCase();
             const isPaid = thisMonthSubscriptionMerchants.some(m => m.includes(searchTag) || searchTag.includes(m));
             if (isPaid) {
                 return { ...sub, isPaid: true };
@@ -820,22 +859,35 @@ const Expenses = () => {
     const toggleSubscription = (sub) => {
         playPop();
         const prev = subscriptions || [];
-        const nameKey = sub.name.toLowerCase().trim();
-        const exists = prev.find(s => s.name.toLowerCase().trim() === nameKey);
+        const nameKey = (sub.name || '').toLowerCase().trim();
+        const exists = prev.find(s => (s.name || '').toLowerCase().trim() === nameKey);
+        
         if (exists) {
-            setSubscriptions(prev.filter(s => s.name.toLowerCase().trim() !== nameKey));
+            // Dismiss / remove
+            const nextList = prev.filter(s => (s.name || '').toLowerCase().trim() !== nameKey && String(s.id) !== String(sub.id));
+            setSubscriptions(nextList);
+            try { localStorage.setItem('dw_saved_subscriptions', JSON.stringify(nextList)); } catch (err) { console.debug(err); }
             setDismissedSubIds(p => {
-                const u = [...p, nameKey];
+                const u = Array.from(new Set([...p, nameKey, String(sub.id), `auto-${nameKey}`]));
                 try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
                 return u;
             });
+            if (user?.id) {
+                supabase.from('subscriptions').delete().eq('user_id', user.id).ilike('name', `%${nameKey}%`).then();
+            }
         } else {
+            // Restore / add
             setDismissedSubIds(p => {
-                const u = p.filter(x => x !== nameKey && x !== sub.id);
+                const u = p.filter(x => {
+                    const xStr = String(x).toLowerCase().trim();
+                    return xStr !== nameKey && xStr !== String(sub.id) && xStr !== `auto-${nameKey}`;
+                });
                 try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
                 return u;
             });
-            setSubscriptions([...prev, { ...sub, id: crypto.randomUUID() }]);
+            const nextList = [...prev.filter(s => (s.name || '').toLowerCase().trim() !== nameKey), { ...sub, id: crypto.randomUUID() }];
+            setSubscriptions(nextList);
+            try { localStorage.setItem('dw_saved_subscriptions', JSON.stringify(nextList)); } catch (err) { console.debug(err); }
         }
     };
 
@@ -843,36 +895,65 @@ const Expenses = () => {
         e.preventDefault();
         if (newSub.name && newSub.cost) {
             const prev = subscriptions || [];
+            const subNameKey = newSub.name.toLowerCase().trim();
+            const costVal = parseFloat(newSub.cost) || 0;
+            const dueDayVal = newSub.dueDate ? parseInt(newSub.dueDate) : null;
+            const domainVal = newSub.domain?.trim() || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`;
+
+            // Un-dismiss if it was previously dismissed
+            setDismissedSubIds(p => {
+                const u = p.filter(x => {
+                    const xStr = String(x).toLowerCase().trim();
+                    return xStr !== subNameKey && xStr !== `auto-${subNameKey}` && String(x) !== String(editingSubId);
+                });
+                try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
+                return u;
+            });
+
+            let nextList;
             if (editingSubId) {
                 const isExistingInSubscriptions = prev.some(s => String(s.id) === String(editingSubId));
                 if (isExistingInSubscriptions) {
-                    setSubscriptions(prev.map(s => String(s.id) === String(editingSubId) ? { 
+                    nextList = prev.map(s => String(s.id) === String(editingSubId) ? { 
                         ...s, 
-                        name: newSub.name, 
-                        domain: newSub.domain,
-                        cost: parseFloat(newSub.cost), 
-                        dueDate: newSub.dueDate || null 
-                    } : s));
+                        name: newSub.name.trim(), 
+                        domain: domainVal,
+                        cost: costVal, 
+                        dueDate: dueDayVal 
+                    } : s);
                 } else {
+                    // Auto-detected item being customized -> save as new manual subscription with UUID
+                    const newUuid = crypto.randomUUID();
+                    // Dismiss old auto identifier
+                    setDismissedSubIds(p => {
+                        const u = Array.from(new Set([...p, String(editingSubId), `auto-${subNameKey}`]));
+                        try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(u)); } catch (err) { console.debug(err); }
+                        return u;
+                    });
                     const custom = {
-                        id: editingSubId,
-                        name: newSub.name,
-                        domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
-                        cost: parseFloat(newSub.cost),
-                        dueDate: newSub.dueDate || null
+                        id: newUuid,
+                        name: newSub.name.trim(),
+                        domain: domainVal,
+                        cost: costVal,
+                        dueDate: dueDayVal,
+                        cadence: 'Monthly'
                     };
-                    setSubscriptions([...prev, custom]);
+                    nextList = [...prev.filter(s => (s.name || '').toLowerCase().trim() !== subNameKey), custom];
                 }
             } else {
                 const custom = {
                     id: crypto.randomUUID(),
-                    name: newSub.name,
-                    domain: newSub.domain || `${newSub.name.toLowerCase().replace(/\s+/g, '')}.com`,
-                    cost: parseFloat(newSub.cost),
-                    dueDate: newSub.dueDate || null
+                    name: newSub.name.trim(),
+                    domain: domainVal,
+                    cost: costVal,
+                    dueDate: dueDayVal,
+                    cadence: 'Monthly'
                 };
-                setSubscriptions([...prev, custom]);
+                nextList = [...prev.filter(s => (s.name || '').toLowerCase().trim() !== subNameKey), custom];
             }
+            setSubscriptions(nextList);
+            try { localStorage.setItem('dw_saved_subscriptions', JSON.stringify(nextList)); } catch (err) { console.debug(err); }
+
             setNewSub({ name: '', cost: '', domain: '', dueDate: '' });
             setShowAddSub(false);
             setEditingSubId(null);
@@ -883,15 +964,35 @@ const Expenses = () => {
         playPop();
         const prev = subscriptions || [];
         const id = typeof subTarget === 'object' ? subTarget.id : subTarget;
-        const nameKey = typeof subTarget === 'object' ? subTarget.name?.toLowerCase().trim() : String(id).toLowerCase();
+        const name = typeof subTarget === 'object' ? subTarget.name : String(subTarget);
+        const nameKey = (name || '').toLowerCase().trim();
 
-        setSubscriptions(prev.filter(s => String(s.id) !== String(id) && s.name?.toLowerCase().trim() !== nameKey));
+        // 1. Filter out from manual subscriptions state
+        const nextSubs = prev.filter(s => {
+            const sName = (s.name || '').toLowerCase().trim();
+            const sId = String(s.id);
+            return sId !== String(id) && sName !== nameKey;
+        });
+        setSubscriptions(nextSubs);
+        try { localStorage.setItem('dw_saved_subscriptions', JSON.stringify(nextSubs)); } catch (err) { console.debug(err); }
 
+        // 2. Mark as dismissed in localStorage and local state so auto-detected items don't reappear
         setDismissedSubIds(prevDismissed => {
-            const updated = Array.from(new Set([...prevDismissed, String(id), nameKey]));
+            const additions = [String(id), nameKey, `auto-${nameKey}`];
+            const updated = Array.from(new Set([...prevDismissed, ...additions.map(x => String(x).toLowerCase().trim())]));
             try { localStorage.setItem('dw_dismissed_subs', JSON.stringify(updated)); } catch (err) { console.debug(err); }
             return updated;
         });
+
+        // 3. Directly delete from Supabase if authenticated
+        if (user?.id) {
+            if (id && String(id).length > 20) {
+                supabase.from('subscriptions').delete().eq('user_id', user.id).eq('id', id).then();
+            }
+            if (nameKey) {
+                supabase.from('subscriptions').delete().eq('user_id', user.id).ilike('name', `%${nameKey}%`).then();
+            }
+        }
     };
 
     const [editingSubId, setEditingSubId] = useState(null);
@@ -1020,7 +1121,7 @@ const Expenses = () => {
     const editVariable = (id, updated) => setVariableExpenses(prev => prev.map(e => e.id === id ? { ...e, ...updated } : e));
 
     return (
-        <div className="page-container animate-fade-in">
+        <div className="page-container animate-fade-in expenses-page">
             <div className="page-header" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '0' }}>
                 <img src="/expenses-header-logo.png" alt="Expenses Header Logo" className="page-header-logo" style={{ height: '336px', objectFit: 'contain' }} loading="lazy" />
                 <p className="page-subtitle">Track and optimize your outflows.</p>
@@ -1093,38 +1194,51 @@ const Expenses = () => {
             <div className="expense-content-grid">
                 {/* Fixed Expenses */}
                 <AnimateOnScroll delay={0.1} className="expense-column fixed-expense-box">
-                    <div className="column-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                            <h2 style={{ margin: 0 }}>Fixed Expenses</h2>
-                            <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${totalFixedExpenses.toLocaleString()}</span>
-                            {(() => {
-                                const paid = computedFixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
-                                const left = totalFixedExpenses - paid;
-                                return (
-                                    <>
-                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
-                                            Paid: ${paid.toLocaleString()}
-                                        </span>
-                                        <span className="badge success-badge">
-                                            Left: ${left.toLocaleString()}
-                                        </span>
-                                    </>
-                                );
-                            })()}
+                    <div className="column-header">
+                        <div className="column-header-left">
+                            <h2 className="column-title" style={{ margin: 0 }}>Fixed Expenses</h2>
+                            <div className="column-pills-row">
+                                <div className="pills-top-row">
+                                    <span className="badge danger-badge">
+                                        <span className="pill-prefix-mobile">Total: </span>${totalFixedExpenses.toLocaleString()}
+                                    </span>
+                                    {(() => {
+                                        const paid = computedFixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
+                                        return (
+                                            <span className="badge" style={{ background: 'var(--surface-hover)', color: theme === 'dark' ? 'var(--text-primary)' : '#000000', border: '1px solid var(--surface-border)' }}>
+                                                Paid: ${paid.toLocaleString()}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                                <div className="pills-bottom-row">
+                                    {(() => {
+                                        const paid = computedFixedExpenses.filter(e => e.isPaid).reduce((sum, e) => sum + e.amount, 0);
+                                        const left = totalFixedExpenses - paid;
+                                        return (
+                                            <span className="badge success-badge">
+                                                Left: ${left.toLocaleString()}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
                         </div>
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => {
-                                if (playPop) playPop();
-                                setIsFixedModalOpen(true);
-                            }}
-                            style={{ height: '32px', padding: '6px 14px', marginLeft: '12px' }}
-                            className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
-                        >
-                            <Plus size={16} style={{ marginRight: '6px' }} />
-                            Add Bill
-                        </Button>
+                        <div className="column-actions-row">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => {
+                                    if (playPop) playPop();
+                                    setIsFixedModalOpen(true);
+                                }}
+                                style={{ height: '32px', padding: '6px 14px' }}
+                                className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
+                            >
+                                <Plus size={16} style={{ marginRight: '6px' }} />
+                                Add Bill
+                            </Button>
+                        </div>
                     </div>
 
                     <Modal 
@@ -1168,30 +1282,36 @@ const Expenses = () => {
 
                 {/* Variable Expenses */}
                 <AnimateOnScroll delay={0.2} className="expense-column variable-expense-box">
-                    <div className="column-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center' }}>
-                            <h2 style={{ margin: 0 }}>Variable Expenses</h2>
-                            <span className="badge warning-badge" style={{ marginLeft: '12px' }}>
-                                Budget: ${totalVariableExpenses.toLocaleString()}
-                            </span>
-                            <span className="badge" style={{ marginLeft: '8px', background: 'var(--surface-hover)', color: '#000000', border: '1px solid var(--surface-border)' }}>
-                                Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
-                            </span>
-                            {(() => {
-                                const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0);
-                                const left = totalVariableExpenses - spent;
-                                const isNegative = left < 0;
-                                const isWarning = left > 0 && left <= (totalVariableExpenses * 0.1);
-                                const badgeClass = isNegative ? 'danger-badge' : isWarning ? 'warning-badge' : 'success-badge';
-                                
-                                return (
-                                    <span className={`badge ${badgeClass}`} style={{ marginLeft: '8px' }}>
-                                        Left: ${left.toLocaleString()}
+                    <div className="column-header">
+                        <div className="column-header-left">
+                            <h2 className="column-title" style={{ margin: 0 }}>Variable Expenses</h2>
+                            <div className="column-pills-row">
+                                <div className="pills-top-row">
+                                    <span className="badge warning-badge">
+                                        Budget: ${totalVariableExpenses.toLocaleString()}
                                     </span>
-                                );
-                            })()}
+                                    <span className="badge" style={{ background: 'var(--surface-hover)', color: theme === 'dark' ? 'var(--text-primary)' : '#000000', border: '1px solid var(--surface-border)' }}>
+                                        Spent: ${variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0).toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="pills-bottom-row">
+                                    {(() => {
+                                        const spent = variableExpenses.reduce((sum, exp) => sum + (exp.manualSpent != null ? Number(exp.manualSpent) : (Number(transactionsByCategory[exp.targetCategory || (mapUserExpenseToPlaidCategory ? mapUserExpenseToPlaidCategory(exp.name) : exp.name)]) || 0)), 0);
+                                        const left = totalVariableExpenses - spent;
+                                        const isNegative = left < 0;
+                                        const isWarning = left > 0 && left <= (totalVariableExpenses * 0.1);
+                                        const badgeClass = isNegative ? 'danger-badge' : isWarning ? 'warning-badge' : 'success-badge';
+                                        
+                                        return (
+                                            <span className={`badge ${badgeClass}`}>
+                                                Left: ${left.toLocaleString()}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="column-actions-row" style={{ display: 'flex', gap: '8px' }}>
                             <Button
                                 variant="secondary"
                                 size="sm"
@@ -1201,7 +1321,7 @@ const Expenses = () => {
                                 }}
                                 className="activity-sync-btn"
                                 style={{ 
-                                    padding: '6px 14px', 
+                                    padding: '6px 12px', 
                                     height: '32px',
                                     ...(activeColor ? {
                                         backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -1213,7 +1333,7 @@ const Expenses = () => {
                                     } : {})
                                 }}
                             >
-                                <Activity size={16} style={{ marginRight: '6px' }} />
+                                <Activity size={16} style={{ marginRight: '4px' }} />
                                 Activity
                             </Button>
                             <Button
@@ -1223,10 +1343,10 @@ const Expenses = () => {
                                     if (playPop) playPop();
                                     setIsVariableModalOpen(true);
                                 }}
-                                style={{ height: '32px', padding: '6px 14px' }}
+                                style={{ height: '32px', padding: '6px 12px' }}
                                 className={expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}
                             >
-                                <Plus size={16} style={{ marginRight: '6px' }} />
+                                <Plus size={16} style={{ marginRight: '4px' }} />
                                 Add expense
                             </Button>
                         </div>
@@ -1286,37 +1406,57 @@ const Expenses = () => {
                             <span>Plaid Auto-Detector active: <strong>{autoDetectedSubscriptions.length} recurring subscriptions</strong> synced from transaction history.</span>
                         </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                            <h2 style={{ margin: 0 }}>Subscriptions</h2>
-                            {(() => {
-                                const currentTotal = (activeSubscriptions || []).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
-                                const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
-                                const left = Math.max(0, currentTotal - paid);
-                                return (
-                                    <>
-                                        <span className="badge danger-badge" style={{ marginLeft: '4px' }}>${currentTotal.toFixed(2)}/mo</span>
-                                        <span className="badge" style={{ background: 'var(--surface-hover)', color: 'var(--text-primary)', border: '1px solid var(--surface-border)' }}>
-                                            Paid: ${paid.toFixed(2)}
-                                        </span>
-                                        <span className="badge success-badge">
-                                            Left: ${left.toFixed(2)}
-                                        </span>
-                                    </>
-                                );
-                            })()}
+                    <div className="column-header" style={{ marginBottom: '20px' }}>
+                        <div className="column-header-left">
+                            <h2 className="column-title" style={{ margin: 0 }}>Subscriptions</h2>
+                            <div className="column-pills-row">
+                                <div className="pills-top-row">
+                                    {(() => {
+                                        const currentTotal = (activeSubscriptions || []).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                        const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                        return (
+                                            <>
+                                                <span className="badge danger-badge">
+                                                    <span className="pill-prefix-mobile">Total: </span>${currentTotal.toFixed(2)}/mo
+                                                </span>
+                                                <span className="badge" style={{ background: 'var(--surface-hover)', color: theme === 'dark' ? 'var(--text-primary)' : '#000000', border: '1px solid var(--surface-border)' }}>
+                                                    Paid: ${paid.toFixed(2)}
+                                                </span>
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                                <div className="pills-bottom-row">
+                                    {(() => {
+                                        const currentTotal = (activeSubscriptions || []).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                        const paid = (activeSubscriptions || []).filter(sub => sub.isPaid).reduce((sum, sub) => sum + (Number(sub.cost) || 0), 0);
+                                        const left = Math.max(0, currentTotal - paid);
+                                        return (
+                                            <span className="badge success-badge">
+                                                Left: ${left.toFixed(2)}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                            </div>
                         </div>
-                        <Button 
-                            size="sm" 
-                            onClick={() => { playPop(); setShowAddSub(!showAddSub); }}
-                            style={activeColor ? { 
-                                background: activeColor, 
-                                borderColor: activeColor, 
-                                color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
-                            } : {}}
-                        >
-                            {showAddSub ? 'Cancel' : <><Plus size={16} /> Custom</>}
-                        </Button>
+                        <div className="column-actions-row">
+                            <Button 
+                                size="sm" 
+                                onClick={() => { playPop(); setShowAddSub(!showAddSub); }}
+                                style={{
+                                    height: '32px',
+                                    padding: '6px 14px',
+                                    ...(activeColor ? { 
+                                        background: activeColor, 
+                                        borderColor: activeColor, 
+                                        color: (expenseBorderColor === 'white' || expenseBorderColor === 'yellow') ? 'black' : 'white' 
+                                    } : {})
+                                }}
+                            >
+                                {showAddSub ? 'Cancel' : <><Plus size={16} style={{ marginRight: '4px' }} /> Custom</>}
+                            </Button>
+                        </div>
                     </div>
 
                     <Modal
@@ -1448,6 +1588,19 @@ const Expenses = () => {
                                                 <span style={{ color: 'white', fontWeight: 900, fontSize: '1.25rem', letterSpacing: '4px', textShadow: '0 2px 10px rgba(0,0,0,0.5)', border: '2px solid white', padding: '4px 12px', borderRadius: '6px' }}>PAID</span>
                                             </div>
                                         )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                playPop();
+                                                setEditingSubId(sub.id);
+                                                setNewSub({ name: sub.name, cost: sub.cost, dueDate: sub.dueDate || '', domain: sub.domain || '' });
+                                                setShowAddSub(true);
+                                            }}
+                                            style={{ position: 'absolute', top: '4px', left: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', fontSize: '0.7rem', zIndex: 20 }}
+                                            title="Edit"
+                                        >
+                                            <Edit2 size={12} />
+                                        </button>
                                         <button
                                             onClick={(e) => { e.stopPropagation(); removeSubscription(sub); }}
                                             style={{ position: 'absolute', top: '4px', right: '6px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px', fontSize: '0.7rem', zIndex: 20 }}
@@ -2225,20 +2378,20 @@ const Expenses = () => {
                     );
                 })()}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                    <p className="text-muted" style={{ fontSize: '0.9rem', maxWidth: '60%', margin: 0 }}>
+                <div className="activity-modal-header">
+                    <p className="activity-modal-description">
                         These transactions were automatically securely synced from your connected Plaid bank accounts.
                         The Rules Engine uses their categories to automatically deduct from your Variable Expense budgets.
                     </p>
-                    <div className="total-amount-box activity-blur-box" style={{ background: 'var(--surface-hover)', padding: '12px 20px', borderRadius: '12px', border: '1px solid var(--surface-border)', textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px', textTransform: 'uppercase', fontWeight: 600 }}>Total ({getFilterLabel(activityCategoryFilter)})</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: filteredTotalAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
+                    <div className="activity-total-box activity-blur-box">
+                        <div className="activity-total-label">Total ({getFilterLabel(activityCategoryFilter)})</div>
+                        <div className="activity-total-value" style={{ color: filteredTotalAmount > 0 ? 'var(--danger)' : 'var(--success)' }}>
                             {filteredTotalAmount > 0 ? '-' : ''}${Math.abs(filteredTotalAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                     </div>
                 </div>
 
-                <div className="category-filters" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '16px', marginBottom: '16px', borderBottom: '1px solid var(--surface-border)' }}>
+                <div className="activity-category-filters">
                     {[
                         { id: 'All', label: getFilterLabel('All') },
                         { id: 'PSEUDO_GAS', label: getFilterLabel('PSEUDO_GAS') },
@@ -2257,8 +2410,8 @@ const Expenses = () => {
                                 border: activityCategoryFilter === catObj.id ? 'none' : '1px solid var(--surface-border)',
                                 background: activityCategoryFilter === catObj.id ? 'var(--primary)' : 'transparent',
                                 color: activityCategoryFilter === catObj.id ? 'black' : 'var(--text-secondary)',
-                                padding: '6px 16px',
-                                fontSize: '0.85rem',
+                                padding: '6px 14px',
+                                fontSize: '0.82rem',
                                 whiteSpace: 'nowrap'
                             }}
                         >
@@ -2267,97 +2420,100 @@ const Expenses = () => {
                     ))}
                 </div>
 
-                <div className="transactions-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="activity-transactions-list">
                     {(!filteredTransactions || filteredTransactions.length === 0) ? (
                         <div className="empty-state text-muted" style={{ textAlign: 'center', padding: '32px' }}>
                             No recent bank transactions found. Have you connected a bank?
                         </div>
                     ) : (
                         paginatedTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
-                                <div className="tx-merchant" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                    <span>{tx.merchant_name || tx.name || 'Unknown Merchant'}</span>
-                                    {tx.pending && <span className="badge warning-badge" style={{ fontSize: '0.7rem' }}>Pending</span>}
-                                </div>
-                                <div className="tx-date text-muted" style={{ fontSize: '0.85rem' }}>
-                                    {new Date(tx.date).toLocaleDateString()}
-                                </div>
-                                <div className="tx-category">
-                                    {editingTransactionId === tx.id && !tx.isSplitChild ? (
-                                        <select
-                                            autoFocus
-                                            defaultValue={detectPseudoCategory(tx)}
-                                            style={{ background: 'var(--surface)', border: '1px solid var(--primary)', borderRadius: '4px', color: 'white', padding: '2px 8px', fontSize: '0.8rem', width: '150px', outline: 'none', cursor: 'pointer' }}
-                                            onChange={(e) => {
-                                                const newCat = e.target.value;
-                                                setEditingTransactionId(null);
-                                                if (newCat && newCat !== detectPseudoCategory(tx)) {
-                                                    const overrideCat = newCat + ' ';
-                                                    
-                                                    if (newCat === 'PSEUDO_SUBSCRIPTIONS') {
-                                                        const newSub = {
-                                                            id: crypto.randomUUID(),
-                                                            user_id: tx.user_id,
-                                                            name: (tx.merchant_name || tx.name || 'New Subscription').trim(),
-                                                            cost: Math.abs(tx.amount),
-                                                            cycle: 'Monthly'
-                                                        };
-                                                        setSubscriptions([...(subscriptions || []), newSub]);
-                                                        if (playCheck) playCheck();
-                                                    }
-
-                                                    useStore.setState(s => ({
-                                                        transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
-                                                    }));
-                                                    
-                                                    supabase.from('transactions').update({ category: overrideCat }).eq('id', tx.id).then();
-                                                }
-                                            }}
-                                            onBlur={() => {
-                                                setTimeout(() => setEditingTransactionId(null), 150);
-                                            }}
-                                        >
-                                            <option disabled value="">Select Category</option>
-                                            <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
-                                            <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
-                                            <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
-                                            <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
-                                            <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
-                                            {uniqueCategories.filter(c => c !== 'All').map(c => (
-                                                <option key={c} value={c}>{getFilterLabel(c)}</option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <span 
-                                            onClick={() => {
-                                                if (!tx.isSplitChild) setEditingTransactionId(tx.id);
-                                            }}
-                                            className="badge badge-hover" 
-                                            style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', cursor: tx.isSplitChild ? 'default' : 'pointer', transition: '0.2s', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}
-                                            title={tx.isSplitChild ? "Edit category via the split menu" : "Click to edit category"}
-                                        >
-                                            {getFilterLabel(detectPseudoCategory(tx))}
+                            <div key={tx.id} className="activity-tx-card activity-blur-box">
+                                <div className="activity-tx-top-row">
+                                    <div className="activity-tx-merchant">
+                                        <span className="activity-tx-name">{tx.merchant_name || tx.name || 'Unknown Merchant'}</span>
+                                        {tx.pending && <span className="badge warning-badge activity-tx-pending">Pending</span>}
+                                    </div>
+                                    <div className="activity-tx-amount-group">
+                                        <span className={`activity-tx-amount ${tx.amount > 0 ? 'text-danger' : 'text-success'}`}>
+                                            {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         </span>
-                                    )}
-                                </div>
-                                <div className={`tx-amount ${tx.amount > 0 ? 'text-danger' : 'text-success'}`} style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                        {tx.amount > 0 ? '-' : '+'}${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                         <button 
                                             onClick={() => setSplittingTransaction(tx)}
-                                            className="btn-icon" 
-                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.5, color: tx.isSplitChild ? 'var(--primary)' : 'inherit', padding: '4px' }}
+                                            className="activity-tx-split-btn" 
+                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.6, color: tx.isSplitChild ? 'var(--primary)' : 'inherit' }}
                                             title={tx.isSplitChild ? "Edit Split" : "Split Transaction"}
                                         >
-                                            <Scissors size={14} />
+                                            <Scissors size={13} />
                                         </button>
+                                    </div>
+                                </div>
+                                <div className="activity-tx-bottom-row">
+                                    <div className="activity-tx-date">
+                                        {new Date(tx.date).toLocaleDateString()}
+                                    </div>
+                                    <div className="activity-tx-category">
+                                        {editingTransactionId === tx.id && !tx.isSplitChild ? (
+                                            <select
+                                                autoFocus
+                                                defaultValue={detectPseudoCategory(tx)}
+                                                className="activity-tx-select"
+                                                onChange={(e) => {
+                                                    const newCat = e.target.value;
+                                                    setEditingTransactionId(null);
+                                                    if (newCat && newCat !== detectPseudoCategory(tx)) {
+                                                        const overrideCat = newCat + ' ';
+                                                        
+                                                        if (newCat === 'PSEUDO_SUBSCRIPTIONS') {
+                                                            const newSub = {
+                                                                id: crypto.randomUUID(),
+                                                                user_id: tx.user_id,
+                                                                name: (tx.merchant_name || tx.name || 'New Subscription').trim(),
+                                                                cost: Math.abs(tx.amount),
+                                                                cycle: 'Monthly'
+                                                            };
+                                                            setSubscriptions([...(subscriptions || []), newSub]);
+                                                            if (playCheck) playCheck();
+                                                        }
+
+                                                        useStore.setState(s => ({
+                                                            transactions: s.transactions.map(t => String(t.id) === String(tx.id) ? { ...t, category: overrideCat } : t)
+                                                        }));
+                                                        
+                                                        supabase.from('transactions').update({ category: overrideCat }).eq('id', tx.id).then();
+                                                    }
+                                                }}
+                                                onBlur={() => {
+                                                    setTimeout(() => setEditingTransactionId(null), 150);
+                                                }}
+                                            >
+                                                <option disabled value="">Select Category</option>
+                                                <option value="PSEUDO_GAS">{getFilterLabel('PSEUDO_GAS')}</option>
+                                                <option value="PSEUDO_RIDE_SHARE">{getFilterLabel('PSEUDO_RIDE_SHARE')}</option>
+                                                <option value="PSEUDO_GROCERIES">{getFilterLabel('PSEUDO_GROCERIES')}</option>
+                                                <option value="PSEUDO_HYGIENE_HOUSEHOLD">{getFilterLabel('PSEUDO_HYGIENE_HOUSEHOLD')}</option>
+                                                <option value="PSEUDO_SUBSCRIPTIONS">{getFilterLabel('PSEUDO_SUBSCRIPTIONS')}</option>
+                                                {uniqueCategories.filter(c => c !== 'All').map(c => (
+                                                    <option key={c} value={c}>{getFilterLabel(c)}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <span 
+                                                onClick={() => {
+                                                    if (!tx.isSplitChild) setEditingTransactionId(tx.id);
+                                                }}
+                                                className="badge badge-hover activity-tx-category-badge" 
+                                                title={tx.isSplitChild ? "Edit category via the split menu" : "Click to edit category"}
+                                            >
+                                                {getFilterLabel(detectPseudoCategory(tx))}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         ))
                     )}
                 </div>
-                
+
 
                 {activityTotalPages > 1 && (
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', borderTop: '1px solid var(--surface-border)', paddingTop: '16px' }}>

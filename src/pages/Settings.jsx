@@ -10,6 +10,7 @@ import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
 import { User, Lock, Camera, Save, Bell, Shield, Loader2, Link2, Sparkles, Briefcase, Zap, BrainCircuit, AlertTriangle, CheckCircle2, FileText, Trash2 } from 'lucide-react';
 import PlaidConnectButton from '../components/PlaidConnectButton';
+import { SyncButton } from '../components/ui/SyncButton';
 import { AnimateOnScroll } from '../components/ui/AnimateOnScroll';
 import { GamificationCard } from '../components/GamificationCard';
 import { InAppBillingManager } from '../components/InAppBillingManager';
@@ -453,9 +454,12 @@ const Settings = () => {
                 {activeTab === 'integrations' && (
                     <AnimateOnScroll delay={0.1}>
                         <div className="settings-section">
-                            <div className="card-header">
-                                <Link2 size={20} className="text-primary" />
-                                <h2>Linked Accounts</h2>
+                            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Link2 size={20} className="text-primary" />
+                                    <h2 style={{ margin: 0 }}>Linked Accounts</h2>
+                                </div>
+                                <SyncButton />
                             </div>
                             <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem', lineHeight: '1.4' }}>
                                 Connect your bank securely via Plaid to automate your budgeting and track expenses in real-time. We never store your credentials.

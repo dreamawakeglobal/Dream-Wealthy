@@ -1,0 +1,81 @@
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    font-family: inherit;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    cursor: default;
+    user-select: none;
+}
+
+.verification-badge.size-xs {
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    gap: 3px;
+}
+
+.verification-badge.size-sm {
+    padding: 2px 8px;
+    font-size: 0.72rem;
+    gap: 4px;
+}
+
+.verification-badge.size-md {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    gap: 6px;
+}
+
+/* Tier 1: Bank Verified (Gold/Amber) */
+.verification-badge.badge-bank-verified {
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    color: #fbbf24;
+    box-shadow: 0 0 10px rgba(234, 179, 8, 0.15);
+}
+
+.verification-badge.badge-bank-verified:hover {
+    border-color: rgba(234, 179, 8, 0.6);
+    box-shadow: 0 0 14px rgba(234, 179, 8, 0.3);
+}
+
+/* Tier 2: Verified Contribution (Emerald Green) */
+.verification-badge.badge-verified-contribution {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+/* Tier 3: Confirmed External Transfer (Cyan Blue) */
+.verification-badge.badge-confirmed-external {
+    background: rgba(6, 182, 212, 0.12);
+    border: 1px solid rgba(6, 182, 212, 0.35);
+    color: #38bdf8;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+}
+
+/* Mixed Allocation */
+.verification-badge.badge-mixed {
+    background: rgba(168, 85, 247, 0.12);
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    color: #c084fc;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
+/* Tier 4: Self-Reported (Muted Slate) */
+.verification-badge.badge-self-reported {
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    color: #94a3b8;
+}
+
+.verification-badge .badge-icon {
+    flex-shrink: 0;
+}

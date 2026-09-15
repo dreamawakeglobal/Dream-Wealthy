@@ -152,27 +152,32 @@ export const AssetProjectionTab = ({ asset, updateAsset, removeAsset }) => {
             <div className="projection-visuals">
                 <Card glass className="chart-container">
                     <h3>Asset Growth Curve ({projectionYears * 12} Months)</h3>
-                    <div className="area-chart-wrapper">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id={`colorBalance-${asset.id}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.8} />
-                                        <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <XAxis dataKey="month" stroke="var(--text-secondary)" />
-                                <YAxis stroke="var(--text-secondary)" tickFormatter={val => `$${val}`} />
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
-                                <Tooltip
-                                    contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--surface-border)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px' }}
-                                    itemStyle={{ color: 'var(--text-primary)' }}
-                                    formatter={(value) => `$${value.toLocaleString()}`}
-                                />
-                                <Area type="monotone" dataKey="Balance" stroke="var(--accent-primary)" fillOpacity={1} fill={`url(#colorBalance-${asset.id})`} strokeWidth={3} />
-                                <Area type="monotone" dataKey="Invested" stroke="var(--text-secondary)" fillOpacity={0} strokeWidth={2} strokeDasharray="5 5" />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                    <div className="mobile-scroll-indicator">
+                        <span>← Swipe horizontally to explore timeline ({projectionYears * 12} Mos) →</span>
+                    </div>
+                    <div className="chart-scroll-wrapper">
+                        <div className="area-chart-scrollable" style={{ minWidth: `${Math.max(720, projectionData.length * 55)}px` }}>
+                            <ResponsiveContainer width="100%" height={320}>
+                                <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id={`colorBalance-${asset.id}`} x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--accent-primary)" stopOpacity={0.8} />
+                                            <stop offset="95%" stopColor="var(--accent-primary)" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="month" stroke="var(--text-secondary)" />
+                                    <YAxis stroke="var(--text-secondary)" tickFormatter={val => `$${val}`} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
+                                    <Tooltip
+                                        contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--surface-border)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px' }}
+                                        itemStyle={{ color: 'var(--text-primary)' }}
+                                        formatter={(value) => `$${value.toLocaleString()}`}
+                                    />
+                                    <Area type="monotone" dataKey="Balance" stroke="var(--accent-primary)" fillOpacity={1} fill={`url(#colorBalance-${asset.id})`} strokeWidth={3} />
+                                    <Area type="monotone" dataKey="Invested" stroke="var(--text-secondary)" fillOpacity={0} strokeWidth={2} strokeDasharray="5 5" />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </Card>
 

@@ -458,15 +458,15 @@ export const TutorialOverlay = () => {
                     </p>
                 </div>
             ),
-            placement: 'bottom',
+            placement: 'top',
         },
         {
             target: '.profile-button',
             content: (
                 <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Identity & Integrations</h3>
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Identity, Settings & Audio</h3>
                     <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Manage your secure biometric authentications, establish API pipelines directly to your banks via Plaid, and recalibrate your global metrics.
+                        Manage your profile settings, toggle sound modulation on or off, connect API pipelines directly to your banks via Plaid, and review subscriptions.
                     </p>
                 </div>
             ),
@@ -483,18 +483,6 @@ export const TutorialOverlay = () => {
                 </div>
             ),
             placement: 'bottom',
-        },
-        {
-            target: '.audio-toggle-btn',
-            content: (
-                <div style={{ textAlign: 'left' }}>
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.5px' }}>Atmospheric Modulation</h3>
-                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.5', color: 'rgba(255,255,255,0.8)' }}>
-                        Building your legacy requires extreme focus. Toggle the native ambient acoustics here to completely tune out the noise.
-                    </p>
-                </div>
-            ),
-            placement: 'top',
         },
         {
             target: '.fixed-system-toggle',

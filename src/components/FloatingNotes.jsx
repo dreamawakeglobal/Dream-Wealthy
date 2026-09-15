@@ -98,9 +98,10 @@ const FloatingNotes = () => {
         if (!isDragging.current) return;
         const dx = Math.abs(e.clientX - startPos.current.x);
         const dy = Math.abs(e.clientY - startPos.current.y);
-        if (dx > 5 || dy > 5) hasMoved.current = true;
-        const newX = Math.max(0, Math.min(window.innerWidth - 144, e.clientX - dragStart.current.x));
-        const newY = Math.max(0, Math.min(window.innerHeight - 144, e.clientY - dragStart.current.y));
+        const isMobile = window.innerWidth <= 768 || (window.innerHeight <= 550 && window.innerWidth <= 950);
+        const btnSize = isMobile ? 54 : 144;
+        const newX = Math.max(0, Math.min(window.innerWidth - btnSize, e.clientX - dragStart.current.x));
+        const newY = Math.max(0, Math.min(window.innerHeight - btnSize, e.clientY - dragStart.current.y));
         setPosition({ x: newX, y: newY });
     }, []);
 
@@ -115,8 +116,8 @@ const FloatingNotes = () => {
     // Calculate notepad position based on button location
     const getNotepadPosition = () => {
         const pad = 12;
-        const noteWidth = 340;
-        const noteHeight = 420;
+        const noteWidth = 272;
+        const noteHeight = 336;
 
         let left = position.x + 56;
         let top = position.y - noteHeight / 2 + 24;
@@ -125,6 +126,7 @@ const FloatingNotes = () => {
         if (left + noteWidth > window.innerWidth - pad) {
             left = position.x - noteWidth - pad;
         }
+        if (left < pad) left = pad;
         if (top < pad) top = pad;
         if (top + noteHeight > window.innerHeight - pad) {
             top = window.innerHeight - noteHeight - pad;
@@ -158,7 +160,7 @@ const FloatingNotes = () => {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
             >
-                <img src="/notes-icon.png" alt="Notes" style={{ width: 144, height: 144, objectFit: 'contain' }} />
+                <img src="/notes-icon.png" alt="Notes" className="floating-notes-icon" />
                 {currentNote.trim().length > 0 && <span className="note-indicator" />}
             </button>
 

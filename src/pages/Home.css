@@ -30,6 +30,16 @@
     object-fit: cover;
     z-index: -2;
     opacity: 0.6;
+    transform: translate3d(0, 0, 0);
+    will-change: transform;
+    backface-visibility: hidden;
+    pointer-events: none;
+    background-color: #abc8e9;
+    transition: background-color 0.4s ease;
+}
+
+[data-theme='dark'] .hero-video-bg {
+    background-color: #334e74;
 }
 
 .hero-overlay {
@@ -57,6 +67,7 @@
     box-shadow: 0 20px 40px rgba(0,0,0,0.6), 0 0 30px var(--hero-shadow-color, rgba(var(--accent-primary-rgb), 0.2)) !important;
     border-radius: 24px !important;
     animation: float 6s ease-in-out infinite;
+    will-change: transform;
     transition: transform var(--transition-bounce), box-shadow var(--transition-bounce);
 }
 
@@ -556,3 +567,35 @@
 [data-theme='dark'] .recharts-tooltip-cursor {
     fill: rgba(0, 0, 0, 0.2);
 }
+
+/* Hero Action Box Wrapper */
+.hero-motion-wrapper {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+/* PC Desktop View: Move Enter Dashboard box down 20% */
+@media (min-width: 769px) and (min-height: 501px) {
+    .hero-motion-wrapper {
+        position: relative;
+        top: 20vh;
+    }
+}
+
+/* Vertical Mobile App Only: Enter Dashboard position & remove hero section video for day mode and night mode */
+@media (max-width: 768px) and (orientation: portrait), (max-width: 500px) {
+    .hero-section {
+        align-items: flex-start !important;
+    }
+
+    .hero-motion-wrapper {
+        top: auto !important;
+        margin-top: calc(25vh + 8px) !important;
+    }
+
+    .hero-video-bg {
+        display: none !important;
+    }
+}
+

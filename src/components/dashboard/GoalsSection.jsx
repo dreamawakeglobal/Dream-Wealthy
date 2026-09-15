@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Target, Plus, X, Trash2, GripHorizontal } from 'lucide-react';
+import { Target, Plus, X, Trash2, GripHorizontal, ShieldCheck } from 'lucide-react';
 import { useFinancialContext } from '../../FinancialContext';
 import { useSound } from '../../SoundContext';
 import { GoalOrb } from './GoalOrb';
+import { VerificationBadge } from './VerificationBadge';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { CurrencyInput } from '../ui/CurrencyInput';
@@ -121,7 +122,14 @@ const calculateGoalProjections = (goals) => {
 };
 
 export const GoalsSection = () => {
-    const { goals, setGoals } = useFinancialContext();
+    const { 
+        goals, setGoals, 
+        bankBalances = [], 
+        goalAllocations = [], 
+        unallocatedCashByAccount = {}, 
+        saveGoalAllocation, 
+        deleteGoalAllocation 
+    } = useFinancialContext();
     const { playPop, playChime, playCrunch } = useSound();
     const { expenseBorderColor, theme } = useTheme();
 
@@ -137,8 +145,20 @@ export const GoalsSection = () => {
     const [newGoal, setNewGoal] = useState({ 
         name: '', targetAmount: '', currentAmount: '', color: '#4FA3F7',
         contributionAmount: '', contributionFrequency: 'monthly',
-        trackAuto: false, orderIndex: '1'
+        trackAuto: false, orderIndex: '1',
+        allocatedBankId: '', allocatedAmount: ''
     });
+
+    // Total unallocated liquid savings across all connected accounts
+    const totalUnallocatedSavings = useMemo(() => {
+        let sum = 0;
+        Object.values(unallocatedCashByAccount || {}).forEach(acc => {
+            if (acc.subtype === 'savings' || acc.type === 'depository') {
+                sum += Number(acc.unallocatedBalance || 0);
+            }
+        });
+        return sum;
+    }, [unallocatedCashByAccount]);
 
     const handleReorderGoals = (newOrderedGoals) => {
         const updated = newOrderedGoals.map((g, idx) => ({ ...g, orderIndex: idx }));
@@ -159,15 +179,18 @@ export const GoalsSection = () => {
             const goalToEdit = goals.find(g => g.id === id);
             if (goalToEdit) {
                 const currentRank = goals.findIndex(g => g.id === id) + 1;
+                const existingAlloc = (goalAllocations || []).find(a => String(a.goalId) === String(id) && a.bankBalanceId);
                 setNewGoal({
                     name: goalToEdit.name,
-                    targetAmount: goalToEdit.targetAmount.toString(),
-                    currentAmount: goalToEdit.currentAmount.toString(),
+                    targetAmount: (goalToEdit.targetAmount || 0).toString(),
+                    currentAmount: (goalToEdit.currentAmount || 0).toString(),
                     color: goalToEdit.color,
                     contributionAmount: goalToEdit.contributionAmount ? goalToEdit.contributionAmount.toString() : '',
                     contributionFrequency: goalToEdit.contributionFrequency || 'monthly',
                     trackAuto: goalToEdit.trackAuto || false,
-                    orderIndex: currentRank.toString()
+                    orderIndex: currentRank.toString(),
+                    allocatedBankId: existingAlloc ? existingAlloc.bankBalanceId : '',
+                    allocatedAmount: existingAlloc ? existingAlloc.allocatedAmount.toString() : ''
                 });
                 setEditingGoalId(id);
             }
@@ -175,7 +198,8 @@ export const GoalsSection = () => {
             setNewGoal({ 
                 name: '', targetAmount: '', currentAmount: '', color: '#4FA3F7',
                 contributionAmount: '', contributionFrequency: 'monthly',
-                trackAuto: false, orderIndex: (goals.length + 1).toString()
+                trackAuto: false, orderIndex: (goals.length + 1).toString(),
+                allocatedBankId: '', allocatedAmount: ''
             });
             setEditingGoalId(null);
         }
@@ -188,6 +212,9 @@ export const GoalsSection = () => {
             playChime();
             const requestedRank = Math.max(1, Number(newGoal.orderIndex) || goals.length + (editingGoalId ? 0 : 1));
             const newOrderScore = requestedRank - 1.5; 
+            const targetGoalId = editingGoalId || crypto.randomUUID();
+            const isBankAllocated = Boolean(newGoal.allocatedBankId && Number(newGoal.allocatedAmount) > 0);
+            const verifiedTier = isBankAllocated ? 'BANK_VERIFIED' : 'SELF_REPORTED';
             
             let draftGoals = [];
 
@@ -197,25 +224,27 @@ export const GoalsSection = () => {
                     ...g,
                     name: newGoal.name,
                     targetAmount: Number(newGoal.targetAmount),
-                    currentAmount: Number(newGoal.currentAmount || 0),
+                    currentAmount: isBankAllocated ? Number(newGoal.allocatedAmount) : Number(newGoal.currentAmount || 0),
                     color: newGoal.color,
                     contributionAmount: Number(newGoal.contributionAmount || 0),
                     contributionFrequency: newGoal.contributionFrequency,
                     trackAuto: newGoal.trackAuto,
-                    orderIndex: newOrderScore
+                    orderIndex: newOrderScore,
+                    verificationTier: verifiedTier
                 } : { ...g });
             } else {
                 // Create new
                 draftGoals = [...goals, {
-                    id: crypto.randomUUID(),
+                    id: targetGoalId,
                     name: newGoal.name,
                     targetAmount: Number(newGoal.targetAmount),
-                    currentAmount: Number(newGoal.currentAmount || 0),
+                    currentAmount: isBankAllocated ? Number(newGoal.allocatedAmount) : Number(newGoal.currentAmount || 0),
                     color: newGoal.color,
                     contributionAmount: Number(newGoal.contributionAmount || 0),
                     contributionFrequency: newGoal.contributionFrequency,
                     trackAuto: newGoal.trackAuto,
-                    orderIndex: newOrderScore
+                    orderIndex: newOrderScore,
+                    verificationTier: verifiedTier
                 }];
             }
             
@@ -223,6 +252,16 @@ export const GoalsSection = () => {
             draftGoals.sort((a, b) => a.orderIndex - b.orderIndex);
             const finalNormalized = draftGoals.map((g, idx) => ({ ...g, orderIndex: idx }));
             setGoals(finalNormalized);
+
+            // Sync virtual envelope bank allocation
+            if (isBankAllocated && saveGoalAllocation) {
+                saveGoalAllocation(targetGoalId, newGoal.allocatedBankId, Number(newGoal.allocatedAmount));
+            } else if (!isBankAllocated && editingGoalId && deleteGoalAllocation) {
+                const oldAlloc = (goalAllocations || []).find(a => String(a.goalId) === String(editingGoalId));
+                if (oldAlloc?.bankBalanceId) {
+                    deleteGoalAllocation(editingGoalId, oldAlloc.bankBalanceId);
+                }
+            }
 
             setShowForm(false);
             setEditingGoalId(null);
@@ -232,16 +271,28 @@ export const GoalsSection = () => {
     const handleRemoveGoal = (id) => {
         playCrunch();
         setGoals(goals.filter(g => g.id !== id));
+        const alloc = (goalAllocations || []).find(a => String(a.goalId) === String(id));
+        if (alloc?.bankBalanceId && deleteGoalAllocation) {
+            deleteGoalAllocation(id, alloc.bankBalanceId);
+        }
     };
 
     return (
         <section className="goals-section" style={{ position: 'relative', marginBottom: '60px' }}>
             <Card glass className={`goals-card ${borderGlowClass}`} style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: theme === 'light' ? 'black' : 'white' }}>
-                    <Target size={24} className="text-secondary" />
-                    Savings Goals
-                </h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: theme === 'light' ? 'black' : 'white' }}>
+                        <Target size={24} className="text-secondary" />
+                        Savings Goals
+                    </h2>
+                    {totalUnallocatedSavings > 0 && (
+                        <span style={{ fontSize: '0.78rem', fontWeight: 600, padding: '4px 12px', borderRadius: '12px', background: 'rgba(234, 179, 8, 0.12)', border: '1px solid rgba(234, 179, 8, 0.35)', color: '#fbbf24', display: 'inline-flex', alignItems: 'center', gap: '6px' }} title="Cash sitting in your connected bank accounts not yet assigned to any goal">
+                            <ShieldCheck size={14} />
+                            ${totalUnallocatedSavings.toLocaleString()} Unallocated Bank Savings
+                        </span>
+                    )}
+                </div>
                 {!showForm && (
                     <Button 
                         variant="secondary" 
@@ -330,6 +381,97 @@ export const GoalsSection = () => {
                                 </div>
                             </div>
                             
+                            {/* Bank Verification & Virtual Envelope Allocation */}
+                            <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div>
+                                        <h4 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <ShieldCheck size={18} style={{ color: '#fbbf24' }} />
+                                            Bank Verification & Allocation
+                                        </h4>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                                            Link a real connected bank balance to unlock Bank-Verified rewards
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {bankBalances && bankBalances.length > 0 ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                                                Select Connected Bank Account (Optional)
+                                            </label>
+                                            <select
+                                                value={newGoal.allocatedBankId || ''}
+                                                onChange={(e) => {
+                                                    const bankId = e.target.value;
+                                                    const unallocInfo = unallocatedCashByAccount[bankId];
+                                                    const suggested = unallocInfo ? Math.min(Number(newGoal.targetAmount) || unallocInfo.unallocatedBalance, unallocInfo.unallocatedBalance) : 0;
+                                                    setNewGoal({
+                                                        ...newGoal,
+                                                        allocatedBankId: bankId,
+                                                        allocatedAmount: bankId ? (newGoal.allocatedAmount || suggested.toString()) : '',
+                                                        currentAmount: bankId && suggested > 0 ? suggested.toString() : newGoal.currentAmount
+                                                    });
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '10px 12px',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid var(--surface-border)',
+                                                    background: 'var(--surface)',
+                                                    color: 'var(--text-primary)',
+                                                    fontSize: '0.9rem',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                <option value="">○ Self-Reported / Manual Progress</option>
+                                                {bankBalances.map(acc => {
+                                                    const info = unallocatedCashByAccount[acc.id] || {};
+                                                    const unalloc = info.unallocatedBalance != null ? info.unallocatedBalance : (acc.available_balance || 0);
+                                                    return (
+                                                        <option key={acc.id} value={acc.id}>
+                                                            🛡️ {acc.name} (...{acc.mask || 'Bank'}) — ${unalloc.toLocaleString()} Unallocated (${Number(acc.available_balance || acc.current_balance || 0).toLocaleString()} Total)
+                                                        </option>
+                                                    );
+                                                })}
+                                            </select>
+                                        </div>
+
+                                        {newGoal.allocatedBankId && (
+                                            <div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                        Verified Amount to Earmark ($)
+                                                    </label>
+                                                    {unallocatedCashByAccount[newGoal.allocatedBankId] && (
+                                                        <span style={{ fontSize: '0.75rem', color: '#38bdf8' }}>
+                                                            Max available: ${Number(unallocatedCashByAccount[newGoal.allocatedBankId].unallocatedBalance || 0).toLocaleString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <CurrencyInput
+                                                    placeholder="e.g. 5000"
+                                                    value={newGoal.allocatedAmount || ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setNewGoal({ 
+                                                            ...newGoal, 
+                                                            allocatedAmount: val,
+                                                            currentAmount: val
+                                                        });
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                        No connected bank accounts found. Connect an account in Settings to unlock 🛡️ Bank-Verified savings.
+                                    </div>
+                                )}
+                            </div>
+
                             {/* Auto-Contribution Settings */}
                             <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
                                 <h4 style={{ margin: '0 0 16px 0', fontSize: '1.1rem', color: newGoal.color }}>Contribution Plan</h4>
@@ -431,8 +573,9 @@ export const GoalsSection = () => {
                                     <h3 style={{ margin: '0 0 4px 0', fontSize: '1.5rem', color: 'var(--text-primary)' }}>
                                         {goal.name} <span style={{ color: goal.color }}>Summary</span>
                                     </h3>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                         <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Financial Progress & Projections</div>
+                                        <VerificationBadge tier={goal.verificationTier || 'SELF_REPORTED'} size="sm" />
                                         {goal.trackAuto && (
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(0,255,100,0.1)', color: '#00e57f', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600 }}>
                                                 <Target size={12} /> Auto-Tracking
@@ -466,6 +609,24 @@ export const GoalsSection = () => {
                                         <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--success)' }}>{stats.estimatedDate}</div>
                                     </div>
                                 </div>
+
+                                {goal.allocations && goal.allocations.length > 0 && (
+                                    <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <ShieldCheck size={16} style={{ color: '#fbbf24' }} />
+                                            <span>Bank-Verified Allocations</span>
+                                        </div>
+                                        {goal.allocations.map((alloc, aIdx) => {
+                                            const acc = bankBalances.find(b => b.id === alloc.bankBalanceId);
+                                            return (
+                                                <div key={alloc.id || aIdx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-primary)', marginTop: '4px' }}>
+                                                    <span>{acc ? `${acc.name} (...${acc.mask || ''})` : 'Manual Progress'}</span>
+                                                    <strong style={{ color: '#fbbf24' }}>${Number(alloc.allocatedAmount || 0).toLocaleString()}</strong>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
                                 <div style={{ background: 'var(--surface-hover)', padding: '16px', borderRadius: '12px', border: '1px solid var(--surface-border)' }}>
                                     <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

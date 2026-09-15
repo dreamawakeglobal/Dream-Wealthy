@@ -1,15 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
 import { useSound } from '../SoundContext';
 import { useTheme } from '../contexts/ThemeContext';
 import './Navigation.css';
 
 const Navigation = () => {
     const location = useLocation();
-    const { playNavClick } = useSound();
+    const { playNavClick, playPop } = useSound();
     const { expenseBorderColor, theme } = useTheme();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [location.pathname]);
 
     const activeGlowColor = expenseBorderColor !== 'none' ? {
         blue: '#4FA3F7',
@@ -22,6 +25,8 @@ const Navigation = () => {
         yellow: '#eab308',
         orange: '#f97316'
     }[expenseBorderColor] || (theme === 'dark' ? '#818CF8' : '#4FA3F7') : (theme === 'dark' ? '#818CF8' : '#4FA3F7');
+
+    const borderGlowClass = expenseBorderColor && expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : '';
 
     const handleNavClick = () => {
         if (playNavClick) playNavClick();
@@ -42,21 +47,51 @@ const Navigation = () => {
     ];
 
     return (
-        <nav 
-            className={`navigation-bar ${isMobileMenuOpen ? 'mobile-open' : ''} ${location.pathname === '/' ? 'waitlist-nav' : ''}`}
-            style={{
-                '--nav-active-glow': activeGlowColor,
-                '--nav-active-glow-shadow': `${activeGlowColor}55`
-            }}
-        >
-            {/* Hamburger Toggle - Only visible on mobile */}
+        <>
+            {/* Mobile Vertical Nav Backdrop */}
+            <div 
+                className={`mobile-nav-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMobileMenuOpen(false);
+                }}
+            />
+
+            {/* Mobile Vertical Floating Circle Trigger Button with 3 horizontal lines */}
             <button
-                className="mobile-menu-toggle"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                type="button"
+                className={`mobile-nav-circle-btn ${borderGlowClass} ${isMobileMenuOpen ? 'open' : ''}`}
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsMobileMenuOpen(prev => !prev);
+                    try {
+                        if (playPop) playPop();
+                    } catch (err) {
+                        console.debug("Audio error:", err);
+                    }
+                }}
                 aria-label="Toggle navigation menu"
+                style={{
+                    '--nav-active-glow': activeGlowColor,
+                    '--nav-active-glow-shadow': `${activeGlowColor}55`
+                }}
             >
-                {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+                <span className="hamburger-box">
+                    <span className="hamburger-line line-1" />
+                    <span className="hamburger-line line-2" />
+                    <span className="hamburger-line line-3" />
+                </span>
             </button>
+
+            {/* Main Navigation Bar */}
+            <nav 
+                className={`navigation-bar ${borderGlowClass} ${isMobileMenuOpen ? 'mobile-popup-open' : ''} ${location.pathname === '/' ? 'waitlist-nav' : ''}`}
+                style={{
+                    '--nav-active-glow': activeGlowColor,
+                    '--nav-active-glow-shadow': `${activeGlowColor}55`
+                }}
+            >
 
             <div className={`nav-links ${isMobileMenuOpen ? 'show' : ''}`}>
                 {navItems.map(({ path, label, customIcon, customSize, customStyle }) => (
@@ -89,7 +124,8 @@ const Navigation = () => {
                 ))}
             </div>
         </nav>
-    );
+    </>
+);
 };
 
 export default Navigation;

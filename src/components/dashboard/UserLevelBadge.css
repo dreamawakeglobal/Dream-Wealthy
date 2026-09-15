@@ -33,7 +33,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 32px;
+    padding: 64px 32px 48px;
     position: relative;
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     background: transparent;
@@ -43,33 +43,16 @@
     .identity-pane {
         border-right: none;
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 40px 16px 32px;
     }
 }
 
 .shield-wrapper {
     position: relative;
     animation: float 6s ease-in-out infinite;
-    margin-bottom: 32px;
+    margin-top: 24px;
+    margin-bottom: 24px;
     z-index: 2;
-}
-
-.shield-glow-ring {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, transparent 0%, var(--accent-primary) 50%, transparent 100%);
-    animation: spin 8s linear infinite;
-    filter: blur(28px);
-    opacity: 0.5;
-    z-index: 0;
-}
-
-@keyframes spin {
-    100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
 .identity-text-stack {
@@ -78,6 +61,10 @@
     align-items: center;
     gap: 12px;
     z-index: 2;
+}
+
+.identity-text-stack .db-pill-btn {
+    margin-top: 18px;
 }
 
 .identity-name {
@@ -91,8 +78,9 @@
 }
 
 .level-badge-pill {
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     background: var(--surface);
     border: 1px solid var(--surface-border);
@@ -106,7 +94,27 @@
     font-weight: 800;
     color: var(--accent-primary);
     text-shadow: 0 0 8px var(--accent-glow);
-    letter-spacing: 1.5px;
+    letter-spacing: 0.5px;
+}
+
+/* Color-matched Level text based on border choice */
+.glow-color-blue .level-text { color: #4FA3F7 !important; text-shadow: 0 0 8px rgba(79, 163, 247, 0.4) !important; }
+.glow-color-white .level-text { color: #ffffff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important; }
+.glow-color-black .level-text { color: #000000 !important; text-shadow: none !important; }
+[data-theme='dark'] .glow-color-black .level-text { color: #ffffff !important; text-shadow: 0 0 8px rgba(255, 255, 255, 0.4) !important; }
+.glow-color-red .level-text { color: #FF0000 !important; text-shadow: 0 0 8px rgba(255, 0, 0, 0.4) !important; }
+.glow-color-green .level-text { color: #10B981 !important; text-shadow: 0 0 8px rgba(16, 185, 129, 0.4) !important; }
+.glow-color-purple .level-text { color: #8b5cf6 !important; text-shadow: 0 0 8px rgba(139, 92, 246, 0.4) !important; }
+.glow-color-pink .level-text { color: #ec4899 !important; text-shadow: 0 0 8px rgba(236, 72, 153, 0.4) !important; }
+.glow-color-yellow .level-text { color: #eab308 !important; text-shadow: 0 0 8px rgba(234, 179, 8, 0.4) !important; }
+.glow-color-orange .level-text { color: #f97316 !important; text-shadow: 0 0 8px rgba(249, 115, 22, 0.4) !important; }
+
+.level-divider {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    opacity: 0.6;
+    user-select: none;
+    line-height: 1;
 }
 
 .level-title {
@@ -114,8 +122,30 @@
     font-weight: 600;
     color: var(--text-secondary);
     letter-spacing: 0.5px;
-    border-left: 1px solid var(--text-secondary);
-    padding-left: 8px;
+}
+
+.db-identity-balance-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #FBBF24;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.db-identity-balance-pill:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%);
+    border-color: rgba(245, 158, 11, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
 }
 
 /* RIGHT COLUMN - METRICS */
@@ -209,6 +239,14 @@
     0% { transform: scale(0.95); opacity: 0.8; }
     50% { transform: scale(1.2); opacity: 1; }
     100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+.networth-hero-main {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 48px;
+    width: 100%;
 }
 
 .networth-massive-value {
@@ -405,81 +443,90 @@
     display: inline-block;
 }
 
-/* Gamified XP Progress Bar Tracker */
-.xp-progress-container {
-    width: 100%;
-    min-width: 200px;
-    margin-top: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: rgba(0, 0, 0, 0.25);
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 2px 12px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0,0,0,0.2);
-}
 
-.xp-progress-text-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 12px;
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.85);
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    white-space: nowrap;
-}
 
-.xp-progress-current {
-    font-size: 0.8rem;
-    font-weight: 900;
-    letter-spacing: 0px;
-    text-shadow: 0 0 12px currentColor;
-}
 
-.xp-progress-track {
-    height: 10px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 6px;
-    overflow: hidden;
-    position: relative;
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-    border: 1px solid rgba(255,255,255,0.05);
-}
+/* Mobile Optimizations */
+@media (max-width: 768px), (max-width: 900px) and (orientation: portrait) {
+    .ultra-badge-container {
+        margin: 20px auto;
+        border-radius: 20px;
+    }
 
-.xp-progress-fill {
-    height: 100%;
-    border-radius: 6px;
-    position: relative;
-    transition: width 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.5s;
-}
+    .identity-pane {
+        padding: 36px 16px 28px;
+    }
 
-.xp-progress-fill::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: linear-gradient(
-        -45deg,
-        rgba(255, 255, 255, 0.2) 25%,
-        transparent 25%,
-        transparent 50%,
-        rgba(255, 255, 255, 0.2) 50%,
-        rgba(255, 255, 255, 0.2) 75%,
-        transparent 75%,
-        transparent
-    );
-    background-size: 20px 20px;
-    animation: xp-barber-pole 1s linear infinite;
-    opacity: 0.9;
-}
+    .shield-wrapper {
+        margin-top: 14px;
+        margin-bottom: 18px;
+    }
 
-@keyframes xp-barber-pole {
-    0% { background-position: 0 0; }
-    100% { background-position: 20px 0; }
+    .identity-name {
+        font-size: 1.4rem;
+    }
+
+    .identity-text-stack .db-pill-btn {
+        margin-top: 14px;
+    }
+
+    .metrics-pane {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .networth-hero-card {
+        padding: 20px 16px;
+        gap: 14px;
+    }
+
+    .networth-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .networth-title {
+        font-size: 0.95rem;
+    }
+
+    .networth-hero-main {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        width: 100%;
+    }
+
+    .networth-massive-value {
+        font-size: clamp(2.2rem, 7vw, 2.7rem) !important;
+        line-height: 1.1;
+    }
+
+    .insight-hud-box {
+        max-width: 100% !important;
+        width: 100% !important;
+        border-radius: 16px !important;
+        padding: 12px 14px !important;
+        box-sizing: border-box;
+    }
+
+    .networth-breakdown-bar {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 14px 16px !important;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .breakdown-divider {
+        display: none !important;
+    }
+
+    .breakdown-label {
+        font-size: 0.68rem;
+    }
+
+    .breakdown-value {
+        font-size: 1.05rem;
+    }
 }

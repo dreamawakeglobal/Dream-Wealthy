@@ -18,6 +18,41 @@
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 60px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    transition: border 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Custom Border Glow for Navigation Bar & Mobile Trigger (Synced with Settings) */
+.navigation-bar[class*="glow-color-"],
+.mobile-nav-circle-btn[class*="glow-color-"] {
+    transition: border 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.navigation-bar.glow-color-blue, .mobile-nav-circle-btn.glow-color-blue {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #4FA3F7 !important;
+}
+.navigation-bar.glow-color-white, .mobile-nav-circle-btn.glow-color-white {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #ffffff !important;
+}
+.navigation-bar.glow-color-black, .mobile-nav-circle-btn.glow-color-black {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #000000 !important;
+}
+.navigation-bar.glow-color-red, .mobile-nav-circle-btn.glow-color-red {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px var(--danger, #ff3b30) !important;
+}
+.navigation-bar.glow-color-green, .mobile-nav-circle-btn.glow-color-green {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px var(--success, #10B981) !important;
+}
+.navigation-bar.glow-color-purple, .mobile-nav-circle-btn.glow-color-purple {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #8b5cf6 !important;
+}
+.navigation-bar.glow-color-pink, .mobile-nav-circle-btn.glow-color-pink {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #ec4899 !important;
+}
+.navigation-bar.glow-color-yellow, .mobile-nav-circle-btn.glow-color-yellow {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #eab308 !important;
+}
+.navigation-bar.glow-color-orange, .mobile-nav-circle-btn.glow-color-orange {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25), 0 0 28px #f97316 !important;
 }
 
 .nav-links {
@@ -122,12 +157,49 @@
 
 .mobile-menu-toggle {
     display: none;
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    cursor: pointer;
-    padding: 8px;
-    z-index: 1003;
+}
+
+/* Mobile Floating Circle Navigation Trigger Button & Backdrop */
+.mobile-nav-circle-btn {
+    display: none;
+}
+
+.mobile-nav-backdrop {
+    display: none;
+}
+
+.hamburger-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 22px;
+    height: 16px;
+    position: relative;
+    pointer-events: none;
+}
+
+.hamburger-line {
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background-color: #ffffff;
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+    transform-origin: center;
+}
+
+/* When open, morph 3 lines into an X */
+.mobile-nav-circle-btn.open .line-1 {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.mobile-nav-circle-btn.open .line-2 {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.mobile-nav-circle-btn.open .line-3 {
+    transform: translateY(-7px) rotate(-45deg);
 }
 
 @media (max-width: 1300px) {
@@ -185,5 +257,114 @@
 
     .nav-link.is-custom {
         padding: 0 4px;
+    }
+}
+
+/* Vertical Mobile View: Pop up nav bar when clicking the circle button with 3 horizontal lines */
+@media (max-width: 768px) and (orientation: portrait), (max-width: 500px) {
+    .mobile-nav-backdrop.open {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: transparent;
+    }
+
+    /* Circle button with 3 horizontal lines (10% bigger: 52px -> 57px) */
+    .mobile-nav-circle-btn {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 57px;
+        height: 57px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        z-index: 1002;
+        padding: 0;
+        transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        pointer-events: auto !important;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .mobile-nav-circle-btn .hamburger-box {
+        width: 24px;
+        height: 18px;
+    }
+
+    .mobile-nav-circle-btn.open .line-1 {
+        transform: translateY(8px) rotate(45deg);
+    }
+
+    .mobile-nav-circle-btn.open .line-3 {
+        transform: translateY(-8px) rotate(-45deg);
+    }
+
+    .mobile-nav-circle-btn:active {
+        transform: translateX(-50%) scale(0.92);
+        background: rgba(255, 255, 255, 0.15);
+    }
+
+    .mobile-nav-circle-btn.open {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.35);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 16px var(--nav-active-glow-shadow);
+    }
+
+    /* In vertical mobile view, the nav bar sits hidden until triggered (10% bigger) */
+    .navigation-bar {
+        position: fixed;
+        top: auto;
+        bottom: 96px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px) scale(0.88);
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+        z-index: 1001;
+        width: max-content;
+        max-width: calc(100vw - 32px);
+        min-height: 55px;
+        padding: 5px 18px;
+        border-radius: 66px;
+        background: rgba(255, 255, 255, 0.05) !important;
+        backdrop-filter: blur(6px) !important;
+        -webkit-backdrop-filter: blur(6px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Pop up state */
+    .navigation-bar.mobile-popup-open {
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        visibility: visible !important;
+        transform: translateX(-50%) translateY(0) scale(1) !important;
+    }
+
+    /* 10% bigger navigation icons in vertical mobile view (40px -> 44px) */
+    .nav-custom-icon {
+        max-width: 44px !important;
+        max-height: 44px !important;
+    }
+
+    .nav-link.is-custom {
+        padding: 0 5px;
+    }
+
+    .nav-tooltip {
+        font-size: 1rem;
     }
 }

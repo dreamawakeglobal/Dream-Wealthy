@@ -12,25 +12,73 @@
 }
 
 .rank-icon-badge {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.08);
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
     border: 2px solid var(--accent-primary);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.7rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.gamification-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.gamification-explore-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.08) 100%);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #FBBF24;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gamification-explore-btn:hover {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%);
+    border-color: rgba(245, 158, 11, 0.65);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+
+.gamification-dual-wallet {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 0.82rem;
+}
+
+.wallet-badge-spendable {
+    color: #FBBF24;
+    font-weight: 700;
+}
+
+.wallet-badge-lifetime {
+    color: var(--text-secondary);
 }
 
 .xp-progress-track {
     width: 100%;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.08);
+    height: 12px;
+    background: rgba(0, 0, 0, 0.4);
     border-radius: 20px;
     overflow: hidden;
     position: relative;
     border: 1px solid var(--surface-border);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .xp-progress-fill {
@@ -41,24 +89,31 @@
 
 .ranks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap: 12px;
 }
 
 .rank-badge-card {
     display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px;
     border-radius: 16px;
     background: var(--surface);
     border: 1px solid var(--surface-border);
     transition: all 0.25s ease;
+    position: relative;
 }
 
 .rank-badge-card.unlocked {
     background: var(--surface-hover);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.rank-badge-card.current {
+    border-color: #F59E0B !important;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, var(--surface-hover) 100%);
+    box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
 }
 
 .rank-badge-card.locked {
@@ -67,11 +122,12 @@
 }
 
 .rank-badge-icon {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .lock-overlay {
@@ -84,18 +140,27 @@
 .rank-badge-info {
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    flex: 1;
 }
 
 .rank-badge-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 0.88rem;
+    font-weight: 700;
     color: var(--text-primary);
     display: flex;
     align-items: center;
 }
 
 .rank-badge-xp {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
+    color: #FBBF24;
+    font-weight: 600;
+}
+
+.rank-badge-desc {
+    font-size: 0.72rem;
     color: var(--text-secondary);
+    line-height: 1.3;
     margin-top: 2px;
 }

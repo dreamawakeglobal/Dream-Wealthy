@@ -22,7 +22,10 @@ serve(async (req) => {
             throw new Error('Email is required');
         }
 
-        const resendApiKey = Deno.env.get('RESEND_API_KEY') || 're_hbyP6YZH_B67xHfbpGFkLJB1YeD9FyvTP';
+        const resendApiKey = Deno.env.get('RESEND_API_KEY');
+        if (!resendApiKey) {
+            throw new Error('RESEND_API_KEY environment variable is not configured');
+        }
 
         const emailResponse = await fetch('https://api.resend.com/emails', {
             method: 'POST',

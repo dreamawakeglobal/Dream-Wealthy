@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSound } from '../SoundContext';
 import { useXP } from '../contexts/XPContext';
-import { motion, useAnimation } from 'framer-motion';
+
 import {
     AreaChart,
     Area,
@@ -84,22 +84,85 @@ const Home = () => {
     const insights = useMemo(() => generateInsights(contextData), [contextData]);
     const _positiveInsight = insights.find(i => i.type === 'success');
 
+    const isDarkMode = theme === 'dark';
+    const heroVideoSrc = isDarkMode ? '/hero-bg-night.mp4' : '/hero-bg.mp4';
+    const heroPosterSrc = isDarkMode ? '/hero-poster-night.jpg' : '/hero-poster.jpg';
+
     const videoRef = useRef(null);
 
     useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.playbackRate = 0.65;
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        const mediaQuery = typeof window !== 'undefined'
+            ? window.matchMedia('(max-width: 768px) and (orientation: portrait), (max-width: 500px)')
+            : null;
+
+        const isMobileVertical = () => mediaQuery?.matches ?? false;
+
+        const playVideo = () => {
+            if (isMobileVertical()) {
+                videoElement.pause();
+                return;
+            }
             try {
-                const playPromise = videoRef.current.play();
+                const playPromise = videoElement.play();
                 if (playPromise && typeof playPromise.catch === 'function') {
                     playPromise.catch(() => {});
                 }
             } catch (e) {
                 // Ignore autoplay restrictions
             }
+        };
+
+        if (isMobileVertical()) {
+            videoElement.pause();
+        } else {
+            playVideo();
         }
 
-        // Gamification Daily Login Check
+        const handleMediaChange = () => {
+            if (isMobileVertical()) {
+                videoElement.pause();
+            } else {
+                playVideo();
+            }
+        };
+
+        if (mediaQuery?.addEventListener) {
+            mediaQuery.addEventListener('change', handleMediaChange);
+        } else if (mediaQuery?.addListener) {
+            mediaQuery.addListener(handleMediaChange);
+        }
+
+        // Pause video decoding when hero section is scrolled off-screen to save CPU & GPU
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    if (!isMobileVertical()) {
+                        playVideo();
+                    }
+                } else {
+                    videoElement.pause();
+                }
+            },
+            { threshold: 0.05 }
+        );
+
+        observer.observe(videoElement);
+
+        return () => {
+            observer.disconnect();
+            if (mediaQuery?.removeEventListener) {
+                mediaQuery.removeEventListener('change', handleMediaChange);
+            } else if (mediaQuery?.removeListener) {
+                mediaQuery.removeListener(handleMediaChange);
+            }
+        };
+    }, [heroVideoSrc]);
+
+    // Gamification Daily Login Check
+    useEffect(() => {
         const lastLogin = localStorage.getItem('dream_wealthy_last_login');
         const today = new Date().toDateString();
         
@@ -159,52 +222,7 @@ const Home = () => {
     }));
     const projected6MonthTotal = futureChartData[futureChartData.length - 1]?.value || 0;
 
-    // Directional Hero Action Box Animation (slides off to RIGHT, returns from LEFT)
-    const controls = useAnimation();
-    const hasExitedRef = useRef(false);
 
-    useEffect(() => {
-        const initialScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-        if (initialScrollY > 15) {
-            hasExitedRef.current = true;
-            controls.set({ x: -1000, opacity: 0, scale: 0.9 });
-        }
-
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-            const scrolled = currentScrollY > 15;
-
-            if (scrolled && !hasExitedRef.current) {
-                hasExitedRef.current = true;
-                // 1. Slide off to the RIGHT
-                controls.start({
-                    x: 1000,
-                    opacity: 0,
-                    scale: 0.9,
-                    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-                }).then(() => {
-                    // 2. Reposition off-screen on the LEFT while hidden
-                    controls.set({ x: -1000, scale: 0.9 });
-                });
-            } else if (!scrolled && hasExitedRef.current) {
-                hasExitedRef.current = false;
-                // 3. Slide back in from the LEFT into center
-                controls.start({
-                    x: 0,
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-                });
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        document.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            document.removeEventListener('scroll', handleScroll);
-        };
-    }, [controls]);
 
     return (
         <div className="home-container animate-fade-in">
@@ -214,26 +232,25 @@ const Home = () => {
             <section className="hero-section">
                 <video
                     ref={videoRef}
+                    key={heroVideoSrc}
                     autoPlay
                     loop
                     muted
                     playsInline
                     preload="auto"
+                    poster={heroPosterSrc}
                     className="hero-video-bg"
                 >
-                    <source src="/hero-bg.mp4" type="video/mp4" />
+                    <source src={heroVideoSrc} type="video/mp4" />
                 </video>
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <motion.div
-                        initial={{ x: 0, opacity: 1, scale: 1 }}
-                        animate={controls}
+                    <div
+                        className="hero-motion-wrapper"
                         style={{
                             width: '100%',
-                            maxWidth: '480px',
-                            margin: '0 auto',
-                            marginTop: 'calc(40vh + 8px)'
+                            maxWidth: '480px'
                         }}
                     >
                         <Card glass className="hero-box" style={{ padding: '40px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px', width: '100%', '--hero-border-color': activeColor, '--hero-shadow-color': `${activeColor}33` }}>
@@ -246,7 +263,7 @@ const Home = () => {
                                 </Button>
                             </div>
                         </Card>
-                    </motion.div>
+                    </div>
                 </div>
             </section>
 
@@ -272,7 +289,7 @@ const Home = () => {
                     <AnimateOnScroll delay={0.1}>
                         <Card glass className={`glass-panel-card ${borderGlowClass}`} style={{ height: '100%' }}>
                             <h3 className="panel-title">Income & Expenses</h3>
-                            <p className="panel-subtitle">6-Month Trailing</p>
+                            <p className="panel-subtitle">6-Month Projection</p>
 
                             <div className="panel-chart flex-1" style={{ marginTop: 'auto' }}>
                                 <ResponsiveContainer width="100%" height="100%">
@@ -333,13 +350,13 @@ const Home = () => {
                                                 <feComposite in="SourceGraphic" in2="fadedBlur" operator="over" />
                                             </filter>
                                             <linearGradient id="colorPortfolio" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#4FA3F7" stopOpacity={0.6} />
-                                                <stop offset="100%" stopColor="#4FA3F7" stopOpacity={0.0} />
+                                                <stop offset="5%" stopColor={activeColor} stopOpacity={0.6} />
+                                                <stop offset="100%" stopColor={activeColor} stopOpacity={0.0} />
                                             </linearGradient>
                                         </defs>
                                         <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: chartTickColor, fontSize: 12, fontWeight: 'bold' }} tickMargin={12} minTickGap={20} />
                                         <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: 'none' }} wrapperStyle={{ outline: 'none', zIndex: 100 }} position={{ y: -20 }} />
-                                        <Area type="linear" dataKey="value" stroke="#4FA3F7" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPortfolio)" activeDot={{ r: 5, fill: '#4FA3F7', stroke: '#fff', strokeWidth: 2 }} filter="url(#glowPortfolio)" />
+                                        <Area type="linear" dataKey="value" stroke={activeColor} strokeWidth={2.5} fillOpacity={1} fill="url(#colorPortfolio)" activeDot={{ r: 5, fill: activeColor, stroke: activeColor === '#ffffff' ? '#333' : '#fff', strokeWidth: 2 }} filter="url(#glowPortfolio)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
                             </div>

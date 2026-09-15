@@ -43,6 +43,9 @@ const mapToSnake = (item) => {
     // Discard volatile/locally fetched API attributes so they aren't incorrectly pushed to the Postgres schema
     if (snakeItem.price !== undefined) delete snakeItem.price;
     if (snakeItem.change !== undefined) delete snakeItem.change;
+    if (snakeItem.isAutoDetected !== undefined) delete snakeItem.isAutoDetected;
+    if (snakeItem.nextBilling !== undefined) delete snakeItem.nextBilling;
+    if (snakeItem.cadence !== undefined) delete snakeItem.cadence;
 
     if (snakeItem.targetAmount !== undefined) { snakeItem.target_amount = snakeItem.targetAmount; delete snakeItem.targetAmount; }
     if (snakeItem.currentAmount !== undefined) { snakeItem.current_amount = snakeItem.currentAmount; delete snakeItem.currentAmount; }
@@ -93,15 +96,27 @@ export const useStore = create((set, get) => ({
     customProjections: [],
     transactions: [], // Plaid Database Cache
     portfolio: [],     // User Investment Holdings
-    subscriptions: [],
+    subscriptions: (() => {
+        try {
+            const saved = localStorage.getItem('dw_saved_subscriptions');
+            return saved ? JSON.parse(saved) : [];
+        } catch {
+            return [];
+        }
+    })(),
     accounts: [],      // Plaid Bank Accounts (Items)
     bankBalances: [],  // Cached Checked/Savings Balances
+    goalAllocations: [], // Virtual Envelopes mapped to bank balances
+    financialEvents: [], // Normalized Journal of inflows/transfers/savings
 
     aiCoachingInsight: null,
     aiCoachingLoading: false,
     isCoachModalOpen: false,
 
     setIsCoachModalOpen: (val) => set({ isCoachModalOpen: val }),
+
+    isHelpOpen: false,
+    setIsHelpOpen: (val) => set({ isHelpOpen: val }),
 
     // Profile Settings
     profileData: {
@@ -115,13 +130,14 @@ export const useStore = create((set, get) => ({
         subscriptionTier: 'none'
     },
 
-    // 1. Initial Load Action
+    // 1. Fetch All Data from Supabase
     fetchAllData: async () => {
-        const { user } = get();
-        if (!user) return;
-
         try {
-            // Run all heavy initial Supabase queries in parallel
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            set({ user });
+
             const [
                 profileRes,
                 incomeRes,
@@ -135,7 +151,9 @@ export const useStore = create((set, get) => ({
                 portfolioRes,
                 subscriptionsRes,
                 accountsRes,
-                bankBalancesRes
+                bankBalancesRes,
+                goalAllocationsRes,
+                financialEventsRes
             ] = await Promise.all([
                 supabase.from('profiles').select('*').eq('user_id', user.id).single(),
                 supabase.from('income_streams').select('*').eq('user_id', user.id),
@@ -149,7 +167,9 @@ export const useStore = create((set, get) => ({
                 supabase.from('portfolios').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
                 supabase.from('subscriptions').select('*').eq('user_id', user.id),
                 supabase.from('accounts').select('*').eq('user_id', user.id),
-                supabase.from('bank_balances').select('*').eq('user_id', user.id)
+                supabase.from('bank_balances').select('*').eq('user_id', user.id),
+                supabase.from('goal_allocations').select('*').eq('user_id', user.id),
+                supabase.from('financial_events').select('*').eq('user_id', user.id).order('event_date', { ascending: false }).limit(200)
             ]);
 
             const newProfileData = profileRes.data ? {
@@ -162,6 +182,30 @@ export const useStore = create((set, get) => ({
                 transactionSplits: profileRes.data.cell_overrides?.transactionSplits || [],
                 subscriptionTier: profileRes.data.subscription_tier || 'none'
             } : get().profileData;
+
+            const dbSubs = (subscriptionsRes.data && subscriptionsRes.data.length > 0)
+                ? (subscriptionsRes.data || []).map(sub => {
+                    const camel = mapToCamel(sub);
+                    try {
+                        const localList = JSON.parse(localStorage.getItem('dw_saved_subscriptions')) || [];
+                        const match = localList.find(l => String(l.id) === String(sub.id) || (l.name || '').toLowerCase().trim() === (sub.name || '').toLowerCase().trim());
+                        if (match) {
+                            if (match.dueDate && !camel.dueDate) camel.dueDate = match.dueDate;
+                            if (match.domain && !camel.domain) camel.domain = match.domain;
+                        }
+                    } catch (e) {
+                        console.debug(e);
+                    }
+                    return camel;
+                })
+                : (() => {
+                    try {
+                        const saved = localStorage.getItem('dw_saved_subscriptions');
+                        return saved ? JSON.parse(saved) : [];
+                    } catch {
+                        return [];
+                    }
+                })();
 
             set({
                 profileData: newProfileData,
@@ -176,9 +220,11 @@ export const useStore = create((set, get) => ({
                 customProjections: (projectionsRes.data || []).map(mapToCamel),
                 transactions: (transactionsRes.data || []),
                 portfolio: (portfolioRes.data || []).map(mapToCamel),
-                subscriptions: (subscriptionsRes.data || []).map(mapToCamel),
+                subscriptions: dbSubs,
                 accounts: (accountsRes.data || []),
-                bankBalances: (bankBalancesRes.data || []).map(mapToCamel)
+                bankBalances: (bankBalancesRes.data || []).map(mapToCamel),
+                goalAllocations: (goalAllocationsRes.data || []).map(mapToCamel),
+                financialEvents: (financialEventsRes.data || []).map(mapToCamel)
             });
 
             if (transactionsRes.error) {
@@ -220,6 +266,14 @@ export const useStore = create((set, get) => ({
         // Instant UI update
         set({ [collectionKey]: newData });
 
+        if (collectionKey === 'subscriptions') {
+            try {
+                localStorage.setItem('dw_saved_subscriptions', JSON.stringify(newData));
+            } catch (e) {
+                console.debug(e);
+            }
+        }
+
         if (!user) return; // Fallback
 
         // Async Sync to Supabase in the background
@@ -234,20 +288,40 @@ export const useStore = create((set, get) => ({
         });
 
         if (deletedIds.length > 0) {
-            const validIds = deletedIds.filter(id => id.length > 20);
-            if (validIds.length > 0) supabase.from(tableName).delete().in('id', validIds).then();
+            const validIds = deletedIds.filter(id => id && String(id).trim().length > 0);
+            if (validIds.length > 0) {
+                supabase.from(tableName).delete().eq('user_id', user.id).in('id', validIds).then(res => {
+                    if (res && res.error) {
+                        console.error(`SUPABASE DELETE ERROR on ${tableName}:`, res.error);
+                    }
+                });
+            }
         }
 
         if (addedItems.length > 0) {
             let needsRefetch = false;
-            const inserts = addedItems.map(item => {
-                const { id, ...rest } = mapToSnake(item);
-                const payload = { ...rest, ...matchConditions, user_id: user.id };
-                if (String(id).length < 20) { needsRefetch = true; return payload; }
-                return { ...payload, id };
-            });
+            let inserts;
+            if (tableName === 'subscriptions') {
+                inserts = addedItems.map(item => ({
+                    id: item.id && String(item.id).length > 20 ? item.id : crypto.randomUUID(),
+                    user_id: user.id,
+                    name: item.name,
+                    cost: parseFloat(item.cost) || 0,
+                    domain: item.domain || null
+                }));
+            } else {
+                inserts = addedItems.map(item => {
+                    const { id, created_at: _c, user_id: _u, ...rest } = mapToSnake(item);
+                    const payload = { ...rest, ...matchConditions, user_id: user.id };
+                    if (!id || String(id).length < 20) { needsRefetch = true; return payload; }
+                    return { ...payload, id };
+                });
+            }
 
-            const { data: fresh } = await supabase.from(tableName).insert(inserts).select();
+            const { data: fresh, error: insertError } = await supabase.from(tableName).insert(inserts).select();
+            if (insertError) {
+                console.error(`SUPABASE INSERT ERROR on ${tableName}:`, insertError.message, insertError.details, insertError.hint, insertError.code, "\nPayload:", JSON.stringify(inserts));
+            }
             if (needsRefetch && fresh) {
                 // Background refetch to tie UUIDs back to UI state cleanly
                 let refetchQ = supabase.from(tableName).select('*').eq('user_id', user.id);
@@ -259,13 +333,28 @@ export const useStore = create((set, get) => ({
 
         if (updatedItems.length > 0) {
             updatedItems.forEach(item => {
-                if (String(item.id).length > 20) {
+                if (tableName === 'subscriptions') {
+                    if (item.id) {
+                        const payload = {
+                            name: item.name,
+                            cost: parseFloat(item.cost) || 0,
+                            domain: item.domain || null
+                        };
+                        supabase.from(tableName).update(payload).eq('user_id', user.id).eq('id', item.id).then(res => {
+                            if (res && res.error) {
+                                console.error(`SUPABASE UPDATE ERROR on ${tableName}:`, res.error);
+                            }
+                        });
+                    }
+                } else {
                     const { id, created_at: _c, user_id: _u, ...rest } = mapToSnake(item);
-                    supabase.from(tableName).update(rest).eq('id', id).then(res => {
-                        if (res && res.error) {
-                            console.error(`SUPABASE UPDATE ERROR on ${tableName}:`, res.error, "\nPayload:", rest);
-                        }
-                    });
+                    if (id) {
+                        supabase.from(tableName).update(rest).eq('user_id', user.id).eq('id', id).then(res => {
+                            if (res && res.error) {
+                                console.error(`SUPABASE UPDATE ERROR on ${tableName}:`, res.error, "\nPayload:", rest);
+                            }
+                        });
+                    }
                 }
             });
         }
@@ -283,6 +372,31 @@ export const useStore = create((set, get) => ({
     setCustomProjections: (data) => get().setCollection('customProjections', 'custom_projections', {}, data),
     setPortfolio: (data) => get().setCollection('portfolio', 'portfolios', {}, data),
     setSubscriptions: (data) => get().setCollection('subscriptions', 'subscriptions', {}, data),
+    setGoalAllocations: (data) => get().setCollection('goalAllocations', 'goal_allocations', {}, data),
+    setFinancialEvents: (data) => set({ financialEvents: data }),
+    saveGoalAllocation: async (goalId, bankBalanceId, amount) => {
+        const currentList = get().goalAllocations || [];
+        const existing = currentList.find(a => String(a.goalId) === String(goalId) && String(a.bankBalanceId) === String(bankBalanceId));
+        if (existing) {
+            const updated = currentList.map(a => a.id === existing.id ? { ...a, allocatedAmount: Number(amount) || 0 } : a);
+            get().setGoalAllocations(updated);
+        } else {
+            const newAlloc = {
+                id: crypto.randomUUID(),
+                goalId,
+                bankBalanceId: bankBalanceId || null,
+                allocatedAmount: Number(amount) || 0,
+                isManual: !bankBalanceId
+            };
+            get().setGoalAllocations([...currentList, newAlloc]);
+        }
+    },
+    deleteGoalAllocation: async (goalId, bankBalanceId) => {
+        const currentList = get().goalAllocations || [];
+        const filtered = currentList.filter(a => !(String(a.goalId) === String(goalId) && String(a.bankBalanceId) === String(bankBalanceId)));
+        get().setGoalAllocations(filtered);
+    },
+    fetchFinancialData: async () => get().fetchAllData(),
 
     // Profile Modifiers
     updateProfileField: async (key, newValueOrFn) => {

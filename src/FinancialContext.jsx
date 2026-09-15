@@ -29,6 +29,76 @@ export const FinancialProvider = ({ children }) => {
         return { checking, savings, total: checking + savings };
     }, [bankBalances]);
 
+    // Virtual Envelopes: Calculate unallocated cash per connected bank account
+    const unallocatedCashByAccount = useMemo(() => {
+        const goalAllocations = store.goalAllocations || [];
+        const allocMap = {};
+        goalAllocations.forEach(a => {
+            if (a.bankBalanceId) {
+                allocMap[a.bankBalanceId] = (allocMap[a.bankBalanceId] || 0) + Number(a.allocatedAmount || 0);
+            }
+        });
+
+        const result = {};
+        bankBalances.forEach(acc => {
+            const bal = Number(acc.available_balance !== null ? acc.available_balance : acc.current_balance || 0);
+            const allocated = allocMap[acc.id] || 0;
+            result[acc.id] = {
+                accountName: acc.name,
+                mask: acc.mask,
+                subtype: acc.subtype,
+                totalBalance: bal,
+                allocatedBalance: allocated,
+                unallocatedBalance: Math.max(0, bal - allocated)
+            };
+        });
+        return result;
+    }, [bankBalances, store.goalAllocations]);
+
+    // Decoupled Goals: Dynamically resolve currentAmount & verification tier from verified allocations
+    const resolvedGoals = useMemo(() => {
+        const rawGoals = store.goals || [];
+        const goalAllocations = store.goalAllocations || [];
+        const allocByGoal = {};
+        goalAllocations.forEach(a => {
+            if (!allocByGoal[a.goalId]) allocByGoal[a.goalId] = [];
+            allocByGoal[a.goalId].push(a);
+        });
+
+        return rawGoals.map(goal => {
+            const allocs = allocByGoal[goal.id] || [];
+            if (allocs.length > 0) {
+                const verifiedSum = allocs
+                    .filter(a => a.bankBalanceId)
+                    .reduce((sum, a) => sum + Number(a.allocatedAmount || 0), 0);
+                const manualSum = allocs
+                    .filter(a => !a.bankBalanceId)
+                    .reduce((sum, a) => sum + Number(a.allocatedAmount || 0), 0);
+                
+                const totalAllocated = verifiedSum + manualSum;
+                let tier = 'BANK_VERIFIED';
+                if (manualSum > 0 && verifiedSum > 0) tier = 'MIXED';
+                else if (manualSum > 0 && verifiedSum === 0) tier = 'SELF_REPORTED';
+
+                return {
+                    ...goal,
+                    currentAmount: totalAllocated,
+                    verificationTier: tier,
+                    isBankVerified: tier === 'BANK_VERIFIED',
+                    allocations: allocs
+                };
+            }
+            // Dual-mode fallback: preserve legacy user-entered currentAmount with SELF_REPORTED tier
+            return {
+                ...goal,
+                currentAmount: Number(goal.currentAmount || 0),
+                verificationTier: goal.verificationTier || 'SELF_REPORTED',
+                isBankVerified: false,
+                allocations: []
+            };
+        });
+    }, [store.goals, store.goalAllocations]);
+
     const forcePlaidRefresh = useCallback(async () => {
         if (!user) return false;
         try {
@@ -185,7 +255,7 @@ export const FinancialProvider = ({ children }) => {
                 if (parseInt(y) === currentY && parseInt(m) - 1 === currentM) {
                     const catLower = (tx.category || '').toLowerCase();
                     const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
-                    if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return acc;
+                    if (tx.is_transfer || tx.isTransfer || catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('sofi money')) return acc;
 
                     const effectiveCat = detectPseudoCategory(tx);
 
@@ -240,7 +310,7 @@ export const FinancialProvider = ({ children }) => {
                     const merchant = (tx.merchant_name || tx.name || '').toLowerCase();
                     
                     // Exclude internal transfers, savings, and checking from counting as legitimate Income
-                    if (catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return acc;
+                    if (tx.is_transfer || tx.isTransfer || catLower.includes('transfer') || merchant.includes('transfer') || merchant.includes('savings') || merchant.includes('checking') || merchant.includes('sofi money')) return acc;
 
                     const category = tx.category ? tx.category.trim() : 'Uncategorized';
                     // Plaid returns income as negative, so we use Math.abs() to make it positive for our tracker UI
@@ -252,7 +322,8 @@ export const FinancialProvider = ({ children }) => {
     }, [processedTransactions]);
 
     const autoDetectedSubs = useMemo(() => {
-        const { subscriptions: detected } = detectSubscriptions(processedTransactions || []);
+        const nonTransferTxs = (processedTransactions || []).filter(tx => !tx.is_transfer && !tx.isTransfer);
+        const { subscriptions: detected } = detectSubscriptions(nonTransferTxs);
         return detected || [];
     }, [processedTransactions]);
 
@@ -263,17 +334,23 @@ export const FinancialProvider = ({ children }) => {
         let dismissed = [];
         try { dismissed = JSON.parse(localStorage.getItem('dw_dismissed_subs')) || []; } catch (err) { console.debug(err); }
 
+        // 1. Manual subscriptions are always counted
         manualSubs.forEach(s => {
-            const key = s.name.toLowerCase().trim();
-            if (!dismissed.includes(key) && !dismissed.includes(String(s.id))) {
+            const key = (s.name || '').toLowerCase().trim();
+            if (key) {
                 mergedMap.set(key, Number(s.cost) || 0);
             }
         });
 
+        // 2. Add auto-detected subscriptions only if not in manual and not dismissed
         autoDetectedSubs.forEach(a => {
-            const key = a.name.toLowerCase().trim();
+            const key = (a.name || '').toLowerCase().trim();
             const aId = a.id || `auto-${key}`;
-            if (!mergedMap.has(key) && !dismissed.includes(key) && !dismissed.includes(aId)) {
+            const isDismissed = dismissed.some(d => {
+                const dStr = String(d).toLowerCase().trim();
+                return dStr === key || dStr === aId || dStr === `auto-${key}`;
+            });
+            if (key && !mergedMap.has(key) && !isDismissed) {
                 mergedMap.set(key, Number(a.monthlyCost || a.amount) || 0);
             }
         });
@@ -302,28 +379,37 @@ export const FinancialProvider = ({ children }) => {
         const monthlyIncomeGrowth = 0; // Fixed at 0%
         const monthlyExpenseInflation = 0; // Fixed at 0%
 
-        let currentMonthIndex = startMonthIndex;
+        // Compound from month 0 (January) of the current year so that cellOverrides (keyed 0..N)
+        // and cumulative savings accurately align with the Projections engine
+        const effectiveMonths = startMonthIndex + totalMonths;
+        let currentMonthIndex = 0;
         let currentYear = new Date().getFullYear();
 
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        for (let month = 1; month <= totalMonths; month++) {
+        for (let month = 1; month <= effectiveMonths; month++) {
             const displayMonth = `${monthNames[currentMonthIndex]} '${currentYear.toString().slice(-2)}`;
             const monthOverrides = store.profileData.cellOverrides[month - 1] || {};
 
             const actualIncome = monthOverrides.Income !== undefined ? Number(monthOverrides.Income) : income;
             const actualExpenses = monthOverrides.Expenses !== undefined ? Number(monthOverrides.Expenses) : expenses;
 
-            let monthExtraExpenses = 0;
+            let monthExtraNet = 0;
             const actualExtraData = {};
 
             store.profileData.extraColumns.forEach(c => {
                 const actualExtra = monthOverrides[c.name] !== undefined ? Number(monthOverrides[c.name]) : Number(c.amount || 0);
-                monthExtraExpenses += actualExtra;
+                if (c.type === 'income') {
+                    monthExtraNet += actualExtra;
+                } else {
+                    // Both positive inflows (transfers to investments/separate savings) and negative outflows (expenses)
+                    // come out of the monthly surplus and are subtracted from income.
+                    monthExtraNet -= actualExtra;
+                }
                 actualExtraData[c.name] = actualExtra;
             });
 
-            let net = actualIncome - actualExpenses - monthExtraExpenses;
+            let net = actualIncome - actualExpenses + monthExtraNet;
             cumulative += net;
 
             // Calculate Actuals from Plaid for this specific month/year
@@ -372,7 +458,7 @@ export const FinancialProvider = ({ children }) => {
             }
         }
 
-        return data;
+        return startMonthIndex > 0 ? data.slice(startMonthIndex, startMonthIndex + totalMonths) : data;
     };
 
     const value = {
@@ -416,6 +502,16 @@ export const FinancialProvider = ({ children }) => {
         accounts: store.accounts,
         plaidAccounts: store.accounts,
         bankBalances: store.bankBalances,
+
+        // Savings Goals & Virtual Envelopes
+        goals: resolvedGoals,
+        rawGoals: store.goals,
+        setGoals: store.setGoals,
+        goalAllocations: store.goalAllocations,
+        financialEvents: store.financialEvents,
+        unallocatedCashByAccount,
+        saveGoalAllocation: store.saveGoalAllocation,
+        deleteGoalAllocation: store.deleteGoalAllocation,
 
         // Plaid Sync
         forceSyncPlaid,

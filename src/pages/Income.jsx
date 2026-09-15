@@ -230,7 +230,7 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
     const isTargetMet = showTracking && diff <= 0;
 
     return (
-        <div className={`stream-item ${isTargetMet ? 'paid' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); setIsEditing(true); }}>
+        <div className={`stream-item ${isTargetMet ? 'target-met' : ''} glass`} onDoubleClick={() => { if (playPop) playPop(); setIsEditing(true); }}>
             {isEditing && (
                 <Modal 
                     isOpen={true} 
@@ -266,48 +266,39 @@ const EditableStreamItem = ({ stream, onRemove, onUpdate, showTracking = false, 
                 </Modal>
             )}
 
-            <div className="stream-info">
+            <div className="stream-info" style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p className="stream-name" style={{ margin: 0 }}>{stream.name}</p>
+                    <p className="stream-name" style={{ margin: 0, fontWeight: 700, fontSize: '1.2rem', color: 'var(--text-primary)' }}>{stream.name}</p>
                     {stream.apiId && (
-                        <span className="badge" style={{ fontSize: '0.65rem', padding: '2px 6px', opacity: 0.8, backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }} title={`Linked to ${stream.apiId}`}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '2px 8px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.15)', fontSize: '0.72rem', lineHeight: 1 }} title={`Linked to ${stream.apiId}`}>
                             🔗
                         </span>
                     )}
                 </div>
-                <span className="stream-freq">Monthly</span>
+                <span className="stream-freq" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Monthly</span>
             </div>
 
             {showTracking && (
-                <div className="expense-tracking" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface-hover)', padding: '8px 16px', borderRadius: '12px', border: '1px solid var(--surface-border)', gap: '16px', margin: '0 12px', flex: 1 }}>
-                    <div style={{
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        color: (() => {
-                            const received = stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions);
-                            const diff = stream.amount - received;
-                            if (diff <= 0) return 'var(--success)';
-                            if (received > 0) return '#ff9f0a';
-                            return 'var(--text-muted)';
-                        })()
-                    }}>
-                        {(() => {
-                            const received = stream.manualReceived != null ? Number(stream.manualReceived) : getStreamAutoReceivedAmount(stream, incomeTransactionsByCategory, filteredIncomeTransactions);
-                            const diff = stream.amount - received;
-                            if (diff <= 0) return `Target Met! (+$${Math.abs(diff).toLocaleString()})`;
-                            return `${diff.toLocaleString()} to go`;
-                        })()}
-                    </div>
+                <div className={`income-auto-track-box ${diff <= 0 ? 'target-met-box' : (received > 0 ? 'in-progress-box' : '')}`}>
+                    {diff <= 0 ? (
+                        <span className="track-status-text">
+                            Target Met!{Math.abs(diff) >= 0.01 ? ` (+${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: Math.abs(diff) % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })})` : ''}
+                        </span>
+                    ) : (
+                        <span className="track-status-text">
+                            ${Math.abs(diff).toLocaleString(undefined, { minimumFractionDigits: diff % 1 !== 0 ? 2 : 0, maximumFractionDigits: 2 })} <span className="track-diff-label">to go</span>
+                        </span>
+                    )}
                 </div>
             )}
 
-            <div className="stream-actions">
-                <span className="stream-amount positive">${stream.amount.toLocaleString()}</span>
-                <button onClick={() => setIsEditing(true)} className="btn-icon">
-                    <Edit2 size={16} />
+            <div className="stream-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                <span className="stream-amount" style={{ fontWeight: 700, fontSize: '1.3rem', color: 'var(--text-primary)' }}>${stream.amount.toLocaleString()}</span>
+                <button onClick={() => setIsEditing(true)} className="btn-icon stream-edit-btn" title="Edit Stream">
+                    <Edit2 size={18} />
                 </button>
-                <button onClick={() => onRemove(stream.id)} className="btn-icon danger">
-                    <Trash2 size={16} />
+                <button onClick={() => onRemove(stream.id)} className="btn-icon danger" title="Delete Stream">
+                    <Trash2 size={18} />
                 </button>
             </div>
         </div>
@@ -949,37 +940,41 @@ const Income = () => {
                     ))}
                 </div>
 
-                <div className="transactions-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="activity-transactions-list">
                     {(!filteredIncomeTransactions || filteredIncomeTransactions.length === 0) ? (
                         <div className="empty-state text-muted" style={{ textAlign: 'center', padding: '32px' }}>
                             No recent deposit transactions found.
                         </div>
                     ) : (
                         paginatedIncomeTransactions.map((tx) => (
-                            <div key={tx.id} className="stream-item glass activity-blur-box" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.5fr 1fr', alignItems: 'center', padding: '16px', gap: '16px' }}>
-                                <div className="tx-merchant" style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                    <span>{tx.merchant_name || tx.name || 'Income Source'}</span>
-                                    {tx.pending && <span className="badge warning-badge" style={{ fontSize: '0.7rem' }}>Pending</span>}
-                                </div>
-                                <div className="tx-date text-muted" style={{ fontSize: '0.85rem' }}>
-                                    {new Date(tx.date).toLocaleDateString()}
-                                </div>
-                                <div className="tx-category">
-                                    <span className="badge" style={{ background: 'var(--surface)', border: '1px solid var(--surface-border)', color: 'var(--text-secondary)', whiteSpace: 'nowrap', display: 'inline-block', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', padding: '4px 10px' }}>
-                                        {getFilterLabel(tx.category ? tx.category.trim() : 'Uncategorized')}
-                                    </span>
-                                </div>
-                                <div className="tx-amount text-success" style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                                        +${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            <div key={tx.id} className="activity-tx-card activity-blur-box">
+                                <div className="activity-tx-top-row">
+                                    <div className="activity-tx-merchant">
+                                        <span className="activity-tx-name">{tx.merchant_name || tx.name || 'Income Source'}</span>
+                                        {tx.pending && <span className="badge warning-badge activity-tx-pending">Pending</span>}
+                                    </div>
+                                    <div className="activity-tx-amount-group">
+                                        <span className="activity-tx-amount text-success">
+                                            +${Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                        </span>
                                         <button 
                                             onClick={() => setSplittingTransaction(tx)}
-                                            className="btn-icon" 
-                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.5, color: tx.isSplitChild ? 'var(--success)' : 'inherit', padding: '4px' }}
+                                            className="activity-tx-split-btn" 
+                                            style={{ opacity: tx.isSplitChild ? 0.9 : 0.6, color: tx.isSplitChild ? 'var(--success)' : 'inherit' }}
                                             title={tx.isSplitChild ? "Edit Split" : "Split Transaction"}
                                         >
-                                            <Scissors size={14} />
+                                            <Scissors size={13} />
                                         </button>
+                                    </div>
+                                </div>
+                                <div className="activity-tx-bottom-row">
+                                    <div className="activity-tx-date">
+                                        {new Date(tx.date).toLocaleDateString()}
+                                    </div>
+                                    <div className="activity-tx-category">
+                                        <span className="badge activity-tx-category-badge">
+                                            {getFilterLabel(tx.category ? tx.category.trim() : 'Uncategorized')}
+                                        </span>
                                     </div>
                                 </div>
                             </div>

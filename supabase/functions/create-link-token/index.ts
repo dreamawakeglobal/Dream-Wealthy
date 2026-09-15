@@ -58,6 +58,16 @@ serve(async (req) => {
 
       if (!credErr && cred?.plaid_access_token) {
         resolvedAccessToken = cred.plaid_access_token;
+      } else {
+        // Fallback to accounts table
+        const { data: acc } = await supabaseAdmin
+          .from('accounts')
+          .select('plaid_access_token')
+          .eq('id', accountId)
+          .single();
+        if (acc?.plaid_access_token) {
+          resolvedAccessToken = acc.plaid_access_token;
+        }
       }
     }
 

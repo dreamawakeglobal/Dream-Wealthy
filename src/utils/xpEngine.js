@@ -10,7 +10,7 @@ export const XP_RULES = {
 };
 
 export const RANKS = [
-    { key: 'DREAMER', level: 1, minXP: 0, title: 'Dreamer', icon: '🌱', description: 'Began the Dream Wealthy ascension' },
+    { key: 'DREAMER', level: 1, minXP: 0, title: 'Dreamer', icon: '', description: 'Began the Dream Wealthy ascension' },
     { key: 'WEALTH_BUILDER', level: 5, minXP: 1000, title: 'Wealth Builder', icon: '⚔️', description: 'Architecting budget boundaries and spending control' },
     { key: 'DREAM_LIBERATOR', level: 10, minXP: 3000, title: 'Dream Liberator', icon: '🔨', description: 'Breaking debt chains and freeing monthly cash flow' },
     { key: 'WEALTH_STRATEGIST', level: 20, minXP: 8000, title: 'Wealth Strategist', icon: '🏛️', description: 'Multiplying income streams and emergency reserves' },

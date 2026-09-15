@@ -56,13 +56,28 @@ serve(async (req) => {
     }
 
     // 3. Fetch the linked Plaid credentials from the isolated table
-    const { data: accounts, error: dbError } = await supabaseAdmin
+    let { data: accounts, error: dbError } = await supabaseAdmin
       .from('plaid_credentials')
       .select('account_id, plaid_access_token')
       .eq('user_id', user.id);
 
     if (dbError) {
-      throw new Error(`Database error fetching tracked accounts: ${dbError.message}`);
+      console.warn(`Could not fetch from plaid_credentials, checking fallback: ${dbError.message}`);
+    }
+
+    if (!accounts || accounts.length === 0) {
+      const { data: legacyAccs } = await supabaseAdmin
+        .from('accounts')
+        .select('id, plaid_access_token')
+        .eq('user_id', user.id)
+        .not('plaid_access_token', 'is', null);
+
+      if (legacyAccs && legacyAccs.length > 0) {
+        accounts = legacyAccs.map((a: any) => ({
+          account_id: a.id,
+          plaid_access_token: a.plaid_access_token
+        }));
+      }
     }
 
     if (!accounts || accounts.length === 0) {

@@ -305,3 +305,172 @@
         white-space: nowrap;
     }
 }
+
+@media (max-width: 768px) and (orientation: portrait), (max-width: 600px) {
+    .settings-page-container {
+        padding: 0 !important;
+        gap: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .settings-header {
+        margin-bottom: 4px !important;
+    }
+
+    .settings-title {
+        font-size: 1.65rem !important;
+        margin-bottom: 2px !important;
+    }
+
+    .settings-header p {
+        font-size: 0.82rem !important;
+        margin: 0 !important;
+    }
+
+    /* Settings Box: Fits within vertical mobile screen and contains scrollable body */
+    .settings-container {
+        border-radius: 18px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        height: calc(100dvh - 200px) !important;
+        min-height: 460px !important;
+        max-height: calc(100vh - 190px) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    /* Horizontal scrollable tab strip fixed at the top of the box */
+    .settings-sidebar {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 10px 12px !important;
+        gap: 8px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        flex-shrink: 0 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        scrollbar-width: none !important;
+    }
+
+    .settings-sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    .settings-tab {
+        padding: 7px 12px !important;
+        font-size: 0.82rem !important;
+        border-radius: 12px !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* Inner Content Area: Smoothly scrollable */
+    .settings-content-area {
+        flex: 1 !important;
+        min-height: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding: 16px 14px 24px 14px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .settings-content-area > div {
+        height: auto !important;
+        min-height: min-content !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .settings-section {
+        gap: 16px !important;
+        height: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .card-header {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        padding-bottom: 12px !important;
+    }
+
+    .card-header h2 {
+        font-size: 1.15rem !important;
+    }
+
+    .profile-avatar-section {
+        flex-wrap: wrap !important;
+        gap: 14px !important;
+    }
+
+    .settings-form {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        gap: 14px !important;
+    }
+
+    .form-row {
+        flex-direction: column !important;
+        gap: 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .form-group {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Advisor persona cards single column */
+    .advisor-grid {
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .persona-card {
+        padding: 16px 14px !important;
+        border-radius: 14px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Billing container inside settings box */
+    .in-app-billing-container {
+        padding: 14px 12px !important;
+        border-radius: 16px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .preference-item {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 14px 12px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .preference-info {
+        width: 100% !important;
+    }
+
+    .preference-item > div:last-child {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+}

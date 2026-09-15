@@ -1,6 +1,9 @@
 .modal-overlay {
+    position: fixed;
+    top: 0;
     left: 0;
     right: 0;
+    bottom: 0;
     background: rgba(2, 6, 23, 0.65);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -115,5 +118,46 @@
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+/* Mobile Vertical View ONLY: Fix view rip and ensure full background blur */
+@media (max-width: 768px) and (orientation: portrait), (max-width: 480px) {
+    .modal-overlay {
+        padding: 12px;
+        top: -60px !important;
+        bottom: -60px !important;
+        height: calc(100% + 120px) !important;
+        height: calc(100dvh + 120px) !important;
+        backdrop-filter: blur(24px) !important;
+        -webkit-backdrop-filter: blur(24px) !important;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        touch-action: none;
+    }
+
+    .modal-overlay.mobile-glass-overlay {
+        background: rgba(2, 6, 23, 0.45) !important;
+    }
+
+    [data-theme='light'] .modal-overlay.mobile-glass-overlay {
+        background: rgba(224, 242, 254, 0.35) !important;
+    }
+
+    .modal-content {
+        border-radius: 18px;
+        max-height: 90vh;
+        max-height: 90dvh;
+        touch-action: auto;
+    }
+
+    .modal-header {
+        padding: 16px 18px;
+    }
+
+    .modal-body {
+        padding: 16px 18px;
+        touch-action: pan-y;
+        -webkit-overflow-scrolling: touch;
     }
 }

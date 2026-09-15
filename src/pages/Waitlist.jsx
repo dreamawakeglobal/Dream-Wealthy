@@ -28,10 +28,58 @@ const Waitlist = () => {
     const [errorMsg, setErrorMsg] = useState('');
 
     useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.playbackRate = 0.65;
-            videoRef.current.play().catch(() => {});
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        const mediaQuery = typeof window !== 'undefined'
+            ? window.matchMedia('(max-width: 768px) and (orientation: portrait), (max-width: 500px)')
+            : null;
+
+        const isMobileVertical = () => mediaQuery?.matches ?? false;
+
+        const playVideo = () => {
+            if (isMobileVertical()) {
+                videoElement.pause();
+                return;
+            }
+            try {
+                videoElement.playbackRate = 0.65;
+                const playPromise = videoElement.play();
+                if (playPromise && typeof playPromise.catch === 'function') {
+                    playPromise.catch(() => {});
+                }
+            } catch (e) {
+                // Ignore autoplay restrictions
+            }
+        };
+
+        if (isMobileVertical()) {
+            videoElement.pause();
+        } else {
+            playVideo();
         }
+
+        const handleMediaChange = () => {
+            if (isMobileVertical()) {
+                videoElement.pause();
+            } else {
+                playVideo();
+            }
+        };
+
+        if (mediaQuery?.addEventListener) {
+            mediaQuery.addEventListener('change', handleMediaChange);
+        } else if (mediaQuery?.addListener) {
+            mediaQuery.addListener(handleMediaChange);
+        }
+
+        return () => {
+            if (mediaQuery?.removeEventListener) {
+                mediaQuery.removeEventListener('change', handleMediaChange);
+            } else if (mediaQuery?.removeListener) {
+                mediaQuery.removeListener(handleMediaChange);
+            }
+        };
     }, []);
 
     useEffect(() => {
@@ -150,6 +198,7 @@ const Waitlist = () => {
                     muted
                     playsInline
                     preload="auto"
+                    poster="/hero-poster.jpg"
                     className="hero-video-bg waitlist-video-bg"
                 >
                     <source src="/hero-bg.mp4" type="video/mp4" />

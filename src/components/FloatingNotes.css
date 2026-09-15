@@ -159,3 +159,72 @@
         transform: scale(1) translateY(0);
     }
 }
+
+.floating-notes-icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    transform: scale(1.7);
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+@media (max-width: 768px) {
+    .floating-notes-btn {
+        width: 108px;
+        height: 108px;
+        box-shadow: 0 0 22px 8px rgba(var(--glow-rgb, 255, 215, 0), 0.35);
+    }
+
+    .floating-notes-btn:hover {
+        box-shadow: 0 0 30px 12px rgba(var(--glow-rgb, 255, 215, 0), 0.5);
+    }
+
+    .floating-notepad {
+        width: min(272px, calc(100vw - 32px));
+        max-width: 272px;
+        max-height: 336px;
+        left: 16px !important;
+    }
+}
+
+/* Mobile (Vertical & Horizontal/Landscape View): Sleek, refined, non-intrusive floating cloud (54px) */
+@media (max-width: 768px), (max-height: 550px) and (orientation: landscape), (max-width: 950px) and (max-height: 500px) {
+    .floating-notes-btn {
+        width: 54px !important;
+        height: 54px !important;
+        background: rgba(255, 255, 255, 0.12) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1.5px solid rgba(255, 255, 255, 0.35) !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 0 0 16px 4px rgba(var(--glow-rgb, 255, 215, 0), 0.3) !important;
+        overflow: hidden;
+        animation: cloud-float-mobile 5s ease-in-out infinite;
+    }
+
+    .floating-notes-btn:active {
+        transform: scale(0.92) !important;
+    }
+
+    .floating-notes-btn .floating-notes-icon {
+        transform: scale(2.1) !important;
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15)) !important;
+    }
+
+    .floating-notes-btn .note-indicator {
+        top: 2px;
+        right: 2px;
+        width: 10px;
+        height: 10px;
+        box-shadow: 0 0 8px var(--success);
+    }
+}
+
+@keyframes cloud-float-mobile {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-4px) rotate(1deg);
+    }
+}

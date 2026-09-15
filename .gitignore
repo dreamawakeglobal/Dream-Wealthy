@@ -26,4 +26,6 @@ dist-ssr
 .env
 .env*.local
 supabase/.temp/
+hf_*.mp4
+scratch/
 

@@ -81,44 +81,47 @@ export const SoundProvider = ({ children }) => {
 
     const playTone = useCallback(async (type, frequency, duration, volume = 0.1, slideFreq = null) => {
         if (isMutedRef.current) return;
-        
-        // Ensure initialized on demand
-        if (!audioCtxRef.current) {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            if (AudioContext) {
-                audioCtxRef.current = new AudioContext();
+        try {
+            // Ensure initialized on demand
+            if (!audioCtxRef.current) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    audioCtxRef.current = new AudioContext();
+                }
             }
+            
+            if (!audioCtxRef.current) return;
+            
+            const ctx = audioCtxRef.current;
+            
+            // Resume if suspended and NOT muted
+            if (ctx.state === 'suspended' && !isMutedRef.current) {
+                await ctx.resume();
+            }
+            
+            const oscillator = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            oscillator.type = type;
+            oscillator.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            const now = ctx.currentTime;
+            oscillator.frequency.setValueAtTime(frequency, now);
+            if (slideFreq) {
+                oscillator.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
+            }
+            
+            // Anti-click volume fade-in to prevent "popping" and drops
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+            
+            oscillator.start(now);
+            oscillator.stop(now + duration + 0.01); // Add a tiny bit of tail for ramp
+        } catch (err) {
+            console.debug("Web Audio tone playback deferred/prevented:", err);
         }
-        
-        if (!audioCtxRef.current) return;
-        
-        const ctx = audioCtxRef.current;
-        
-        // Resume if suspended and NOT muted
-        if (ctx.state === 'suspended' && !isMutedRef.current) {
-            await ctx.resume();
-        }
-        
-        const oscillator = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-        
-        oscillator.type = type;
-        oscillator.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        
-        const now = ctx.currentTime;
-        oscillator.frequency.setValueAtTime(frequency, now);
-        if (slideFreq) {
-            oscillator.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
-        }
-        
-        // Anti-click volume fade-in to prevent "popping" and drops
-        gainNode.gain.setValueAtTime(0, now);
-        gainNode.gain.linearRampToValueAtTime(volume, now + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        
-        oscillator.start(now);
-        oscillator.stop(now + duration + 0.01); // Add a tiny bit of tail for ramp
     }, []);
 
     const playFile = useCallback((key, volume = 0.15) => {

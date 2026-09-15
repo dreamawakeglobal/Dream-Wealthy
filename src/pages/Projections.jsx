@@ -252,20 +252,45 @@ const Projections = () => {
                             <div className="controls-header" style={{ justifyContent: 'space-between', display: 'flex', width: '100%', alignItems: 'center', marginBottom: '8px' }}>
                                 <label style={{ margin: 0, fontSize: '0.9rem', color: theme === 'dark' ? '#ffffff' : '#000000', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Extra Monthly Flows</label>
                                 <button className="add-tab-btn" onClick={() => {
-                                    setExtraColumns([...extraColumns, { id: crypto.randomUUID(), name: 'New Flow', amount: 0 }]);
+                                    const newId = crypto.randomUUID();
+                                    setExtraColumns([...extraColumns, { id: newId, name: 'New Flow', amount: 0, type: 'positive' }]);
+                                    setEditingFlowId(newId);
                                 }} style={{ padding: '4px 8px', fontSize: '0.8rem' }}><Plus size={14} /> Add</button>
                             </div>
 
                             {extraColumns.length > 0 && (
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-                                    {extraColumns.map(col => (
-                                        editingFlowId === col.id ? (
-                                            <div key={`edit-${col.id}`} style={{ display: 'flex', gap: '4px', background: 'var(--surface-hover)', padding: '6px', borderRadius: '20px', border: '1px solid var(--accent-primary)', alignItems: 'center' }}>
+                                    {extraColumns.map(col => {
+                                        const isPositive = col.type === 'positive';
+                                        return editingFlowId === col.id ? (
+                                            <div key={`edit-${col.id}`} style={{ display: 'flex', gap: '6px', background: 'var(--surface-hover)', padding: '6px 10px', borderRadius: '20px', border: '1px solid var(--accent-primary)', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExtraColumns(extraColumns.map(c => c.id === col.id ? { ...c, type: isPositive ? 'negative' : 'positive' } : c))}
+                                                    style={{
+                                                        background: isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                                        border: `1px solid ${isPositive ? 'var(--success)' : 'var(--danger)'}`,
+                                                        color: isPositive ? 'var(--success)' : 'var(--danger)',
+                                                        borderRadius: '12px',
+                                                        padding: '2px 8px',
+                                                        fontSize: '0.78rem',
+                                                        fontWeight: 'bold',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '2px',
+                                                        transition: 'all 0.2s',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                    title={isPositive ? '+ Inflow: Sent to investments/separate savings (funded from month surplus). Click to switch.' : '- Outflow: Deducted for expenses/debt. Click to switch.'}
+                                                >
+                                                    {isPositive ? '+ Inflow' : '- Outflow'}
+                                                </button>
                                                 <input
                                                     autoFocus
                                                     value={col.name}
                                                     onChange={e => setExtraColumns(extraColumns.map(c => c.id === col.id ? { ...c, name: e.target.value } : c))}
-                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '80px', fontSize: '0.85rem', paddingLeft: '8px' }}
+                                                    style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', outline: 'none', width: '85px', fontSize: '0.85rem', paddingLeft: '4px' }}
                                                     placeholder="Name"
                                                 />
                                                 <span style={{ color: 'var(--text-muted)' }}>|</span>
@@ -279,13 +304,36 @@ const Projections = () => {
                                                 <button
                                                     onClick={() => setEditingFlowId(null)}
                                                     style={{ background: 'var(--accent-primary)', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', marginLeft: '4px' }}
+                                                    title="Done"
                                                 >
                                                     <X size={12} />
                                                 </button>
                                             </div>
                                         ) : (
                                             <div key={col.id} className="flow-bubble animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--surface-hover)', padding: '6px 12px', borderRadius: '20px', border: '1px solid var(--surface-border)', fontSize: '0.85rem', color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                                                <span style={{ fontWeight: 'bold' }}>{col.name}: <span className={col.amount >= 0 ? 'text-success' : 'text-danger'}>${Math.abs(col.amount).toLocaleString()}</span></span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setExtraColumns(extraColumns.map(c => c.id === col.id ? { ...c, type: isPositive ? 'negative' : 'positive' } : c))}
+                                                    style={{
+                                                        background: isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                                                        border: `1px solid ${isPositive ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)'}`,
+                                                        color: isPositive ? 'var(--success)' : 'var(--danger)',
+                                                        borderRadius: '8px',
+                                                        padding: '1px 6px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '800',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                    title={isPositive ? 'Positive Inflow: Sent to investments/separate savings (funded from month surplus). Click to switch.' : 'Negative Outflow: Extra expense/debt. Click to switch.'}
+                                                >
+                                                    {isPositive ? '+' : '-'}
+                                                </button>
+                                                <span style={{ fontWeight: 'bold' }}>
+                                                    {col.name}:{' '}
+                                                    <span className={isPositive ? 'text-success' : 'text-danger'}>
+                                                        {isPositive ? '+' : '-'}${Math.abs(col.amount).toLocaleString()}
+                                                    </span>
+                                                </span>
                                                 <button
                                                     onClick={() => setEditingFlowId(col.id)}
                                                     style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '2px', marginLeft: '4px' }}
@@ -301,8 +349,8 @@ const Projections = () => {
                                                     <X size={14} />
                                                 </button>
                                             </div>
-                                        )
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
 
@@ -348,45 +396,49 @@ const Projections = () => {
                     <AnimateOnScroll delay={0.1}>
                         <Card glass className={`chart-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
                             <h3 style={{ textAlign: 'center' }}>Net Wealth Curve ({projectionYears * 12} Months)</h3>
-                            <div className="area-chart-wrapper">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
-                                        <defs>
-                                            <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={activeColor} stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor={activeColor} stopOpacity={0.05} />
-                                            </linearGradient>
-                                        </defs>
-                                        <XAxis 
-                                            dataKey="month" 
-                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
-                                            tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
-                                            tickFormatter={(val) => typeof val === 'string' ? (val.split(" ").length === 2 ? `${val.split(" ")[0].substring(0, 3)} ${val.split(" ")[1]}` : val.substring(0, 3)) : val} 
-                                        />
-                                        <YAxis 
-                                            stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
-                                            tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
-                                            tickFormatter={(val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 }).format(val)} 
-                                        />
-                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
-                                        <Tooltip
-                                            contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--surface-border)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px' }}
-                                            itemStyle={{ color: 'var(--text-primary)' }}
-                                            formatter={(value) => `$${value.toLocaleString()}`}
-                                        />
-                                        <Area type="monotone" dataKey="Cumulative" stroke={activeColor} fillOpacity={1} fill="url(#colorCumulative)" strokeWidth={3} />
-                                    </AreaChart>
-                                </ResponsiveContainer>
+                            <div className="mobile-scroll-indicator">
+                                <span>← Swipe horizontally to explore timeline ({projectionYears * 12} Mos) →</span>
+                            </div>
+                            <div className="chart-scroll-wrapper">
+                                <div className="area-chart-scrollable" style={{ minWidth: `${Math.max(720, projectionData.length * 55)}px` }}>
+                                    <ResponsiveContainer width="100%" height={320}>
+                                        <AreaChart data={projectionData} margin={{ top: 20, right: 30, left: 20, bottom: 0 }}>
+                                            <defs>
+                                                <linearGradient id="colorCumulative" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor={activeColor} stopOpacity={0.8} />
+                                                    <stop offset="95%" stopColor={activeColor} stopOpacity={0.05} />
+                                                </linearGradient>
+                                            </defs>
+                                            <XAxis 
+                                                dataKey="month" 
+                                                stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                                tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                                tickFormatter={(val) => typeof val === 'string' ? (val.split(" ").length === 2 ? `${val.split(" ")[0].substring(0, 3)} ${val.split(" ")[1]}` : val.substring(0, 3)) : val} 
+                                            />
+                                            <YAxis 
+                                                stroke={theme === 'dark' ? '#F8FAFC' : '#1E293B'} 
+                                                tick={{ fontWeight: 'bold', fill: theme === 'dark' ? '#F8FAFC' : '#1E293B' }} 
+                                                tickFormatter={(val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 }).format(val)} 
+                                            />
+                                            <CartesianGrid strokeDasharray="3 3" stroke="var(--surface-border)" vertical={false} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: 'var(--surface)', borderColor: 'var(--surface-border)', backdropFilter: 'blur(10px)', color: 'var(--text-primary)', borderRadius: '8px' }}
+                                                itemStyle={{ color: 'var(--text-primary)' }}
+                                                formatter={(value) => `$${value.toLocaleString()}`}
+                                            />
+                                            <Area type="monotone" dataKey="Cumulative" stroke={activeColor} fillOpacity={1} fill="url(#colorCumulative)" strokeWidth={3} />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </div>
                             </div>
                         </Card>
                     </AnimateOnScroll>
 
                     <AnimateOnScroll delay={0.2} yOffset={40}>
                         <Card glass className={`table-container ${expenseBorderColor !== 'none' ? `glow-color-${expenseBorderColor}` : ''}`}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: '16px' }}>
-                                <div />
+                            <div className="projection-breakdown-header">
                                 <h3 style={{ margin: 0, textAlign: 'center' }}>Month-by-Month Breakdown</h3>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
+                                <div className="projection-breakdown-actions">
                                     <Button 
                                         onClick={() => { playPop(); setShowEngineModal(true); }} 
                                         variant="primary" 
@@ -429,9 +481,29 @@ const Projections = () => {
                                     <thead>
                                         <tr>
                                             <th>Month</th>
-                                            <th>Income</th>
-                                            <th>Expenses</th>
-                                            {extraColumns.map(c => <th key={c.id}>{c.name}</th>)}
+                                            <th style={{ textAlign: 'center' }}>Income</th>
+                                            <th style={{ textAlign: 'center' }}>Expenses</th>
+                                            {extraColumns.map(c => {
+                                                const isPositive = c.type === 'positive';
+                                                return (
+                                                    <th key={c.id} style={{ textAlign: 'center' }}>
+                                                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
+                                                            <span>{c.name}</span>
+                                                            <span style={{
+                                                                fontSize: '0.65rem',
+                                                                padding: '1px 5px',
+                                                                borderRadius: '6px',
+                                                                background: isPositive ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                                                color: isPositive ? 'var(--success)' : 'var(--danger)',
+                                                                border: `1px solid ${isPositive ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                                                                fontWeight: 700
+                                                            }}>
+                                                                {isPositive ? '+' : '-'}
+                                                            </span>
+                                                        </div>
+                                                    </th>
+                                                );
+                                            })}
                                             <th>Net</th>
                                             <th>Cumulative</th>
                                         </tr>
@@ -462,16 +534,21 @@ const Projections = () => {
                                                         <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: -${(row.ActualExpenses || 0).toLocaleString()}</span>
                                                     </div>
                                                 </td>
-                                                {extraColumns.map(c => (
-                                                    <td key={c.id} style={{ color: theme === 'dark' ? '#ffffff' : '#000000' }}>
-                                                        <EditableCell
-                                                            value={row[c.name] || 0}
-                                                            sign="-"
-                                                            onSave={(val) => handleCellEdit(row.monthIndex, c.name, val)}
-                                                            onCopyDown={(val) => handleCopyDown(row.monthIndex, c.name, val)}
-                                                        />
-                                                    </td>
-                                                ))}
+                                                {extraColumns.map(c => {
+                                                    const isPositive = c.type === 'positive';
+                                                    return (
+                                                        <td key={c.id} style={{ color: theme === 'dark' ? '#ffffff' : '#000000', textAlign: 'center' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <EditableCell
+                                                                    value={row[c.name] || 0}
+                                                                    sign={isPositive ? '+' : '-'}
+                                                                    onSave={(val) => handleCellEdit(row.monthIndex, c.name, val)}
+                                                                    onCopyDown={(val) => handleCopyDown(row.monthIndex, c.name, val)}
+                                                                />
+                                                            </div>
+                                                        </td>
+                                                    );
+                                                })}
                                                 <td className={row.Net >= 0 ? 'text-success' : 'text-danger'}>
                                                     {row.Net >= 0 ? '+' : '-'}${Math.abs(row.Net).toLocaleString()}
                                                 </td>
@@ -499,14 +576,19 @@ const Projections = () => {
                                                     <span style={{ fontSize: '0.71rem', color: activeColor, textShadow: theme === 'dark' ? `0 0 8px ${activeColor}` : 'none', minWidth: '95px', textAlign: 'left' }}>Actual: -${pageTotals.ActualExpenses.toLocaleString()}</span>
                                                 </div>
                                             </td>
-                                            {extraColumns.map(c => (
-                                                <td key={`total-${c.id}`} style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'flex-end' }}>
-                                                        <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 'bold' }}>-${(pageTotals[c.name] || 0).toLocaleString()}</span>
-                                                        <div style={{ width: '16px' }} />
-                                                    </div>
-                                                </td>
-                                            ))}
+                                            {extraColumns.map(c => {
+                                                const isPositive = c.type === 'positive';
+                                                return (
+                                                    <td key={`total-${c.id}`} style={{ borderTop: '2px solid var(--surface-border)', color: 'var(--text-primary)', textAlign: 'center' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', minWidth: '110px', justifyContent: 'center' }}>
+                                                            <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 'bold', color: isPositive ? 'var(--success)' : 'var(--danger)' }}>
+                                                                {isPositive ? '+' : '-'}${(pageTotals[c.name] || 0).toLocaleString()}
+                                                            </span>
+                                                            <div style={{ width: '16px' }} />
+                                                        </div>
+                                                    </td>
+                                                );
+                                            })}
                                             <td style={{ borderTop: '2px solid var(--surface-border)' }} className={pageTotals.Net >= 0 ? 'text-success' : 'text-danger'}>
                                                 {pageTotals.Net >= 0 ? '+' : '-'}${Math.abs(pageTotals.Net).toLocaleString()}
                                             </td>

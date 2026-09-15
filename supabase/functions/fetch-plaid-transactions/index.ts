@@ -66,7 +66,7 @@ serve(async (req) => {
         // 4. Fetch the user's connected Plaid accounts & isolated credentials from Supabase
         const { data: accounts, error: accountError } = await supabaseAdmin
             .from('accounts')
-            .select('id, user_id, transactions_cursor, plaid_item_id')
+            .select('id, user_id, transactions_cursor, plaid_item_id, plaid_access_token')
             .eq('user_id', user.id);
 
         if (accountError) throw accountError;
@@ -78,8 +78,16 @@ serve(async (req) => {
 
         const credMap = new Map<string, string>();
         creds?.forEach((c: any) => {
-            if (c.account_id) credMap.set(c.account_id, c.plaid_access_token);
-            if (c.plaid_item_id) credMap.set(c.plaid_item_id, c.plaid_access_token);
+            if (c.account_id && c.plaid_access_token) credMap.set(c.account_id, c.plaid_access_token);
+            if (c.plaid_item_id && c.plaid_access_token) credMap.set(c.plaid_item_id, c.plaid_access_token);
+        });
+
+        // Defensive fallback: if any account lacks credentials in plaid_credentials, fallback to accounts table
+        accounts?.forEach((a: any) => {
+            if (a.plaid_access_token) {
+                if (!credMap.has(a.id)) credMap.set(a.id, a.plaid_access_token);
+                if (a.plaid_item_id && !credMap.has(a.plaid_item_id)) credMap.set(a.plaid_item_id, a.plaid_access_token);
+            }
         });
 
         const validAccounts = (accounts || []).filter(a => credMap.has(a.id) || credMap.has(a.plaid_item_id));
@@ -177,24 +185,74 @@ serve(async (req) => {
                 continue; // Swallow all other Plaid errors safely without destroying the Edge Instance!
             }
 
-            // 6. Bulk Insert/Update/Delete mapped precisely to our `transactions` PostgreSQL schema!
+            // 6. Bulk Insert/Update/Delete mapped precisely to our `transactions` and `financial_events` schemas!
             if (added.length > 0 || modified.length > 0) {
-                const transactionsToUpsert = [...added, ...modified]
-                    .filter(txn => {
-                        const preciseCat = txn.personal_finance_category?.detailed;
-                        // Natively exclude Internal Bank transfers (Checking <-> Savings) to inherently prevent Dashboard duplicate expense distortion!
-                        return preciseCat !== 'TRANSFER_IN_ACCOUNT_TRANSFER' && preciseCat !== 'TRANSFER_OUT_ACCOUNT_TRANSFER';
-                    })
-                    .map(txn => ({
+                const rawTxns = [...added, ...modified];
+                const financialEventsToUpsert: any[] = [];
+
+                const transactionsToUpsert = rawTxns.map(txn => {
+                    const preciseCat = txn.personal_finance_category?.detailed || '';
+                    const primaryCat = txn.personal_finance_category?.primary || txn.category?.[0] || 'Uncategorized';
+                    const isTransfer = preciseCat === 'TRANSFER_IN_ACCOUNT_TRANSFER' || 
+                                       preciseCat === 'TRANSFER_OUT_ACCOUNT_TRANSFER' ||
+                                       primaryCat === 'TRANSFER_IN' ||
+                                       primaryCat === 'TRANSFER_OUT';
+
+                    if (isTransfer) {
+                        const absAmount = Math.abs(Number(txn.amount) || 0);
+                        const isOutflow = txn.amount > 0;
+                        const isSavingsAccount = account.type === 'savings' || account.subtype === 'savings';
+                        
+                        let eventType = 'INTERNAL_TRANSFER';
+                        let verificationLevel = 'VERIFIED_CONTRIBUTION';
+
+                        if (isSavingsAccount && !isOutflow) {
+                            eventType = 'SAVINGS_CONTRIBUTION';
+                            verificationLevel = 'VERIFIED_CONTRIBUTION';
+                        } else if (isSavingsAccount && isOutflow) {
+                            eventType = 'SAVINGS_WITHDRAWAL';
+                            verificationLevel = 'VERIFIED_CONTRIBUTION';
+                        } else if (isOutflow) {
+                            const desc = (txn.merchant_name || txn.name || '').toLowerCase();
+                            const isExternalSavings = desc.includes('marcus') || desc.includes('ally') || 
+                                                     desc.includes('capital one') || desc.includes('vanguard') || 
+                                                     desc.includes('fidelity') || desc.includes('savings');
+                            if (isExternalSavings) {
+                                eventType = 'CONFIRMED_EXTERNAL_OUTFLOW';
+                                verificationLevel = 'CONFIRMED_EXTERNAL_TRANSFER';
+                            }
+                        }
+
+                        if (absAmount > 0) {
+                            financialEventsToUpsert.push({
+                                user_id: user.id,
+                                event_type: eventType,
+                                amount: absAmount,
+                                source_account_id: isOutflow ? account.id : null,
+                                destination_account_id: !isOutflow ? account.id : null,
+                                destination_name: txn.merchant_name || txn.name || 'Transfer',
+                                verification_level: verificationLevel,
+                                plaid_transaction_id: txn.transaction_id,
+                                plaid_category: preciseCat || primaryCat,
+                                status: txn.pending ? 'PENDING' : 'POSTED',
+                                event_date: txn.date,
+                                metadata: { merchant_name: txn.merchant_name, name: txn.name, category: txn.category }
+                            });
+                        }
+                    }
+
+                    return {
                         user_id: user.id,
                         account_id: account.id,
                         plaid_transaction_id: txn.transaction_id,
                         merchant_name: txn.merchant_name || txn.name || 'Unknown',
                         amount: txn.amount, // Plaid: positive is Expense, negative is Income.
                         date: txn.date,
-                        category: txn.personal_finance_category?.primary || txn.category?.[0] || 'Uncategorized',
-                        pending: txn.pending
-                    }));
+                        category: primaryCat,
+                        pending: txn.pending,
+                        is_transfer: isTransfer
+                    };
+                });
 
                 const { error: upsertError } = await supabaseAdmin
                     .from('transactions')
@@ -203,6 +261,16 @@ serve(async (req) => {
                 if (upsertError) {
                     console.error("Upsert Error:", upsertError);
                     throw upsertError;
+                }
+
+                if (financialEventsToUpsert.length > 0) {
+                    const { error: eventErr } = await supabaseAdmin
+                        .from('financial_events')
+                        .upsert(financialEventsToUpsert, { onConflict: 'plaid_transaction_id' });
+
+                    if (eventErr) {
+                        console.error("Warning: error upserting financial events:", eventErr.message);
+                    }
                 }
             }
 
@@ -217,6 +285,11 @@ serve(async (req) => {
                     console.error("Delete Error:", deleteError);
                     throw deleteError;
                 }
+
+                await supabaseAdmin
+                    .from('financial_events')
+                    .update({ status: 'REVERSED' })
+                    .in('plaid_transaction_id', transactionIdsToRemove);
             }
 
             // 7. Overwrite the Master Cursor onto the account so we don't fetch duplicates next time!

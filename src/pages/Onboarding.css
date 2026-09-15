@@ -154,3 +154,43 @@
     0%, 100% { opacity: 1; text-shadow: 0 0 8px var(--accent-primary); }
     50% { opacity: 0.5; text-shadow: none; }
 }
+
+/* Mobile Vertical (Portrait) View Optimizations */
+@media (max-width: 768px) and (orientation: portrait), (max-width: 600px) {
+    .onboarding-page-container {
+        padding: 16px;
+    }
+
+    .onboarding-card {
+        padding: 22px 16px;
+        gap: 16px;
+        border-radius: 18px !important;
+    }
+
+    .onboarding-header h1 {
+        font-size: 1.65rem;
+    }
+
+    .onboarding-header p {
+        font-size: 0.95rem;
+    }
+
+    .goal-selection-container {
+        gap: 12px;
+        margin: 16px 0;
+    }
+
+    .goal-option {
+        padding: 14px 12px;
+        border-radius: 14px;
+    }
+
+    .goal-option h3 {
+        font-size: 1.05rem;
+    }
+
+    .onboarding-actions {
+        margin-top: 16px;
+        gap: 12px;
+    }
+}

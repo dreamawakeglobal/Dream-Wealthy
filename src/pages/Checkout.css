@@ -54,6 +54,18 @@
 @media (max-width: 900px) {
     .checkout-container-grid {
         grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .checkout-summary-pane {
+        padding: 20px 16px;
+        border-radius: 18px;
+    }
+
+    .checkout-form-pane {
+        padding: 16px;
+        border-radius: 18px;
+        min-height: 400px;
     }
 }
 
@@ -203,4 +215,70 @@
     width: 100%;
     border-radius: 16px;
     overflow: hidden;
+}
+
+/* Mobile Vertical (Portrait) View Optimizations */
+@media (max-width: 768px) and (orientation: portrait), (max-width: 600px) {
+    .checkout-page {
+        padding: 85px 14px 140px;
+    }
+
+    .checkout-top-bar {
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        border-radius: 14px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .checkout-brand {
+        font-size: 0.95rem;
+    }
+
+    .checkout-summary-pane {
+        padding: 20px 16px !important;
+        border-radius: 18px !important;
+        gap: 18px;
+    }
+
+    .summary-header {
+        gap: 12px;
+        padding-bottom: 16px;
+    }
+
+    .summary-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .summary-price-box {
+        padding: 16px 14px;
+        border-radius: 14px;
+    }
+
+    .price-display {
+        font-size: 1.85rem;
+    }
+
+    .summary-features-list ul {
+        gap: 10px;
+    }
+
+    .summary-features-list li {
+        font-size: 0.85rem;
+        gap: 8px;
+    }
+
+    .trust-seal-box {
+        padding-top: 14px;
+        font-size: 0.78rem;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .checkout-form-pane {
+        padding: 18px 14px;
+        border-radius: 18px;
+        min-height: 380px;
+    }
 }

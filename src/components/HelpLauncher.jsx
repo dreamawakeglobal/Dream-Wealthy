@@ -7,6 +7,7 @@ import { HelpCircle, X, Search, Send, CheckCircle2, MessageSquare, ExternalLink,
 import { useSound } from '../SoundContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useStore } from '../store';
 import { supabase } from '../supabaseClient';
 import './HelpLauncher.css';
 
@@ -22,13 +23,10 @@ export const HelpLauncher = () => {
     const { playPop } = useSound();
     const { theme, expenseBorderColor } = useTheme();
     const { user } = useAuth();
+    const { isHelpOpen, setIsHelpOpen } = useStore();
+    const isOpen = isHelpOpen;
+    const setIsOpen = setIsHelpOpen;
 
-    // Hide support launcher button on waitlist page
-    if (location.pathname === '/' || location.pathname === '/waitlist' || location.pathname.endsWith('/index.html')) {
-        return null;
-    }
-    
-    const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('search'); // 'search' | 'ticket'
     const [searchQuery, setSearchQuery] = useState('');
     
@@ -107,11 +105,24 @@ export const HelpLauncher = () => {
         f.a.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Hide support launcher on waitlist/home page when closed
+    const isWaitlistPage = location.pathname === '/' || location.pathname === '/waitlist' || location.pathname.endsWith('/index.html');
+    if (isWaitlistPage && !isOpen) {
+        return null;
+    }
+
     return (
         <div className="help-launcher-wrapper">
             {/* Slide-over Glass Panel */}
             {isOpen && (
-                <div className="help-panel-overlay animate-fade-in">
+                <div 
+                    className="help-panel-overlay animate-fade-in"
+                    onClick={(e) => {
+                        if (e.target === e.currentTarget) {
+                            toggleLauncher();
+                        }
+                    }}
+                >
                     <Card glass className="help-panel-card">
                         <div className="help-panel-header" style={{ borderBottomColor: `${activeColor}40` }}>
                             <div className="help-header-title">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { VerificationBadge } from './VerificationBadge';
 import './GoalOrb.css';
 
 export const GoalOrb = ({ goal, onDoubleClick }) => {
@@ -70,9 +71,12 @@ export const GoalOrb = ({ goal, onDoubleClick }) => {
 
             <div className="goal-orb-info">
                 <h4>{name}</h4>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 6px 0' }}>
+                    <VerificationBadge tier={goal.verificationTier || 'SELF_REPORTED'} size="xs" />
+                </div>
                 <div className="goal-orb-amount-pill">
-                    <span style={{ color: color }}>${currentAmount.toLocaleString()}</span>
-                    <span className="text-muted"> / ${targetAmount.toLocaleString()}</span>
+                    <span style={{ color: color }}>${(currentAmount || 0).toLocaleString()}</span>
+                    <span className="text-muted"> / ${(targetAmount || 0).toLocaleString()}</span>
                 </div>
                 {contributionAmount > 0 && (
                     <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 500, background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', display: 'inline-block' }}>

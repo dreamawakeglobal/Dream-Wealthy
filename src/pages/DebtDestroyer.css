@@ -197,3 +197,47 @@
     color: #ff9f0a;
     letter-spacing: -0.5px;
 }
+
+@media (max-width: 768px) {
+    .debt-dashboard {
+        gap: 20px;
+    }
+
+    .debt-card,
+    .strategy-card,
+    .burn-down-card {
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+
+    .debt-form {
+        padding: 14px 12px;
+    }
+
+    .debt-form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .debt-item {
+        padding: 12px 14px;
+    }
+
+    .strategy-btn {
+        padding: 14px 16px;
+    }
+
+    .burn-down-header {
+        flex-direction: column;
+        gap: 16px;
+        padding-bottom: 16px;
+    }
+
+    .glowing-danger {
+        font-size: clamp(1.85rem, 6vw, 2.25rem);
+    }
+
+    .text-warning {
+        font-size: clamp(1.65rem, 5vw, 2rem);
+    }
+}

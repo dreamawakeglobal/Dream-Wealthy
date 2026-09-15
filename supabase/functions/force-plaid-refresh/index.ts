@@ -64,12 +64,32 @@ serve(async (req) => {
         const plaidClient = new PlaidApi(configuration);
 
         // 4. Fetch the user's connected Plaid credentials from isolated table
-        const { data: creds, error: credError } = await supabaseAdmin
+        let { data: creds, error: credError } = await supabaseAdmin
             .from('plaid_credentials')
             .select('id, account_id, plaid_access_token')
             .eq('user_id', user.id);
 
-        if (credError) throw credError;
+        if (credError) {
+            console.warn("Could not query plaid_credentials, checking accounts fallback:", credError.message);
+        }
+
+        // Defensive fallback to accounts table if plaid_credentials is empty
+        if (!creds || creds.length === 0) {
+            const { data: legacyAccounts } = await supabaseAdmin
+                .from('accounts')
+                .select('id, plaid_access_token')
+                .eq('user_id', user.id)
+                .not('plaid_access_token', 'is', null);
+
+            if (legacyAccounts && legacyAccounts.length > 0) {
+                creds = legacyAccounts.map((a: any) => ({
+                    id: a.id,
+                    account_id: a.id,
+                    plaid_access_token: a.plaid_access_token
+                }));
+            }
+        }
+
         if (!creds || creds.length === 0) {
             return new Response(JSON.stringify({ success: true, message: 'No connected accounts found.' }), {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },

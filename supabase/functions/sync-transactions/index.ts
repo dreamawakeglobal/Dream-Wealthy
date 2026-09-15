@@ -59,7 +59,7 @@ serve(async (req) => {
     // 2. Look up the User ID, account details, and isolated Access Token associated with this incoming Item ID
     const { data: account, error: accountErr } = await supabaseAdmin
       .from('accounts')
-      .select('id, user_id, transactions_cursor')
+      .select('id, user_id, transactions_cursor, plaid_access_token')
       .eq('plaid_item_id', itemId)
       .single();
 
@@ -73,9 +73,9 @@ serve(async (req) => {
       .eq('plaid_item_id', itemId)
       .single();
 
-    const accessToken = cred?.plaid_access_token;
+    const accessToken = cred?.plaid_access_token || account.plaid_access_token;
     if (!accessToken) {
-      throw new Error(`Could not find isolated credentials for item_id: ${itemId}`);
+      throw new Error(`Could not find credentials for item_id: ${itemId}`);
     }
 
     const plaidClient = getPlaidClient();
@@ -107,23 +107,74 @@ serve(async (req) => {
 
       console.log(`Plaid Sync logic found ${added.length} new transactions for User ${account.user_id}`);
 
-      // 4. Process Added & Modified Transactions (Map to Database Schema)
-      const transactionsToUpsert = [...added, ...modified]
-        .filter((tx: any) => {
-          const preciseCat = tx.personal_finance_category?.detailed;
-          // Natively exclude Internal Bank transfers to prevent duplicate expense distortion!
-          return preciseCat !== 'TRANSFER_IN_ACCOUNT_TRANSFER' && preciseCat !== 'TRANSFER_OUT_ACCOUNT_TRANSFER';
-        })
-        .map((tx: any) => ({
+      // 4. Process Added & Modified Transactions (Map to Database Schema & Financial Events)
+      const rawRecords = [...added, ...modified];
+      const financialEventsToUpsert: any[] = [];
+
+      const transactionsToUpsert = rawRecords.map((tx: any) => {
+        const preciseCat = tx.personal_finance_category?.detailed || '';
+        const primaryCat = tx.personal_finance_category?.primary || tx.category?.[0] || 'Uncategorized';
+        const isTransfer = preciseCat === 'TRANSFER_IN_ACCOUNT_TRANSFER' || 
+                           preciseCat === 'TRANSFER_OUT_ACCOUNT_TRANSFER' ||
+                           primaryCat === 'TRANSFER_IN' ||
+                           primaryCat === 'TRANSFER_OUT';
+
+        // Extract normalized Financial Events for savings and transfer tracking
+        if (isTransfer) {
+          const absAmount = Math.abs(Number(tx.amount) || 0);
+          const isOutflow = tx.amount > 0;
+          const isSavingsAccount = account.type === 'savings' || account.subtype === 'savings';
+          
+          let eventType = 'INTERNAL_TRANSFER';
+          let verificationLevel = 'VERIFIED_CONTRIBUTION';
+
+          if (isSavingsAccount && !isOutflow) {
+            eventType = 'SAVINGS_CONTRIBUTION';
+            verificationLevel = 'VERIFIED_CONTRIBUTION';
+          } else if (isSavingsAccount && isOutflow) {
+            eventType = 'SAVINGS_WITHDRAWAL';
+            verificationLevel = 'VERIFIED_CONTRIBUTION';
+          } else if (isOutflow) {
+            const desc = (tx.merchant_name || tx.name || '').toLowerCase();
+            const isExternalSavings = desc.includes('marcus') || desc.includes('ally') || 
+                                     desc.includes('capital one') || desc.includes('vanguard') || 
+                                     desc.includes('fidelity') || desc.includes('savings');
+            if (isExternalSavings) {
+              eventType = 'CONFIRMED_EXTERNAL_OUTFLOW';
+              verificationLevel = 'CONFIRMED_EXTERNAL_TRANSFER';
+            }
+          }
+
+          if (absAmount > 0) {
+            financialEventsToUpsert.push({
+              user_id: account.user_id,
+              event_type: eventType,
+              amount: absAmount,
+              source_account_id: isOutflow ? account.id : null,
+              destination_account_id: !isOutflow ? account.id : null,
+              destination_name: tx.merchant_name || tx.name || 'Transfer',
+              verification_level: verificationLevel,
+              plaid_transaction_id: tx.transaction_id,
+              plaid_category: preciseCat || primaryCat,
+              status: tx.pending ? 'PENDING' : 'POSTED',
+              event_date: tx.date,
+              metadata: { merchant_name: tx.merchant_name, name: tx.name, category: tx.category }
+            });
+          }
+        }
+
+        return {
           plaid_transaction_id: tx.transaction_id,
           user_id: account.user_id,
-          account_id: account.id, // Use our internal Postgres UUID representation, not Plaid's string.
-          amount: tx.amount, // Plaid amounts are positive for outflows (expenses) and negative for inflows (income)
+          account_id: account.id,
+          amount: tx.amount, // Plaid: positive is Expense, negative is Income
           date: tx.date,
           merchant_name: tx.merchant_name || tx.name || 'Unknown',
-          category: tx.personal_finance_category?.primary || tx.category?.[0] || 'Uncategorized',
-          pending: tx.pending
-        }));
+          category: primaryCat,
+          pending: tx.pending,
+          is_transfer: isTransfer
+        };
+      });
 
       // 5. Category Overwrite Shield: Look up existing transactions to prevent Plaid from resetting custom UI buckets
       if (transactionsToUpsert.length > 0) {
@@ -160,6 +211,17 @@ serve(async (req) => {
         }
       }
 
+      // 6.2 Upsert financial events into Postgres
+      if (financialEventsToUpsert.length > 0) {
+        const { error: eventErr } = await supabaseAdmin
+          .from('financial_events')
+          .upsert(financialEventsToUpsert, { onConflict: 'plaid_transaction_id' });
+
+        if (eventErr) {
+          console.error("Warning: error upserting financial events:", eventErr.message);
+        }
+      }
+
       // 5.5. Auto-Purge Removed Transactions continuously
       if (removed.length > 0) {
         const transactionIdsToRemove = removed.map((r: any) => r.transaction_id);
@@ -171,6 +233,12 @@ serve(async (req) => {
         if (deleteErr) {
           throw new Error(`Error deleting removed transactions: ${deleteErr.message}`);
         }
+
+        // Update financial events status to REVERSED
+        await supabaseAdmin
+          .from('financial_events')
+          .update({ status: 'REVERSED' })
+          .in('plaid_transaction_id', transactionIdsToRemove);
       }
 
       // 6. Save the new cursor so we don't fetch these same transactions again next time
