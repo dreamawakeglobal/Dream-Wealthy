@@ -1,10 +1,12 @@
 import React, { useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSound } from '../SoundContext';
 
 import './AudioPlayer.css';
 
 const AudioPlayer = () => {
     const { isMuted } = useSound() || {};
+    const location = useLocation();
     const audioRef = useRef(null);
     
     // Web Audio refs for mobile
@@ -13,7 +15,10 @@ const AudioPlayer = () => {
     const sourceNodeRef = useRef(null);
     const hasRoutedAudio = useRef(false);
 
-    // Try to auto-play when the component mounts if not muted
+    const isWaitlist = location.pathname === '/';
+    const shouldPlay = !isMuted && !isWaitlist;
+
+    // Try to auto-play when the component mounts if not muted and not on waitlist
     useEffect(() => {
         if (audioRef.current) {
             // Initial fallback volume for PC
@@ -47,8 +52,8 @@ const AudioPlayer = () => {
                     }
                 }
                 
-                // If context is suspended (autoplay policy), resume it if unmuted
-                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended' && !isMuted) {
+                // If context is suspended (autoplay policy), resume it if unmuted and allowed to play
+                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended' && shouldPlay) {
                     audioCtxRef.current.resume();
                 }
             };
@@ -57,7 +62,7 @@ const AudioPlayer = () => {
             window.addEventListener('click', attachWebAudioGain, { once: true });
             window.addEventListener('touchstart', attachWebAudioGain, { once: true });
 
-            if (!isMuted) {
+            if (shouldPlay) {
                 const playPromise = audioRef.current.play();
                 if (playPromise !== undefined) {
                     playPromise.catch(() => {
@@ -73,10 +78,10 @@ const AudioPlayer = () => {
         }
     }, []);
 
-    // Sync play/pause with global isMuted state
+    // Sync play/pause with shouldPlay (isMuted or waitlist page changes)
     useEffect(() => {
         if (!audioRef.current) return;
-        if (isMuted) {
+        if (!shouldPlay) {
             audioRef.current.pause();
         } else {
             const playPromise = audioRef.current.play();
@@ -87,7 +92,7 @@ const AudioPlayer = () => {
                 audioCtxRef.current.resume();
             }
         }
-    }, [isMuted]);
+    }, [shouldPlay]);
 
     return (
         <div className="global-audio-player" style={{ display: 'none' }}>
@@ -97,10 +102,11 @@ const AudioPlayer = () => {
                 crossOrigin="anonymous"
                 loop
                 preload="auto"
-                autoPlay={!isMuted}
+                autoPlay={shouldPlay}
             />
         </div>
     );
 };
 
 export default AudioPlayer;
+

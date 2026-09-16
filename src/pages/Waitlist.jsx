@@ -7,7 +7,6 @@ import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
 import { Input } from '../components/ui/Input';
 import { supabase } from '../supabaseClient';
-import { motion, useAnimation } from 'framer-motion';
 import './Home.css';
 import './Waitlist.css';
 
@@ -16,8 +15,6 @@ const Waitlist = () => {
     const { playPop } = useSound();
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
     const videoRef = useRef(null);
-    const controls = useAnimation();
-    const hasExitedRef = useRef(false);
 
     // Waitlist Form State
     const [showForm, setShowForm] = useState(false);
@@ -93,50 +90,6 @@ const Waitlist = () => {
         return () => window.removeEventListener('mousemove', handleMouseMove);
     }, []);
 
-    // Directional Hero Action Box Animation (slides off to RIGHT, returns from LEFT)
-    useEffect(() => {
-        const initialScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-        if (initialScrollY > 15) {
-            hasExitedRef.current = true;
-            controls.set({ x: -1000, opacity: 0, scale: 0.9 });
-        }
-
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-            const scrolled = currentScrollY > 15;
-
-            if (scrolled && !hasExitedRef.current) {
-                hasExitedRef.current = true;
-                // 1. Slide off to the RIGHT
-                controls.start({
-                    x: 1000,
-                    opacity: 0,
-                    scale: 0.9,
-                    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] }
-                }).then(() => {
-                    // 2. Reposition off-screen on the LEFT while hidden
-                    controls.set({ x: -1000, scale: 0.9 });
-                });
-            } else if (!scrolled && hasExitedRef.current) {
-                hasExitedRef.current = false;
-                // 3. Slide back in from the LEFT into center
-                controls.start({
-                    x: 0,
-                    opacity: 1,
-                    scale: 1,
-                    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] }
-                });
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        document.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            document.removeEventListener('scroll', handleScroll);
-        };
-    }, [controls]);
-
     // If a logged-in user hits the waitlist page, redirect them to the dashboard automatically
     if (user) {
         return <Navigate to="/dashboard" replace />;
@@ -206,9 +159,7 @@ const Waitlist = () => {
                 <div className="hero-overlay"></div>
                 <div className="hero-content" style={{ position: 'relative' }}>
 
-                    <motion.div
-                        initial={{ x: 0, opacity: 1, scale: 1 }}
-                        animate={controls}
+                    <div
                         style={{
                             width: '100%',
                             maxWidth: '480px',
@@ -293,7 +244,7 @@ const Waitlist = () => {
                             By joining, you agree to our <a href="/terms" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Terms</a> & <a href="/privacy" target="_blank" style={{ color: 'var(--text-primary)', textDecoration: 'underline', position: 'relative', zIndex: 50 }}>Privacy Policy</a>.
                         </div>
                     </Card>
-                    </motion.div>
+                    </div>
                 </div>
             </section>
         </div>
